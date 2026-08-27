@@ -2,10 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+html { overflow-x: hidden; scroll-behavior: smooth; }
 body {
   background: #0B0215;
   color: white;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: rgba(255,215,0,0.2);
+}
+
+/* 100% mobile fit */
+img, video, canvas, svg { max-width: 100%; height: auto; }
+* { word-wrap: break-word; overflow-wrap: break-word; }
+button, a, [role="button"] { min-height: 44px; min-width: 44px; }
+@media (max-width: 640px) {
+  .glass, .gold-card { padding: 16px !important; }
+  h1 { font-size: 1.5rem !important; }
+  .text-5xl { font-size: 2rem !important; }
+  .text-4xl { font-size: 1.75rem !important; }
 }
 
 /* Premium Animations */
@@ -24,21 +40,22 @@ body {
 .shadow-gold { box-shadow: 0 8px 24px rgba(255,215,0,0.15); }
 .shadow-gold\/20 { box-shadow: 0 12px 30px rgba(255,215,0,0.2); }
 
-/* Glassmorphism */
-.glass { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); }
+/* Glassmorphism — performance aware (lighter blur on mobile) */
+.glass { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); }
 .glass-hover:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255,215,0,0.18); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,215,0,0.08); }
+@media (max-width: 640px) {
+  .glass { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.5); }
-
-/* Smooth page transition */
 * { scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
 
-/* Typography polish */
-h1, h2, h3 { letter-spacing: -0.02em; }
+/* Typography */
+h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.2; }
 .premium-heading {
   font-size: 2.5rem;
   font-weight: 700;
@@ -48,6 +65,7 @@ h1, h2, h3 { letter-spacing: -0.02em; }
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+@media (max-width: 640px) { .premium-heading { font-size: 1.75rem; } }
 .gold-card {
   background: rgba(255, 215, 0, 0.05);
   border: 1px solid rgba(255, 215, 0, 0.15);
@@ -64,3 +82,15 @@ h1, h2, h3 { letter-spacing: -0.02em; }
 }
 @keyframes pulseGold { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
 .animate-pulseGold { animation: pulseGold 1.5s ease-in-out infinite; }
+
+/* Bento grid 2026 */
+.bento { display: grid; gap: 16px; }
+@media (min-width: 768px) { .bento { gap: 20px; } }
+
+/* Focus visible */
+:focus-visible { outline: 2px solid #FFD700; outline-offset: 2px; }
+
+/* Safe area for iPhone notch */
+@supports (padding: max(0px)) {
+  .safe-p { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+}

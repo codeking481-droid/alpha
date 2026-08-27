@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+﻿import { useState, useEffect } from "react"
 import KPICard from "../components/analytics/KPICard"
 import PerformanceChart from "../components/analytics/PerformanceChart"
 import TopContent from "../components/analytics/TopContent"
@@ -29,7 +29,7 @@ const platformData = [
 ]
 
 const topItems = [
-  { id: 1, title: "The Invisible System — Genesis Launch", platform: "LinkedIn", format: "script", views: 12400, likes: 820, engagement: 8.4 },
+  { id: 1, title: "The Invisible System â€” Genesis Launch", platform: "LinkedIn", format: "script", views: 12400, likes: 820, engagement: 8.4 },
   { id: 2, title: "Why Dominion Wins at Outreach (25% reply)", platform: "Blog", format: "article", views: 9200, likes: 610, engagement: 7.1 },
   { id: 3, title: "AlphaTek Agency OS Announcement", platform: "Twitter", format: "post", views: 6800, likes: 540, engagement: 6.8 },
   { id: 4, title: "7 Content Hooks That Print Meetings", platform: "Newsletter", format: "caption", views: 4300, likes: 390, engagement: 6.2 },
@@ -47,12 +47,12 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-[#0B0215] text-white selection:bg-[#FFD700] selection:text-[#0B0215]">
       {/* Sub header */}
-      <div className="max-w-7xl mx-auto px-6 py-5 flex flex-wrap items-center justify-between gap-4 animate-fadeIn">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap items-center justify-between gap-4 animate-fadeIn">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-[#0B0215] font-black shadow-gold">📊</div>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-[#0B0215] font-black shadow-gold">ðŸ“Š</div>
           <div>
             <h1 className="font-black tracking-tight leading-none text-lg">ANALYTICS</h1>
-            <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Overview • content • outreach • client reports</p>
+            <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Overview â€¢ content â€¢ outreach â€¢ client reports</p>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-white/[0.04] backdrop-blur border border-white/10 rounded-full p-1">
@@ -68,25 +68,25 @@ export default function Analytics() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-6 pb-10 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 space-y-6">
         {/* KPI Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard loading={loading} label="Total Views" value="12.4K" change="+18.2%" icon="👁️" sub="Last 30 days" />
-          <KPICard loading={loading} label="Engagement" value="7.6%" change="+2.1%" icon="⚡" sub="Avg across platforms" />
-          <KPICard loading={loading} label="Revenue" value="$103k" change="+12.4%" icon="💰" sub="MRR • All companies" />
-          <KPICard loading={loading} label="Growth" value="+24.3%" change="+5.6%" icon="📈" sub="MoM growth rate" />
+          <KPICard loading={loading} label="Total Views" value="12.4K" change="+18.2%" icon="ðŸ‘ï¸" sub="Last 30 days" />
+          <KPICard loading={loading} label="Engagement" value="7.6%" change="+2.1%" icon="âš¡" sub="Avg across platforms" />
+          <KPICard loading={loading} label="Revenue" value="$103k" change="+12.4%" icon="ðŸ’°" sub="MRR â€¢ All companies" />
+          <KPICard loading={loading} label="Growth" value="+24.3%" change="+5.6%" icon="ðŸ“ˆ" sub="MoM growth rate" />
         </div>
 
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PerformanceChart title="Views Over Time" subtitle="Daily views • last 6 weeks" type="line" data={viewsData} color="#FFD700" />
-          <PerformanceChart title="Engagement by Platform" subtitle="Views per platform • 30 days" type="bar" data={platformData} color="#38bdf8" />
+          <PerformanceChart title="Views Over Time" subtitle="Daily views â€¢ last 6 weeks" type="line" data={viewsData} color="#FFD700" />
+          <PerformanceChart title="Engagement by Platform" subtitle="Views per platform â€¢ 30 days" type="bar" data={platformData} color="#38bdf8" />
         </div>
 
         {/* Charts Row 2 + Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <PerformanceChart title="Outreach Performance" subtitle="Funnel: sent → opened → replied → meetings" type="bar" data={outreachData} color="#10b981" />
+            <PerformanceChart title="Outreach Performance" subtitle="Funnel: sent â†’ opened â†’ replied â†’ meetings" type="bar" data={outreachData} color="#10b981" />
           </div>
           <div className="glass rounded-2xl p-6 animate-slideUp flex flex-col">
             <h3 className="text-sm font-bold tracking-widest uppercase text-white/60">Growth Trends</h3>
@@ -121,10 +121,10 @@ export default function Analytics() {
         {/* Footer insight */}
         <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">✓</div>
+            <div className="w-10 h-10 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">âœ“</div>
             <div>
-              <div className="text-sm font-bold text-white">Premium analytics — live</div>
-              <div className="text-xs text-white/40">Data from D1 + R2 + Groq • Update: 2 hours ago</div>
+              <div className="text-sm font-bold text-white">Premium analytics â€” live</div>
+              <div className="text-xs text-white/40">Data from D1 + R2 + Groq â€¢ Update: 2 hours ago</div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -135,8 +135,9 @@ export default function Analytics() {
       </main>
 
       <footer className="text-center py-10 text-xs text-white/20 tracking-widest uppercase font-semibold">
-        Analytics • Premium UI — $5,000/month agency experience 🇳🇬🔥🚀
+        Analytics â€¢ Premium UI â€” $5,000/month agency experience ðŸ‡³ðŸ‡¬ðŸ”¥ðŸš€
       </footer>
     </div>
   )
 }
+

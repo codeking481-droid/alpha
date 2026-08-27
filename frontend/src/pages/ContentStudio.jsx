@@ -1,20 +1,12 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import ContentCard from "../components/content/ContentCard"
 import AIWriter from "../components/content/AIWriter"
 import TemplateSelector, { templates } from "../components/content/TemplateSelector"
 import ContentCalendar from "../components/content/ContentCalendar"
-
-const initialProjects = [
-  { id: 1, title: "Genesis Launch — The Invisible System", format: "script", company: "Genesis", status: "review", words: 1240, lastEdited: "2h ago", preview: "Hook: Most people think you need 10 tools. You need 1 invisible system..." },
-  { id: 2, title: "Why Dominion Wins at Outreach", format: "article", company: "Dominion", status: "draft", words: 980, lastEdited: "5h ago", preview: "Outreach isn't spam — it's systems. Here's how we hit 25% reply rate..." },
-  { id: 3, title: "AlphaTek X — Agency OS Announcement", format: "post", company: "AlphaTek X", status: "published", words: 280, lastEdited: "1d ago", preview: "🚀 We built the invisible ops dashboard. 4 companies, 1 hub. Steal it..." },
-  { id: 4, title: "Newsletter #12 — Build In Public", format: "caption", company: "Genesis", status: "draft", words: 420, lastEdited: "1d ago", preview: "Behind the scenes: how we shipped Command Hub in one weekend..." },
-  { id: 5, title: "Twitter Thread: 7 Content Hooks", format: "post", company: "Dominion", status: "review", words: 560, lastEdited: "2d ago", preview: "1/7 The hook is everything. If you lose the first 2 seconds, you lose..." },
-  { id: 6, title: "Blog: Content Calendar That Ships", format: "article", company: "AlphaTek X", status: "draft", words: 1120, lastEdited: "3d ago", preview: "A content calendar shouldn't be a chore. It should be a canon..." },
-]
+import { useLocalStorage } from "../hooks/useLocalStorage.js"
 
 export default function ContentStudio() {
-  const [projects, setProjects] = useState(initialProjects)
+  const [projects, setProjects] = useLocalStorage("alpha.content", [])
   const [filter, setFilter] = useState("all")
   const [aiTopic, setAiTopic] = useState("")
   const [aiFormat, setAiFormat] = useState("post")
@@ -45,9 +37,9 @@ export default function ContentStudio() {
   return (
     <div className="min-h-screen bg-[#0B0215] text-white selection:bg-[#FFD700] selection:text-[#0B0215]">
       {/* Sub Header */}
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">✍️</div>
+          <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">âœï¸</div>
           <div>
             <h1 className="font-black tracking-tight leading-none">CONTENT STUDIO</h1>
             <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Create posts, articles, scripts & captions</p>
@@ -61,7 +53,7 @@ export default function ContentStudio() {
         </button>
       </div>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-5">
@@ -133,8 +125,9 @@ export default function ContentStudio() {
       </main>
 
       <footer className="text-center py-10 text-xs text-white/20 tracking-widest uppercase font-semibold">
-        Content Studio • Fast & easy to use • Where content gets created 🇳🇬🔥🚀
+        Content Studio â€¢ Fast & easy to use â€¢ Where content gets created ðŸ‡³ðŸ‡¬ðŸ”¥ðŸš€
       </footer>
     </div>
   )
 }
+

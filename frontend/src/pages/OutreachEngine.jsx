@@ -1,4 +1,4 @@
-import { useState } from "react"
+﻿import { useState } from "react"
 import LeadFinder from "../components/outreach/LeadFinder"
 import MessageDraft from "../components/outreach/MessageDraft"
 import CampaignManager from "../components/outreach/CampaignManager"
@@ -7,7 +7,7 @@ import ReplyTracker from "../components/outreach/ReplyTracker"
 export default function OutreachEngine() {
   const [addedLeads, setAddedLeads] = useState([])
   const [events, setEvents] = useState([
-    { id: 1, text: "Added 2 leads to Genesis — Lagos Fintechs", time: "now", type: "lead" },
+    { id: 1, text: "Added 2 leads to Genesis â€” Lagos Fintechs", time: "now", type: "lead" },
   ])
 
   const handleAddToCampaign = (lead, isRemove) => {
@@ -15,7 +15,7 @@ export default function OutreachEngine() {
       setAddedLeads((prev) => prev.filter((l) => l.id !== lead.id))
     } else {
       setAddedLeads((prev) => [...prev, lead])
-      setEvents((prev) => [{ id: Date.now(), text: `Added ${lead.name} → campaign queue`, time: "now", type: "lead" }, ...prev].slice(0, 5))
+      setEvents((prev) => [{ id: Date.now(), text: `Added ${lead.name} â†’ campaign queue`, time: "now", type: "lead" }, ...prev].slice(0, 5))
     }
   }
 
@@ -26,21 +26,21 @@ export default function OutreachEngine() {
   return (
     <div className="min-h-screen bg-[#0B0215] text-white selection:bg-[#FFD700] selection:text-[#0B0215]">
       {/* Sub header */}
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">📧</div>
+          <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">ðŸ“§</div>
           <div>
             <h1 className="font-black tracking-tight leading-none">OUTREACH ENGINE</h1>
-            <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Find leads • draft messages • track replies</p>
+            <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Find leads â€¢ draft messages â€¢ track replies</p>
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2 text-xs">
           <span className="px-3 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold">{addedLeads.length} queued</span>
-          <span className="px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/50 font-semibold">Groq AI • Ready</span>
+          <span className="px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/50 font-semibold">Groq AI â€¢ Ready</span>
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-6 pb-10 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 space-y-6">
         {/* Overview Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-5">
@@ -77,16 +77,16 @@ export default function OutreachEngine() {
               <div className="text-xs font-bold tracking-widest uppercase text-white/30">Queued Leads ({addedLeads.length})</div>
               <div className="mt-2 space-y-2">
                 {addedLeads.length === 0 ? (
-                  <p className="text-xs text-white/30 py-4 text-center bg-[#0B0215] border border-white/5 rounded-xl">No leads queued — add from Lead Finder</p>
+                  <p className="text-xs text-white/30 py-4 text-center bg-[#0B0215] border border-white/5 rounded-xl">No leads queued â€” add from Lead Finder</p>
                 ) : (
                   addedLeads.map((l) => (
                     <div key={l.id} className="bg-[#0B0215] border border-white/10 rounded-xl p-3 flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black text-xs">{l.name.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-bold text-white truncate">{l.name}</div>
-                        <div className="text-[11px] text-white/40 truncate">{l.company} • {l.email}</div>
+                        <div className="text-[11px] text-white/40 truncate">{l.company} â€¢ {l.email}</div>
                       </div>
-                      <button onClick={() => handleAddToCampaign(l, true)} className="text-xs text-white/40 hover:text-white">✕</button>
+                      <button onClick={() => handleAddToCampaign(l, true)} className="text-xs text-white/40 hover:text-white">âœ•</button>
                     </div>
                   ))
                 )}
@@ -127,8 +127,9 @@ export default function OutreachEngine() {
       </main>
 
       <footer className="text-center py-10 text-xs text-white/20 tracking-widest uppercase font-semibold">
-        Outreach Engine • Find & contact leads — fast and effective 🇳🇬🔥🚀
+        Outreach Engine â€¢ Find & contact leads â€” fast and effective ðŸ‡³ðŸ‡¬ðŸ”¥ðŸš€
       </footer>
     </div>
   )
 }
+
