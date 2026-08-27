@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom"
 import Dashboard from "./pages/Dashboard.jsx"
 import ContentStudio from "./pages/ContentStudio.jsx"
@@ -74,6 +74,27 @@ function TopNav() {
 }
 
 export default function App() {
+  // 🧹 Kill ALL mock data forever — clears old Genesis/Dominion/AlphaTekX on load
+  useEffect(() => {
+    const keys = ['alpha.companies', 'alpha.content', 'alpha.campaigns', 'alpha.invoices', 'alpha.contracts', 'alpha.clients', 'alpha.leads', 'alpha.replies', 'alpha.drafts', 'alpha.activities', 'alpha.team']
+    try {
+      const raw = localStorage.getItem('alpha.companies')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const hasMock = parsed.some && parsed.some((c) => ['Genesis', 'Dominion', 'AlphaTek X', 'AlphaTek', 'Venture Labs', 'Paystack Alumni Co', 'Dominion Labs'].includes(c.name) || ['Genesis', 'Dominion', 'AlphaTek X'].includes(c.company))
+        if (hasMock) {
+          keys.forEach((k) => localStorage.removeItem(k))
+          localStorage.removeItem('alpha.onboardingDismissed')
+          // also clear any mock with launch
+          window.location.reload()
+        }
+      }
+    } catch {
+      // if parsing fails, clear everything
+      keys.forEach((k) => localStorage.removeItem(k))
+    }
+  }, [])
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-[#0B0215] animate-fadeIn overflow-x-hidden">

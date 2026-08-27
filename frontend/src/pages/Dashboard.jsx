@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+﻿import { useState, useEffect } from "react"
 import CompanyCard from "../components/dashboard/CompanyCard"
 import QuickActions from "../components/dashboard/QuickActions"
 import ActivityFeed from "../components/dashboard/ActivityFeed"
@@ -16,7 +16,7 @@ export default function Dashboard() {
   useEffect(() => {
     store.getCompanies().then((remote) => {
       if (remote && remote.length > 0 && companies.length === 0) {
-        setCompanies(remote.map((c) => ({ ...c, projects: c.projects || 0, revenue: c.mrr || "$0", lastActivity: "now", industry: c.company || c.industry || "—" })))
+        setCompanies(remote.map((c) => ({ ...c, projects: c.projects || 0, revenue: c.mrr || "$0", lastActivity: "now", industry: c.company || c.industry || "â€”" })))
       }
     })
     // eslint-disable-next-line
@@ -34,7 +34,7 @@ export default function Dashboard() {
     const company = {
       id: Date.now(),
       name: form.name.trim(),
-      industry: form.industry.trim() || "—",
+      industry: form.industry.trim() || "â€”",
       status: form.status,
       projects: 0,
       revenue: "$0",
@@ -55,7 +55,7 @@ export default function Dashboard() {
     companies: companies.length,
     projects: companies.reduce((s, c) => s + (c.projects || 0), 0),
     revenue: companies.length ? `$${companies.reduce((s, c) => s + parseInt((c.revenue || "$0").replace(/[^0-9]/g, "")) || 0, 0)}k` : "$0",
-    replyRate: "—",
+    replyRate: "â€”",
   }
   const activeCount = companies.filter((c) => c.status === "active").length
 
@@ -63,11 +63,11 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#0B0215] text-white selection:bg-[#FFD700] selection:text-[#0B0215] overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <h1 className="font-black tracking-tight text-lg">COMMAND HUB</h1>
-        <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Invisible OS • Real data • 100% mobile</p>
+        <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Invisible OS â€¢ Real data â€¢ 100% mobile</p>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-        {/* Hero Stats — real */}
+        {/* Hero Stats â€” real */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-4 sm:p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-white/40">Companies</div>
@@ -92,10 +92,10 @@ export default function Dashboard() {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)}>
             <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-[#14141f] border border-white/10 rounded-2xl p-6 animate-slideUp">
               <h3 className="text-lg font-black tracking-tight">Add Company</h3>
-              <p className="text-xs text-white/40 mt-1">Real data — saved to this device + D1 when live</p>
+              <p className="text-xs text-white/40 mt-1">Real data â€” saved to this device + D1 when live</p>
               <div className="mt-4 space-y-3">
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Company name — e.g. Genesis" className="w-full bg-[#0B0215] border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-[#FFD700]/50" />
-                <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Industry — e.g. Fintech" className="w-full bg-[#0B0215] border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-[#FFD700]/50" />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Company name â€” e.g. Acme Co" className="w-full bg-[#0B0215] border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-[#FFD700]/50" />
+                <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Industry â€” e.g. Fintech" className="w-full bg-[#0B0215] border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none focus:border-[#FFD700]/50" />
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full bg-[#0B0215] border border-white/10 rounded-xl px-4 py-3 text-base text-white">
                   <option value="active">Active</option>
                   <option value="new">New</option>
@@ -114,14 +114,14 @@ export default function Dashboard() {
         <section className="mt-8">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-bold tracking-widest uppercase text-white/60">Company Overview</h2>
-            <span className="text-xs text-white/30 whitespace-nowrap">{companies.length} • {activeCount} active</span>
+            <span className="text-xs text-white/30 whitespace-nowrap">{companies.length} â€¢ {activeCount} active</span>
           </div>
 
           {companies.length === 0 ? (
             <div className="glass p-6 sm:p-8 text-center rounded-2xl mt-4 animate-fadeIn">
-              <span className="text-5xl sm:text-6xl">🚀</span>
+              <span className="text-5xl sm:text-6xl">ðŸš€</span>
               <h3 className="text-xl sm:text-2xl font-bold text-white mt-4 tracking-tight">Your Agency Awaits</h3>
-              <p className="text-white/40 mt-2 text-sm">No companies yet. Add your first — it's real and saved.</p>
+              <p className="text-white/40 mt-2 text-sm">No companies yet. Add your first â€” it's real and saved.</p>
               <button onClick={() => setShowAdd(true)} className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-[#FFD700] to-[#F59E0B] text-black font-black tracking-widest uppercase text-xs hover:scale-105 transition shadow-gold min-h-[48px]">
                 Add Company
               </button>
@@ -142,12 +142,12 @@ export default function Dashboard() {
           </div>
           <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
             <h3 className="text-sm font-bold tracking-widest uppercase text-white/60">Team Members</h3>
-            <p className="text-xs text-white/40 mt-1">Real team — invite to collaborate</p>
+            <p className="text-xs text-white/40 mt-1">Real team â€” invite to collaborate</p>
             {team.length === 0 ? (
               <div className="mt-6 text-center py-8 bg-white/[0.03] border border-white/5 rounded-xl">
-                <div className="text-3xl">👥</div>
+                <div className="text-3xl">ðŸ‘¥</div>
                 <p className="text-sm text-white/40 mt-2">No team yet.</p>
-                <p className="text-xs text-white/30 mt-1">Invite members — they'll appear here.</p>
+                <p className="text-xs text-white/30 mt-1">Invite members â€” they'll appear here.</p>
               </div>
             ) : (
               <div className="mt-5 space-y-3">
@@ -173,8 +173,11 @@ export default function Dashboard() {
       </main>
 
       <footer className="text-center py-10 text-xs text-white/20 tracking-widest uppercase font-semibold px-4">
-        Command Hub • Real data • 100% mobile • Ready 🇳🇬
+        Command Hub â€¢ Real data â€¢ 100% mobile â€¢ Ready ðŸ‡³ðŸ‡¬
       </footer>
     </div>
   )
 }
+
+
+
