@@ -52,14 +52,20 @@ export async function findLeadsOverpass(city, niche, limit = 50) {
   const { lat, lon } = await getCoordinates(city)
   const latMin = lat - 0.05, latMax = lat + 0.05, lonMin = lon - 0.05, lonMax = lon + 0.05
   const n = String(niche).toLowerCase().trim()
+  // Query multiple OSM tag categories for broader results
   const query = `
     [out:json][timeout:30];
     (
       node["amenity"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
       node["shop"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
       node["office"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
+      node["tourism"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
+      node["healthcare"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
+      node["leisure"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
       way["amenity"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
       way["shop"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
+      way["tourism"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
+      way["healthcare"="${n}"](${latMin},${lonMin},${latMax},${lonMax});
     );
     out body ${Math.min(limit, 50)};
   `
@@ -91,7 +97,7 @@ export async function findLeadsOverpass(city, niche, limit = 50) {
 // Main — picks best source
 export async function findLeads(env, city, niche, limit = 20) {
   const n = String(niche).toLowerCase()
-  const isBusinessNiche = ['hotel', 'restaurant', 'cafe', 'bar', 'shop', 'bank', 'school', 'doctors', 'store'].includes(n)
+  const isBusinessNiche = ['hotel', 'motel', 'restaurant', 'cafe', 'bar', 'shop', 'bank', 'school', 'doctors', 'store', 'hospital', 'clinic', 'pharmacy'].includes(n)
   // If APOLLO key exists and niche is professional (ceo, founder, tech, saas), use Apollo for gmails
   if (env.APOLLO_API_KEY && !isBusinessNiche) {
     try {
