@@ -4,6 +4,8 @@ import AIWriter from "../components/content/AIWriter"
 import TemplateSelector, { templates } from "../components/content/TemplateSelector"
 import ContentCalendar from "../components/content/ContentCalendar"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
+import EmptyState from "../components/ui/EmptyState.jsx"
+import AISuggestion from "../components/ui/AISuggestion.jsx"
 
 export default function ContentStudio() {
   const [projects, setProjects] = useLocalStorage("alpha.content", [])
@@ -117,12 +119,24 @@ export default function ContentStudio() {
             <ContentCard key={item.id} item={item} onEdit={() => console.log("edit", item)} onPreview={() => console.log("preview", item)} />
           ))}
         </div>
-        {filtered.length === 0 && (
+        {projects.length === 0 ? (
+          <>
+            <EmptyState
+              icon="✍️"
+              title="Your Content Studio"
+              description="Write your first post. I'll help you."
+              tip="Tip: Start with a LinkedIn post about your agency."
+              action={() => document.getElementById("ai-writer")?.scrollIntoView({ behavior: "smooth" })}
+              actionLabel="+ Create Your First Post"
+            />
+            <AISuggestion message="Want me to draft your first post? Just tell me what you want to say." action={() => document.getElementById("ai-writer")?.scrollIntoView({ behavior: "smooth" })} actionLabel="Generate Draft" />
+          </>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-10 bg-[#0B0215] border border-white/5 rounded-xl">
-            <p className="text-sm text-white/50 font-bold">{projects.length === 0 ? "No real content yet — that's correct" : "No matches"}</p>
-            <p className="text-xs text-white/30 mt-1 max-w-md mx-auto">{projects.length === 0 ? "Usefulness: Create posts/articles/scripts here. Use AI Writer above or + New Content. Real content you create appears here and in Calendar." : "Try another filter or search"}</p>
+            <p className="text-sm text-white/50 font-bold">No matches</p>
+            <p className="text-xs text-white/30 mt-1">Try another filter or search</p>
           </div>
-        )}
+        ) : null}
 
         {/* Calendar */}
         <ContentCalendar />

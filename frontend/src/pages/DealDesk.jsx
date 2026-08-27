@@ -5,6 +5,8 @@ import InvoiceTracker from "../components/dealdesk/InvoiceTracker"
 import ContractManager from "../components/dealdesk/ContractManager"
 import RevenueChart from "../components/dealdesk/RevenueChart"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
+import EmptyState from "../components/ui/EmptyState.jsx"
+import AISuggestion from "../components/ui/AISuggestion.jsx"
 
 export default function DealDesk() {
   const [clients] = useLocalStorage("alpha.companies", [])
@@ -61,11 +63,17 @@ export default function DealDesk() {
         </div>
 
         {!hasData && (
-          <div className="glass rounded-2xl p-6 sm:p-8 text-center">
-            <div className="text-3xl">💰</div>
-            <p className="text-sm text-white/70 mt-3 font-bold">Deal Desk is empty — that's correct, no fake money.</p>
-            <p className="text-xs text-white/30 mt-2 max-w-2xl mx-auto">Usefulness: Add clients in Command Hub → they appear here → create a real invoice (Invoice Builder) → track if paid (Invoice Tracker) → manage contracts (Contract Manager) → see real revenue (chart). No fake $318k projected — only when you invoice.</p>
-          </div>
+          <>
+            <EmptyState
+              icon="💰"
+              title="Your Deal Desk"
+              description="Your first dollar is coming. Let's go."
+              tip="Tip: Start by adding your first client."
+              action={() => document.getElementById("invoice-builder")?.scrollIntoView({ behavior: "smooth" })}
+              actionLabel="+ Add Your First Client"
+            />
+            <AISuggestion message="Want me to help you close your first deal? I can draft a proposal for you." action={() => document.getElementById("invoice-builder")?.scrollIntoView({ behavior: "smooth" })} actionLabel="Draft Proposal" />
+          </>
         )}
 
         <RevenueChart mrrData={mrrData} byClient={byClient} projected={projected} />

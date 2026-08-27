@@ -4,6 +4,8 @@ import PerformanceChart from "../components/analytics/PerformanceChart"
 import TopContent from "../components/analytics/TopContent"
 import ClientReport from "../components/analytics/ClientReport"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
+import EmptyState from "../components/ui/EmptyState.jsx"
+import AISuggestion from "../components/ui/AISuggestion.jsx"
 
 export default function Analytics() {
   const [loading, setLoading] = useState(true)
@@ -57,15 +59,22 @@ export default function Analytics() {
         </div>
 
         {!hasData ? (
-          <div className="glass rounded-2xl p-8 text-center animate-fadeIn">
-            <div className="text-3xl">📊</div>
-            <p className="text-sm text-white/70 mt-3 font-bold">Analytics is empty because you have no real data yet — that's correct.</p>
-            <p className="text-xs text-white/30 mt-2 max-w-2xl mx-auto">Usefulness: Analytics shows you what's working. Add a company → create content → add leads → create invoices. Then this page will show real views, engagement, revenue, outreach funnel. No fake $103k, no fake 12.4K views. Only your numbers.</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <a href="/content" className="px-5 py-2.5 rounded-full bg-[#FFD700] text-black text-xs font-black tracking-widest uppercase">Go to Content Studio</a>
-              <a href="/deals" className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-white text-xs font-bold">Go to Deal Desk</a>
+          <>
+            <EmptyState
+              icon="📊"
+              title="Your Analytics Awaits"
+              description="Real numbers will appear when you create. No fake $103k."
+              tip="Add a company, content, or invoice first."
+              action={() => window.location.href = "/content"}
+              actionLabel="Create First Content"
+            />
+            <div className="revenue-insight glass p-6 border border-[#FFD700]/20 text-center rounded-2xl mt-4">
+              <span className="text-4xl">📈</span>
+              <h4 className="text-xl font-bold text-[#FFD700] mt-2">Your next $1,000 is closer than you think.</h4>
+              <p className="text-white/40 mt-1 text-sm">Start by adding your first client or closing your first deal.</p>
             </div>
-          </div>
+            <AISuggestion message="Want me to show you what's working? Add real data and I'll build your insights." action={() => window.location.href = "/deals"} actionLabel="View Deal Desk" />
+          </>
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

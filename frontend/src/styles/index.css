@@ -83,6 +83,14 @@ h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.2; }
 @keyframes pulseGold { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
 .animate-pulseGold { animation: pulseGold 1.5s ease-in-out infinite; }
 
+/* Make it feel ALIVE — empty states & AI suggestions */
+.empty-state { animation: fadeIn 0.6s ease, slideUp 0.6s ease; transition: all 0.3s ease; }
+.empty-state:hover { transform: translateY(-4px); box-shadow: 0 12px 48px rgba(255, 215, 0, 0.08); }
+.ai-suggestion { animation: fadeIn 0.8s ease; border-left: 3px solid #FFD700; transition: all 0.3s ease; }
+.ai-suggestion:hover { background: rgba(255, 215, 0, 0.06); }
+.revenue-insight { animation: pulseGold 2s ease-in-out infinite; }
+@keyframes pulse-gold { 0%,100% { border-color: rgba(255, 215, 0, 0.2); } 50% { border-color: rgba(255, 215, 0, 0.6); } }
+
 /* Bento grid 2026 */
 .bento { display: grid; gap: 16px; }
 @media (min-width: 768px) { .bento { gap: 20px; } }

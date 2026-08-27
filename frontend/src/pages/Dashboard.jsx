@@ -4,6 +4,8 @@ import QuickActions from "../components/dashboard/QuickActions"
 import ActivityFeed from "../components/dashboard/ActivityFeed"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
 import { store } from "../lib/store.js"
+import EmptyState from "../components/ui/EmptyState.jsx"
+import AISuggestion from "../components/ui/AISuggestion.jsx"
 
 export default function Dashboard() {
   const [companies, setCompanies] = useLocalStorage("alpha.companies", [])
@@ -118,14 +120,19 @@ export default function Dashboard() {
           </div>
 
           {companies.length === 0 ? (
-            <div className="glass p-6 sm:p-8 text-center rounded-2xl mt-4 animate-fadeIn">
-              <span className="text-5xl sm:text-6xl">ðŸš€</span>
-              <h3 className="text-xl sm:text-2xl font-bold text-white mt-4 tracking-tight">Your Agency Awaits</h3>
-              <p className="text-white/40 mt-2 text-sm">No companies yet. Add your first â€” it's real and saved.</p>
-              <button onClick={() => setShowAdd(true)} className="mt-6 w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-[#FFD700] to-[#F59E0B] text-black font-black tracking-widest uppercase text-xs hover:scale-105 transition shadow-gold min-h-[48px]">
-                Add Company
-              </button>
-            </div>
+            <>
+              <div className="mt-4">
+                <EmptyState
+                  icon="🚀"
+                  title="Your Agency Awaits"
+                  description="Your first company is waiting. Name it."
+                  tip="Tip: Start with your own company first."
+                  action={() => setShowAdd(true)}
+                  actionLabel="+ Add Your First Company"
+                />
+              </div>
+              <AISuggestion message="Want me to help you find your first company? I can search for businesses in your niche." action={() => setShowAdd(true)} actionLabel="Find Companies" />
+            </>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mt-4">
               {companies.map((c) => (

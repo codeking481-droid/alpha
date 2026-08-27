@@ -4,6 +4,8 @@ import MessageDraft from "../components/outreach/MessageDraft"
 import CampaignManager from "../components/outreach/CampaignManager"
 import ReplyTracker from "../components/outreach/ReplyTracker"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
+import EmptyState from "../components/ui/EmptyState.jsx"
+import AISuggestion from "../components/ui/AISuggestion.jsx"
 
 export default function OutreachEngine() {
   const [addedLeads, setAddedLeads] = useState([])
@@ -73,10 +75,17 @@ export default function OutreachEngine() {
         </div>
 
         {stats.leads === 0 && stats.campaigns === 0 && (
-          <div className="glass rounded-2xl p-6 text-center">
-            <p className="text-sm text-white/60 font-bold">Outreach is empty because you haven't added real leads yet — that's correct.</p>
-            <p className="text-xs text-white/30 mt-1">Usefulness: Lead Finder finds people → Campaign groups them → Message Draft writes email → Reply Tracker logs answers → you book meetings. Start with Lead Finder below.</p>
-          </div>
+          <>
+            <EmptyState
+              icon="📧"
+              title="Your Outreach Engine"
+              description="Find your first lead. I'll find the right people."
+              tip="Tip: Start by searching for companies in your niche."
+              action={() => document.querySelector('[placeholder=\"Search your leads...\"]')?.focus()}
+              actionLabel="+ Find Your First Lead"
+            />
+            <AISuggestion message="Want me to find leads for you? I can search for companies that need your services." action={() => document.querySelector('[placeholder=\"Search your leads...\"]')?.focus()} actionLabel="Find Leads" />
+          </>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
