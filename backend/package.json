@@ -1,6 +1,6 @@
 {
   "name": "alphatekx-agency-backend",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,9 +8,9 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.5.0"
+    "hono": "^4.6.0"
   },
   "devDependencies": {
-    "wrangler": "^3.60.0"
+    "wrangler": "^4.0.0"
   }
 }
