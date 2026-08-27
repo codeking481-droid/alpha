@@ -37,7 +37,10 @@ export default function ActivityFeed({ items }) {
         ))}
 
         {items.length === 0 && (
-          <p className="text-sm text-white/30 text-center py-8">No activity yet. Start by adding a company or creating content.</p>
+          <div className="text-center py-8">
+            <p className="text-sm text-white/30">No activity yet. Start working and it will appear here.</p>
+            <p className="text-xs text-white/20 mt-1">Your recent actions will be tracked here.</p>
+          </div>
         )}
       </div>
     </div>
