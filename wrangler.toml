@@ -1,9 +1,10 @@
-# Fallback for when Git Integration Root path is empty (should be backend)
+﻿# Fallback for when Git Integration Root path is empty (should be backend)
 # Cloudflare will use backend/wrangler.toml when Root = backend, but this ensures API works even if Root is wrong
-name = "alphatekx-agency-backend"
+name = "alpha-agency-api"
 main = "backend/src/index.js"
 compatibility_date = "2024-12-18"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENV = "production"
+

@@ -1,4 +1,4 @@
-﻿name = "alphatekx-agency-backend"
+﻿name = "alpha-agency-api"
 main = "src/index.js"
 compatibility_date = "2024-12-18"
 compatibility_flags = ["nodejs_compat"]
@@ -29,4 +29,5 @@ ENV = "production"
 
 # [observability]
 # enabled = true
+
 
