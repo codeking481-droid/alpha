@@ -4,6 +4,7 @@ import { sbSelect, sbInsert, sbUpdate, sbDelete, sbGetOne, getSupabase } from '.
 import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
 import { verifyAccessCode, getUserFromRequest } from './lib/auth.js'
 import { findLeads } from './lib/leadFinder.js'
+import { sendEmailResend } from './lib/email.js'
 
 const app = new Hono()
 app.use('*', cors())
@@ -120,9 +121,10 @@ app.post('/api/leads/find', async (c) => {
     const { city, niche, limit = 20, query, industry } = await c.req.json().catch(() => ({}))
     const cityVal = city || query
     const nicheVal = niche || industry
-    if (!cityVal || !nicheVal) return c.json({ error: 'City and niche are required — e.g. { city: "Port Harcourt", niche: "hotel" }' }, 400)
-    const leads = await findLeads(cityVal, nicheVal, Math.min(limit, 50))
-    return c.json({ success: true, leads, count: leads.length, city: cityVal, niche: nicheVal, source: 'OpenStreetMap (free, no key)' })
+    if (!cityVal || !nicheVal) return c.json({ error: 'City and niche are required — e.g. { city: "Port Harcourt", niche: "hotel" } or { city: "Lagos", niche: "CEO" }' }, 400)
+    const leads = await findLeads(c.env, cityVal, nicheVal, Math.min(limit, 50))
+    const source = leads[0]?.source || (c.env.APOLLO_API_KEY ? 'Hybrid (Apollo + Overpass)' : 'OpenStreetMap (free)')
+    return c.json({ success: true, leads, count: leads.length, city: cityVal, niche: nicheVal, source })
   } catch (e) {
     return c.json({ error: e.message }, 500)
   }
@@ -150,7 +152,31 @@ app.post('/api/outreach/campaigns', async (c) => {
 app.get('/api/messages', async (c) => c.json(await list(c.env, 'messages')))
 app.post('/api/messages', async (c) => {
   const body = await c.req.json().catch(() => ({}))
+  // If it's an email send (has to/subject), try Resend
+  if (body.to && body.subject) {
+    try {
+      const sent = await sendEmailResend(c.env, { to: body.to, subject: body.subject, html: body.html, text: body.content || body.text, from: body.from })
+      const saved = await create(c.env, 'messages', { ...body, resend_id: sent.id || sent.data?.id, sent_at: new Date().toISOString(), replied: false })
+      return c.json({ ...saved, resend: sent, note: 'Real email sent via Resend' }, 201)
+    } catch (e) {
+      // Save even if send fails, with error
+      const saved = await create(c.env, 'messages', { ...body, error: e.message, sent_at: new Date().toISOString() })
+      return c.json({ ...saved, error: e.message, note: 'Saved but Resend failed — check RESEND_API_KEY' }, 201)
+    }
+  }
   return c.json(await create(c.env, 'messages', body), 201)
+})
+// Explicit send endpoint for outreach
+app.post('/api/outreach/send', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  if (!body.to || !body.subject) return c.json({ error: 'to and subject required' }, 400)
+  try {
+    const sent = await sendEmailResend(c.env, { to: body.to, subject: body.subject, html: body.html, text: body.text || body.content, from: body.from })
+    const saved = await create(c.env, 'messages', { ...body, resend_id: sent.id, sent_at: new Date().toISOString() })
+    return c.json({ success: true, sent, saved })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
 })
 app.get('/api/replies', async (c) => c.json(await list(c.env, 'replies')))
 app.get('/api/outreach/replies', async (c) => c.json(await list(c.env, 'replies')))
