@@ -7,6 +7,8 @@ import { useLocalStorage } from "../hooks/useLocalStorage.js"
 
 export default function ContentStudio() {
   const [projects, setProjects] = useLocalStorage("alpha.content", [])
+  const [companies] = useLocalStorage("alpha.companies", [])
+  const realCompany = companies[0]?.name || "Your Company"
   const [filter, setFilter] = useState("all")
   const [aiTopic, setAiTopic] = useState("")
   const [aiFormat, setAiFormat] = useState("post")
@@ -20,10 +22,9 @@ export default function ContentStudio() {
   }
 
   const handleGenerated = (text) => {
-    // auto-create a draft card from AI output
     const title = text.split("\n")[0].slice(0, 48).replace(/^#+\s*/, "") || "AI Draft"
     setProjects((prev) => [
-      { id: Date.now(), title: title, format: aiFormat, company: "Genesis", status: "draft", words: text.split(/\s+/).length, lastEdited: "now", preview: text.slice(0, 120) },
+      { id: Date.now(), title: title, format: aiFormat, company: realCompany, status: "draft", words: text.split(/\s+/).length, lastEdited: "now", preview: text.slice(0, 120) },
       ...prev,
     ])
   }
@@ -46,7 +47,7 @@ export default function ContentStudio() {
           </div>
         </div>
         <button
-          onClick={() => setProjects([{ id: Date.now(), title: "Untitled Draft", format: "post", company: "Genesis", status: "draft", words: 0, lastEdited: "now", preview: "Start writing..." }, ...projects])}
+          onClick={() => setProjects([{ id: Date.now(), title: "Untitled Draft", format: "post", company: realCompany, status: "draft", words: 0, lastEdited: "now", preview: "Real draft — edit and save" }, ...projects])}
           className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FFD700] hover:bg-[#ffdf33] text-[#0B0215] text-xs font-black tracking-widest uppercase transition shadow-lg shadow-[#FFD700]/10"
         >
           + New Content
@@ -117,7 +118,10 @@ export default function ContentStudio() {
           ))}
         </div>
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-white/30 text-sm">No content matches. Try another filter or create new content.</div>
+          <div className="text-center py-10 bg-[#0B0215] border border-white/5 rounded-xl">
+            <p className="text-sm text-white/50 font-bold">{projects.length === 0 ? "No real content yet — that's correct" : "No matches"}</p>
+            <p className="text-xs text-white/30 mt-1 max-w-md mx-auto">{projects.length === 0 ? "Usefulness: Create posts/articles/scripts here. Use AI Writer above or + New Content. Real content you create appears here and in Calendar." : "Try another filter or search"}</p>
+          </div>
         )}
 
         {/* Calendar */}
