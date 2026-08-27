@@ -31,26 +31,36 @@ export default function Dashboard() {
     if (id === "analytics") window.location.href = "/analytics"
   }
 
-  const addCompany = () => {
+  const addCompany = async () => {
     if (!form.name.trim()) return
-    const company = {
-      id: Date.now(),
-      name: form.name.trim(),
-      industry: form.industry.trim() || "â€”",
-      status: form.status,
-      projects: 0,
-      revenue: "$0",
-      lastActivity: "now",
-    }
-    const next = [company, ...companies]
-    setCompanies(next)
-    store.saveCompanies(next)
+    try {
+      const created = await store.createCompany({
+        name: form.name.trim(),
+        industry: form.industry.trim() || "",
+        status: form.status,
+        projects_count: 0,
+        revenue: 0,
+      })
+      const company = {
+        id: created.id || Date.now(),
+        name: created.name || form.name.trim(),
+        industry: created.industry || form.industry.trim() || "—",
+        status: created.status || form.status,
+        projects: 0,
+        revenue: "$0",
+        lastActivity: "now",
+      }
+      const next = [company, ...companies]
+      setCompanies(next)
     const act = { id: Date.now(), user: "You", action: `Added ${company.name}`, time: "now", company: company.name, type: "company", meta: `Status: ${company.status}` }
     const nextAct = [act, ...activities].slice(0, 20)
     setActivities(nextAct)
     try { localStorage.setItem("alpha.activities", JSON.stringify(nextAct)) } catch {}
-    setForm({ name: "", industry: "", status: "active" })
-    setShowAdd(false)
+      setForm({ name: "", industry: "", status: "active" })
+      setShowAdd(false)
+    } catch (e) {
+      alert("Failed to create company: " + e.message)
+    }
   }
 
   const stats = {

@@ -1,7 +1,6 @@
-// Real data layer — localStorage first, API (D1) when ready
-// All badges use this. When Workers D1 is live, swap fetch to /api/*
-
-import { API_URL } from "./api.js"
+// Real store — API first, localStorage fallback (offline)
+// When SUPABASE is live, API is Supabase. When not, API is in-memory Workers. Both persist.
+import { api, API_URL } from "./api.js"
 
 const LS_KEYS = {
   companies: "alpha.companies",
@@ -11,42 +10,80 @@ const LS_KEYS = {
   contracts: "alpha.contracts",
 }
 
+function lsGet(key) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : [] } catch { return [] }
+}
+function lsSet(key, v) {
+  try { localStorage.setItem(key, JSON.stringify(v)) } catch {}
+}
+
 export const store = {
-  // Companies — real CRUD
+  // Companies — real API, fallback to localStorage
   async getCompanies() {
     try {
-      const r = await fetch(`${API_URL}/api/deals/clients`, { signal: AbortSignal.timeout(800) })
-      if (r.ok) return await r.json()
+      const data = await api.companies.list()
+      if (Array.isArray(data)) { lsSet(LS_KEYS.companies, data); return data }
     } catch {}
+    // Fallback: try legacy /api/deals/clients then localStorage
     try {
-      const raw = localStorage.getItem(LS_KEYS.companies)
-      return raw ? JSON.parse(raw) : []
-    } catch { return [] }
+      const data = await api.get("/api/companies")
+      if (Array.isArray(data)) return data
+    } catch {}
+    return lsGet(LS_KEYS.companies)
   },
-  saveCompanies(list) {
-    localStorage.setItem(LS_KEYS.companies, JSON.stringify(list))
+  async createCompany(data) {
+    try {
+      const created = await api.companies.create(data)
+      // keep localStorage in sync
+      const list = lsGet(LS_KEYS.companies)
+      lsSet(LS_KEYS.companies, [created, ...list])
+      return created
+    } catch {
+      const list = lsGet(LS_KEYS.companies)
+      const item = { id: Date.now(), ...data }
+      lsSet(LS_KEYS.companies, [item, ...list])
+      return item
+    }
   },
-  // Content
+  saveCompanies(list) { lsSet(LS_KEYS.companies, list) },
+
+  // Content — real API
   async getContent() {
     try {
-      const raw = localStorage.getItem(LS_KEYS.content)
-      return raw ? JSON.parse(raw) : []
-    } catch { return [] }
+      const data = await api.content.list()
+      if (Array.isArray(data)) { lsSet(LS_KEYS.content, data); return data }
+    } catch {}
+    return lsGet(LS_KEYS.content)
   },
-  saveContent(list) { localStorage.setItem(LS_KEYS.content, JSON.stringify(list)) },
-  // Campaigns
-  async getCampaigns() {
-    try { const raw = localStorage.getItem(LS_KEYS.campaigns); return raw ? JSON.parse(raw) : [] } catch { return [] }
+  saveContent(list) { lsSet(LS_KEYS.content, list) },
+  async generateContent(payload) {
+    try { return await api.content.generate(payload) } catch (e) { throw e }
   },
-  saveCampaigns(list) { localStorage.setItem(LS_KEYS.campaigns, JSON.stringify(list)) },
+
+  // Campaigns (leads)
+  async getCampaigns() { return lsGet(LS_KEYS.campaigns) },
+  saveCampaigns(list) { lsSet(LS_KEYS.campaigns, list) },
+
   // Invoices
   async getInvoices() {
-    try { const raw = localStorage.getItem(LS_KEYS.invoices); return raw ? JSON.parse(raw) : [] } catch { return [] }
+    try {
+      const data = await api.invoices.list()
+      if (Array.isArray(data)) { lsSet(LS_KEYS.invoices, data); return data }
+    } catch {}
+    return lsGet(LS_KEYS.invoices)
   },
-  saveInvoices(list) { localStorage.setItem(LS_KEYS.invoices, JSON.stringify(list)) },
+  saveInvoices(list) { lsSet(LS_KEYS.invoices, list) },
+
   // Contracts
   async getContracts() {
-    try { const raw = localStorage.getItem(LS_KEYS.contracts); return raw ? JSON.parse(raw) : [] } catch { return [] }
+    try {
+      const data = await api.contracts.list()
+      if (Array.isArray(data)) { lsSet(LS_KEYS.contracts, data); return data }
+    } catch {}
+    return lsGet(LS_KEYS.contracts)
   },
-  saveContracts(list) { localStorage.setItem(LS_KEYS.contracts, JSON.stringify(list)) },
+  saveContracts(list) { lsSet(LS_KEYS.contracts, list) },
+
+  // Generic
+  api, API_URL,
 }

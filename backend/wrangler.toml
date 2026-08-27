@@ -6,21 +6,26 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ENV = "production"
 
-# D1 Database - create with: npx wrangler d1 create alphatekx-db
+# Supabase — create project at https://supabase.com then set:
+# npx wrangler secret put SUPABASE_URL
+# npx wrangler secret put SUPABASE_ANON_KEY
+# Optional service key for writes: SUPABASE_SERVICE_KEY
+# See supabase.sql for tables (backend/supabase.sql)
+
+# Groq — https://console.groq.com/keys
+# npx wrangler secret put GROQ_API_KEY
+# npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
+
+# D1 (alternative to Supabase) — npx wrangler d1 create alphatekx-db
 # [[d1_databases]]
 # binding = "DB"
 # database_name = "alphatekx-db"
 # database_id = "REPLACE_AFTER_CREATE"
 
-# R2 Storage - create with: npx wrangler r2 bucket create alphatekx-storage
+# R2 — npx wrangler r2 bucket create alphatekx-storage
 # [[r2_buckets]]
 # binding = "STORAGE"
 # bucket_name = "alphatekx-storage"
 
-# AI Binding for Groq via Workers AI (Workers AI) - optional
-# [ai]
-# binding = "AI"
-
-# Uncomment to set Groq key via secrets: npx wrangler secret put GROQ_API_KEY
 # [observability]
 # enabled = true
