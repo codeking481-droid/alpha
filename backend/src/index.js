@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+﻿import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { sbSelect, sbInsert, sbUpdate, sbDelete, sbGetOne, getSupabase } from './lib/supabase.js'
 import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
@@ -15,11 +15,11 @@ app.use('*', async (c, next) => {
   }
 })
 
-// In-memory fallback when Supabase not configured — all real, empty until you add
+// In-memory fallback when Supabase not configured â€” all real, empty until you add
 const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
-// Helpers — use Supabase if configured, else memory
+// Helpers â€” use Supabase if configured, else memory
 async function list(env, table) {
   if (hasSupabase(env)) return (await sbSelect(env, table, 'order=created_at.desc')) || []
   return mem[table] || []
@@ -48,12 +48,13 @@ async function deleteOne(env, table, id) {
   return mem[table].length < before
 }
 
-// Health — both / and /api/health (for prompt's test)
-app.get('/', (c) => c.json({ status: 'Alpha Agency API — Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only — Root path must be backend' }))
+// Health â€” both / and /api/health (for prompt's test)
+app.get('/', (c) => c.json({ status: 'Alpha Agency API â€” Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only â€” Root path must be backend' }))
+app.get('/api/debug/env', (c) => c.json({ hasSupabaseUrl: !!c.env.SUPABASE_URL, hasAnon: !!c.env.SUPABASE_ANON_KEY, hasService: !!c.env.SUPABASE_SERVICE_KEY, hasGroq: !!c.env.GROQ_API_KEY, envKeys: Object.keys(c.env || {}), note: 'debug — no values leaked' }))
 app.get('/api/health', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live', timestamp: new Date().toISOString() }))
 app.get('/api/healthz', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live' }))
 
-// ── Companies (also /api/companies)
+// â”€â”€ Companies (also /api/companies)
 app.get('/api/companies', async (c) => c.json(await list(c.env, 'companies')))
 app.post('/api/companies', async (c) => {
   const body = await c.req.json().catch(() => ({}))
@@ -74,7 +75,7 @@ app.delete('/api/companies/:id', async (c) => {
   return ok ? c.json({ ok: true }) : c.json({ error: 'not found' }, 404)
 })
 
-// ── Content
+// â”€â”€ Content
 app.get('/api/content', async (c) => c.json(await list(c.env, 'content')))
 app.post('/api/content', async (c) => {
   const body = await c.req.json().catch(() => ({}))
@@ -109,7 +110,7 @@ app.post('/api/ai/generate', async (c) => {
 })
 app.get('/api/content/projects', async (c) => c.json(await list(c.env, 'content')))
 
-// ── Outreach / Leads
+// â”€â”€ Outreach / Leads
 app.get('/api/leads', async (c) => {
   const all = await list(c.env, 'leads')
   const q = c.req.query('q') || ''
@@ -121,7 +122,7 @@ app.post('/api/leads/find', async (c) => {
     const { city, niche, limit = 20, query, industry } = await c.req.json().catch(() => ({}))
     const cityVal = city || query
     const nicheVal = niche || industry
-    if (!cityVal || !nicheVal) return c.json({ error: 'City and niche are required — e.g. { city: "Port Harcourt", niche: "hotel" } or { city: "Lagos", niche: "CEO" }' }, 400)
+    if (!cityVal || !nicheVal) return c.json({ error: 'City and niche are required â€” e.g. { city: "Port Harcourt", niche: "hotel" } or { city: "Lagos", niche: "CEO" }' }, 400)
     const leads = await findLeads(c.env, cityVal, nicheVal, Math.min(limit, 50))
     const source = leads[0]?.source || (c.env.APOLLO_API_KEY ? 'Hybrid (Apollo + Overpass)' : 'OpenStreetMap (free)')
     return c.json({ success: true, leads, count: leads.length, city: cityVal, niche: nicheVal, source })
@@ -161,7 +162,7 @@ app.post('/api/messages', async (c) => {
     } catch (e) {
       // Save even if send fails, with error
       const saved = await create(c.env, 'messages', { ...body, error: e.message, sent_at: new Date().toISOString() })
-      return c.json({ ...saved, error: e.message, note: 'Saved but Resend failed — check RESEND_API_KEY' }, 201)
+      return c.json({ ...saved, error: e.message, note: 'Saved but Resend failed â€” check RESEND_API_KEY' }, 201)
     }
   }
   return c.json(await create(c.env, 'messages', body), 201)
@@ -186,20 +187,20 @@ app.post('/api/outreach/replies', async (c) => {
 })
 app.get('/api/outreach/analytics', async (c) => c.json({ leadsFound: (await list(c.env, 'leads')).length, sent: (await list(c.env, 'messages')).length, replyRate: 0, meetings: 0, openRate: 0, note: 'Real' }))
 
-// ── Analytics
+// â”€â”€ Analytics
 app.get('/api/analytics/overview', async (c) => {
   const companies = await list(c.env, 'companies')
   const content = await list(c.env, 'content')
   const invoices = await list(c.env, 'invoices')
   return c.json({
     views: content.length * 120,
-    viewsChange: '—',
-    engagement: '—',
-    engagementChange: '—',
+    viewsChange: 'â€”',
+    engagement: 'â€”',
+    engagementChange: 'â€”',
     revenue: `$${invoices.reduce((s, i) => s + (Number(i.amount) || 0), 0)}`,
-    revenueChange: '—',
-    growth: '—',
-    growthChange: '—',
+    revenueChange: 'â€”',
+    growth: 'â€”',
+    growthChange: 'â€”',
     viewsOverTime: content.slice(0, 6).map((_, i) => ({ label: `W${i + 1}`, value: (i + 1) * 10 })),
     platform: [],
     outreach: [],
@@ -219,7 +220,7 @@ app.post('/api/analytics/report', async (c) => {
   return c.json({ status: 'generated', client, range, format, note: 'Real report' })
 })
 
-// ── Deal Desk / Clients / Invoices / Contracts
+// â”€â”€ Deal Desk / Clients / Invoices / Contracts
 app.get('/api/clients', async (c) => c.json(await list(c.env, 'clients')))
 app.post('/api/clients', async (c) => {
   const body = await c.req.json().catch(() => ({}))
@@ -263,7 +264,7 @@ app.post('/api/deals/invoices/:id/send', async (c) => {
 })
 app.get('/api/deals/revenue', async (c) => {
   const invoices = await list(c.env, 'invoices')
-  return c.json({ totalRevenue: `$${invoices.reduce((s,i)=>s+(Number(i.amount)||0),0)}`, mrr: '$0', churn: '—', avgDeal: '—', mrrTrend: [], byClient: [], projected: { total: '$0', period: 'No invoices yet' } })
+  return c.json({ totalRevenue: `$${invoices.reduce((s,i)=>s+(Number(i.amount)||0),0)}`, mrr: '$0', churn: 'â€”', avgDeal: 'â€”', mrrTrend: [], byClient: [], projected: { total: '$0', period: 'No invoices yet' } })
 })
 app.get('/api/deals/contracts', async (c) => c.json(await list(c.env, 'contracts')))
 app.post('/api/deals/contracts', async (c) => {
@@ -271,7 +272,7 @@ app.post('/api/deals/contracts', async (c) => {
   return c.json(await create(c.env, 'contracts', body), 201)
 })
 
-// ── Auth / Access Codes
+// â”€â”€ Auth / Access Codes
 app.post('/api/auth/login', async (c) => {
   const { email, password } = await c.req.json().catch(()=>({}))
   if (!email) return c.json({ error: 'email required' }, 400)
@@ -289,7 +290,7 @@ app.get('/api/auth/me', (c) => {
 })
 app.post('/api/auth/logout', (c) => c.json({ ok: true }))
 
-// ── Outcomes
+// â”€â”€ Outcomes
 app.get('/api/outcomes/revenue', async (c) => {
   const invoices = await list(c.env, 'invoices')
   return c.json({ revenue: invoices.reduce((s,i)=>s+(Number(i.amount)||0),0), invoices, note: 'Real revenue attribution' })
@@ -301,7 +302,7 @@ app.get('/api/outcomes/views', async (c) => {
 app.get('/api/outcomes/roi', async (c) => {
   const invoices = await list(c.env, 'invoices')
   const revenue = invoices.reduce((s,i)=>s+(Number(i.amount)||0),0)
-  return c.json({ revenue, cost: 0, roi: revenue ? '—' : '0', note: 'Real ROI' })
+  return c.json({ revenue, cost: 0, roi: revenue ? 'â€”' : '0', note: 'Real ROI' })
 })
 app.post('/api/outcomes/report', async (c) => {
   const { client = 'Your Client', range = 'Last 30 days' } = await c.req.json().catch(()=>({}))
@@ -309,3 +310,4 @@ app.post('/api/outcomes/report', async (c) => {
 })
 
 export default app
+
