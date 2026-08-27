@@ -46,8 +46,10 @@ async function deleteOne(env, table, id) {
   return mem[table].length < before
 }
 
-// Health
-app.get('/', (c) => c.json({ status: 'Alpha Agency API — Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only' }))
+// Health — both / and /api/health (for prompt's test)
+app.get('/', (c) => c.json({ status: 'Alpha Agency API — Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only — Root path must be backend' }))
+app.get('/api/health', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live', timestamp: new Date().toISOString() }))
+app.get('/api/healthz', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live' }))
 
 // ── Companies (also /api/companies)
 app.get('/api/companies', async (c) => c.json(await list(c.env, 'companies')))
