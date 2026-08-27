@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { sbSelect, sbInsert, sbUpdate, sbDelete, sbGetOne, getSupabase } from './lib/supabase.js'
 import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
 import { verifyAccessCode, getUserFromRequest } from './lib/auth.js'
+import { findLeads } from './lib/leadFinder.js'
 
 const app = new Hono()
 app.use('*', cors())
@@ -115,13 +116,16 @@ app.get('/api/leads', async (c) => {
   return c.json(filtered)
 })
 app.post('/api/leads/find', async (c) => {
-  const { query, industry, n = 3 } = await c.req.json().catch(() => ({}))
-  // Mock find but via Groq if key set — returns real-ish leads
-  const prompt = `Find ${n} leads for query "${query || industry || 'SaaS'}" — return JSON array with name, email, company`
-  const { text } = await groqGenerate(c.env, { prompt })
-  // Fallback: create n empty leads for demo
-  const leads = Array.from({ length: n }, (_, i) => ({ id: crypto.randomUUID(), name: `Lead ${i + 1}`, email: `lead${i + 1}@example.com`, status: 'new', score: 80 }))
-  return c.json({ leads, note: text.slice(0, 120) })
+  try {
+    const { city, niche, limit = 20, query, industry } = await c.req.json().catch(() => ({}))
+    const cityVal = city || query
+    const nicheVal = niche || industry
+    if (!cityVal || !nicheVal) return c.json({ error: 'City and niche are required — e.g. { city: "Port Harcourt", niche: "hotel" }' }, 400)
+    const leads = await findLeads(cityVal, nicheVal, Math.min(limit, 50))
+    return c.json({ success: true, leads, count: leads.length, city: cityVal, niche: nicheVal, source: 'OpenStreetMap (free, no key)' })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
 })
 app.get('/api/outreach/leads', async (c) => {
   const all = await list(c.env, 'leads')
