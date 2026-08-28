@@ -10,9 +10,9 @@ export const Platform = () => {
       </div>
       <Features />
       <div className="max-w-[1120px] mx-auto px-6 py-8">
-        <div className="card" style={{background:'#0A0A0A', border:'1px solid #0A0A0A'}}>
-          <h3 style={{color:'#FFFFFB', fontSize:'18px', fontWeight:600}}>The OS is invisible. The results are not.</h3>
-          <p className="mt-2" style={{color:'#9CA3AF', fontSize:'14px'}}>Ad Engine • Real reach 700/215/54/3k • Truth clause — no view guarantees, real delivery.</p>
+        <div className="card" style={{background:'#FFFFFF', border:'1px solid #EDEDED'}}>
+          <h3 style={{color:'#0A0A0A', fontSize:'18px', fontWeight:700}}>The OS is invisible. The results are not.</h3>
+          <p className="mt-2" style={{color:'#6B7280', fontSize:'14px'}}>Ad Engine • Real reach 700/215/54/3k • Truth clause — no view guarantees, real delivery.</p>
         </div>
       </div>
     </div>

@@ -13,23 +13,23 @@ export default function Onboarding() {
   const progress = Math.round((steps.filter(s=>s.done).length / steps.length)*100)
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
-      <div className="gold-card rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center animate-slideUp">
+      <div className="card rounded-2xl p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center animate-slideUp" style={{background:'#FFFFFF', border:'1px solid #EDEDED'}}>
         <div className="flex-1">
-          <div className="text-sm font-black tracking-widest uppercase text-[#FFD700]">Welcome to Alpha — 4 steps to real OS</div>
-          <div className="mt-2 h-2 bg-[#0B0215] rounded-full overflow-hidden border border-white/10">
-            <div className="h-full bg-gradient-to-r from-[#FFD700] to-[#F59E0B] rounded-full transition-all" style={{ width: `${progress}%` }} />
+          <div className="text-sm font-bold tracking-widest uppercase" style={{color:'#5E17EB'}}>Welcome to Alpha — 4 steps to real OS</div>
+          <div className="mt-2 h-2 rounded-full overflow-hidden" style={{background:'#F3F4F6', border:'1px solid #EDEDED'}}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background:'#5E17EB' }} />
           </div>
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
             {steps.map((s) => (
               <div key={s.label} className="flex items-center gap-2 text-sm">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${s.done ? "bg-emerald-500 text-white" : "bg-white/10 text-white/40 border border-white/10"}`}>{s.done ? "✓" : "○"}</span>
-                <span className={s.done ? "text-white line-through" : "text-white"}>{s.label}</span>
-                <span className="text-white/30 text-xs hidden sm:inline">— {s.desc}</span>
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={s.done ? {background:'#10B981', color:'#FFFFFF'} : {background:'#F9FAFB', color:'#9CA3AF', border:'1px solid #EDEDED'}}>{s.done ? "✓" : "○"}</span>
+                <span style={s.done ? {color:'#9CA3AF', textDecoration:'line-through'} : {color:'#0A0A0A'}}>{s.label}</span>
+                <span className="text-xs hidden sm:inline" style={{color:'#9CA3AF'}}>— {s.desc}</span>
               </div>
             ))}
           </div>
         </div>
-        <button onClick={() => setDismissed(true)} className="px-4 py-2 rounded-full bg-white/10 border border-white/10 text-white text-xs font-bold hover:bg-white/20 transition shrink-0">Dismiss</button>
+        <button onClick={() => setDismissed(true)} className="px-4 py-2 rounded-full text-xs font-bold transition shrink-0" style={{background:'#F9FAFB', border:'1px solid #EDEDED', color:'#6B7280'}}>Dismiss</button>
       </div>
     </div>
   )

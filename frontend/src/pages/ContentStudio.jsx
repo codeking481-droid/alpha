@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import ContentCard from "../components/content/ContentCard"
 import AIWriter from "../components/content/AIWriter"
 import TemplateSelector, { templates } from "../components/content/TemplateSelector"
@@ -38,18 +38,18 @@ export default function ContentStudio() {
   })
 
   return (
-    <div className="min-h-screen bg-[#0B0215] text-white selection:bg-[#FFD700] selection:text-[#0B0215]">
+    <div className="min-h-screen bg-[#FFFCF8] text-[#0A0A0A] selection:bg-[#FFD700] selection:text-[#0B0215]">
       {/* Sub Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">âœï¸</div>
+          <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215] font-black">✍️</div>
           <div>
             <h1 className="font-black tracking-tight leading-none">CONTENT STUDIO</h1>
-            <p className="text-xs text-white/50 tracking-widest uppercase font-semibold">Create posts, articles, scripts & captions</p>
+            <p className="text-xs text-[#6B7280] tracking-widest uppercase font-semibold">Create posts, articles, scripts & captions</p>
           </div>
         </div>
         <button
-          onClick={() => setProjects([{ id: Date.now(), title: "Untitled Draft", format: "post", company: realCompany, status: "draft", words: 0, lastEdited: "now", preview: "Real draft — edit and save" }, ...projects])}
+          onClick={() => setProjects([{ id: Date.now(), title: "Untitled Draft", format: "post", company: realCompany, status: "draft", words: 0, lastEdited: "now", preview: "Real draft � edit and save" }, ...projects])}
           className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FFD700] hover:bg-[#ffdf33] text-[#0B0215] text-xs font-black tracking-widest uppercase transition shadow-lg shadow-[#FFD700]/10"
         >
           + New Content
@@ -59,20 +59,20 @@ export default function ContentStudio() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-5">
-            <div className="text-xs tracking-widest uppercase font-bold text-white/40">Total Projects</div>
+          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+            <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Total Projects</div>
             <div className="text-3xl font-black mt-2">{projects.length}</div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-5">
-            <div className="text-xs tracking-widest uppercase font-bold text-white/40">Drafts</div>
-            <div className="text-3xl font-black mt-2 text-white/80">{projects.filter(p=>p.status==="draft").length}</div>
+          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+            <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Drafts</div>
+            <div className="text-3xl font-black mt-2 text-[#0A0A0A]/80">{projects.filter(p=>p.status==="draft").length}</div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-5">
-            <div className="text-xs tracking-widest uppercase font-bold text-white/40">In Review</div>
+          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+            <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">In Review</div>
             <div className="text-3xl font-black mt-2 text-amber-400">{projects.filter(p=>p.status==="review").length}</div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-white/10 rounded-2xl p-5">
-            <div className="text-xs tracking-widest uppercase font-bold text-white/40">Published</div>
+          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+            <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Published</div>
             <div className="text-3xl font-black mt-2 text-emerald-400">{projects.filter(p=>p.status==="published").length}</div>
           </div>
         </div>
@@ -86,16 +86,16 @@ export default function ContentStudio() {
         </div>
 
         {/* Library Header */}
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-wrap items-center gap-3">
-          <h3 className="text-sm font-bold tracking-widest uppercase text-white/80">Content Library</h3>
-          <span className="text-xs text-white/30">{filtered.length} items</span>
+        <div className="bg-white/[0.04] backdrop-blur-xl border border-[#EDEDED] rounded-2xl p-4 flex flex-wrap items-center gap-3">
+          <h3 className="text-sm font-bold tracking-widest uppercase text-[#0A0A0A]/80">Content Library</h3>
+          <span className="text-xs text-[#9CA3AF]">{filtered.length} items</span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title or company..."
-            className="ml-auto min-w-[200px] flex-1 sm:flex-none bg-[#0B0215] border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#FFD700]/40"
+            className="ml-auto min-w-[200px] flex-1 sm:flex-none bg-[#FFFCF8] border border-[#EDEDED] rounded-full px-4 py-2 text-sm text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#FFD700]/40"
           />
-          <div className="flex items-center gap-1 bg-[#0B0215] border border-white/10 rounded-full p-1">
+          <div className="flex items-center gap-1 bg-[#FFFCF8] border border-[#EDEDED] rounded-full p-1">
             {[
               ["all", "All"],
               ["draft", "Draft"],
@@ -105,7 +105,7 @@ export default function ContentStudio() {
               <button
                 key={id}
                 onClick={() => setFilter(id)}
-                className={`px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase transition ${filter === id ? "bg-[#FFD700] text-[#0B0215]" : "text-white/50 hover:text-white"}`}
+                className={`px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase transition ${filter === id ? "bg-[#FFD700] text-[#0B0215]" : "text-[#6B7280] hover:text-[#0A0A0A]"}`}
               >
                 {label}
               </button>
@@ -122,7 +122,7 @@ export default function ContentStudio() {
         {projects.length === 0 ? (
           <>
             <EmptyState
-              icon="✍️"
+              icon="??"
               title="Your Content Studio"
               description="Write your first post. I'll help you."
               tip="Tip: Start with a LinkedIn post about your agency."
@@ -132,9 +132,9 @@ export default function ContentStudio() {
             <AISuggestion message="Want me to draft your first post? Just tell me what you want to say." action={() => document.getElementById("ai-writer")?.scrollIntoView({ behavior: "smooth" })} actionLabel="Generate Draft" />
           </>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-10 bg-[#0B0215] border border-white/5 rounded-xl">
-            <p className="text-sm text-white/50 font-bold">No matches</p>
-            <p className="text-xs text-white/30 mt-1">Try another filter or search</p>
+          <div className="text-center py-10 bg-[#FFFCF8] border border-[#EDEDED] rounded-xl">
+            <p className="text-sm text-[#6B7280] font-bold">No matches</p>
+            <p className="text-xs text-[#9CA3AF] mt-1">Try another filter or search</p>
           </div>
         ) : null}
 
@@ -142,8 +142,8 @@ export default function ContentStudio() {
         <ContentCalendar />
       </main>
 
-      <footer className="text-center py-10 text-xs text-white/20 tracking-widest uppercase font-semibold">
-        Content Studio â€¢ Fast & easy to use â€¢ Where content gets created ðŸ‡³ðŸ‡¬ðŸ”¥ðŸš€
+      <footer className="text-center py-10 text-xs text-[#9CA3AF] tracking-widest uppercase font-semibold">
+        Content Studio • Fast & easy to use • Where content gets created 🇳🇬🔥🚀
       </footer>
     </div>
   )

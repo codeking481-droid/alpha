@@ -104,19 +104,19 @@ export default function Approvals() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-[#FFD700] text-[#0B0215] flex items-center justify-center font-black">✓</div>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white">APPROVALS — Yes replies</h1>
-          <p className="text-xs text-white/40">Review companies that said YES → approve to generate 7-day campaign plan</p>
+          <h1 className="text-xl font-black tracking-tight text-[#0A0A0A]">APPROVALS — Yes replies</h1>
+          <p className="text-xs text-[#6B7280]">Review companies that said YES → approve to generate 7-day campaign plan</p>
         </div>
         <div className="ml-auto flex gap-2">
-          <select value={filter} onChange={e=>setFilter(e.target.value)} className="bg-[#0B0215] border border-white/10 rounded-full px-3 py-2 text-xs text-white">
+          <select value={filter} onChange={e=>setFilter(e.target.value)} className="bg-[#FFFCF8] border border-[#EDEDED] rounded-full px-3 py-2 text-xs text-[#0A0A0A]">
             <option value="all">All replies & leads</option>
             <option value="yes">Only YES</option>
           </select>
-          <button onClick={fetchAll} className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs">Refresh</button>
+          <button onClick={fetchAll} className="px-4 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] text-xs">Refresh</button>
         </div>
       </div>
 
-      {msg && <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-white/80 whitespace-pre-wrap">{msg}</div>}
+      {msg && <div className="rounded-xl border border-[#EDEDED] bg-white/[0.04] px-4 py-3 text-xs text-[#0A0A0A]/80 whitespace-pre-wrap">{msg}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Stat label="Replies" value={replies.length} sub="total" />
@@ -125,11 +125,11 @@ export default function Approvals() {
         <Stat label="Approved flow" value="→ Campaigns" sub="$500 / week" />
       </div>
 
-      {loading ? <p className="text-center text-white/30 py-10 text-sm">Loading approvals…</p> : filtered.length===0 ? (
+      {loading ? <p className="text-center text-[#9CA3AF] py-10 text-sm">Loading approvals…</p> : filtered.length===0 ? (
         <div className="glass rounded-2xl p-10 text-center">
           <div className="text-2xl">📥</div>
-          <p className="text-white font-bold mt-2">No approvals yet</p>
-          <p className="text-white/30 text-xs mt-1">Send offers from Outreach → when a company replies YES it appears here. You can also mark any lead as YES to test.</p>
+          <p className="text-[#0A0A0A] font-bold mt-2">No approvals yet</p>
+          <p className="text-[#9CA3AF] text-xs mt-1">Send offers from Outreach → when a company replies YES it appears here. You can also mark any lead as YES to test.</p>
           <div className="mt-4 flex justify-center gap-2">
             <a href="/outreach" className="px-4 py-2 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs">Go to Outreach → Send offers</a>
           </div>
@@ -137,22 +137,22 @@ export default function Approvals() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map((item, idx)=> (
-            <div key={idx} className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur p-4 sm:p-5 flex flex-col gap-3">
+            <div key={idx} className="rounded-2xl border border-[#EDEDED] bg-white/[0.04] backdrop-blur p-4 sm:p-5 flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-[#0B0215] font-black text-sm">{String(item.company||'?').slice(0,2).toUpperCase()}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-black text-white truncate">{item.company}</div>
-                  <div className="text-xs text-white/40 truncate">{item.data?.email || item.data?.phone || item.data?.website || item.replyText.slice(0,60)}</div>
-                  <div className="text-[11px] text-white/25 mt-1">{item.at ? new Date(item.at).toLocaleString() : ''} • {item.type}</div>
+                  <div className="text-sm font-black text-[#0A0A0A] truncate">{item.company}</div>
+                  <div className="text-xs text-[#6B7280] truncate">{item.data?.email || item.data?.phone || item.data?.website || item.replyText.slice(0,60)}</div>
+                  <div className="text-[11px] text-[#0A0A0A]/25 mt-1">{item.at ? new Date(item.at).toLocaleString() : ''} • {item.type}</div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-[11px] font-black tracking-widest uppercase ${item.replyText.toLowerCase().includes('yes')?'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20':'bg-white/5 text-white/40 border border-white/10'}`}>{item.replyText.toLowerCase().includes('yes')?'YES':'REVIEW'}</span>
+                <span className={`px-2 py-1 rounded-full text-[11px] font-black tracking-widest uppercase ${item.replyText.toLowerCase().includes('yes')?'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20':'bg-[#F9FAFB] text-[#6B7280] border border-[#EDEDED]'}`}>{item.replyText.toLowerCase().includes('yes')?'YES':'REVIEW'}</span>
               </div>
-              {item.replyText && <div className="rounded-xl bg-[#0B0215] border border-white/5 p-3 text-xs text-white/70 whitespace-pre-wrap max-h-20 overflow-auto">{item.replyText}</div>}
+              {item.replyText && <div className="rounded-xl bg-[#FFFCF8] border border-[#EDEDED] p-3 text-xs text-[#0A0A0A]/70 whitespace-pre-wrap max-h-20 overflow-auto">{item.replyText}</div>}
               <div className="flex gap-2">
                 <button onClick={()=>handleApprove(item)} disabled={!!approving} className="flex-1 py-2.5 rounded-xl bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase disabled:opacity-50">{approving===item.company?'Approving…':'Approve → Create 1-Week Plan'}</button>
-                <button onClick={()=>handleMarkYes(item)} className="px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 text-xs">Mark YES</button>
+                <button onClick={()=>handleMarkYes(item)} className="px-3 py-2.5 rounded-xl bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] text-xs">Mark YES</button>
               </div>
-              <p className="text-[11px] text-white/25">Approve generates Day 1-7 plan + 32 deliverables ($500). Next: Campaigns → Generate content.</p>
+              <p className="text-[11px] text-[#0A0A0A]/25">Approve generates Day 1-7 plan + 32 deliverables ($500). Next: Campaigns → Generate content.</p>
             </div>
           ))}
         </div>
@@ -160,16 +160,16 @@ export default function Approvals() {
 
       <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
         <h3 className="text-xs font-black tracking-widest uppercase text-amber-400">🔒 Truth Clause — included in every proposal</h3>
-        <p className="text-xs text-white/60 mt-2 leading-relaxed">We have real communities, not bots. LinkedIn (700 followers, 500+ connections): 10 posts. WhatsApp (215+ members across 2 groups): 10 posts. Telegram (54 members): 10 posts. YouTube (3,000+ subscribers): 2 videos. We do not guarantee views, likes, or conversions. We guarantee we will deliver the content to real people who have chosen to follow us. The rest is organic.</p>
+        <p className="text-xs text-[#6B7280] mt-2 leading-relaxed">We have real communities, not bots. LinkedIn (700 followers, 500+ connections): 10 posts. WhatsApp (215+ members across 2 groups): 10 posts. Telegram (54 members): 10 posts. YouTube (3,000+ subscribers): 2 videos. We do not guarantee views, likes, or conversions. We guarantee we will deliver the content to real people who have chosen to follow us. The rest is organic.</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-        <h3 className="text-xs font-black tracking-widest uppercase text-white/50">How approvals work</h3>
-        <ol className="list-decimal list-inside text-xs text-white/40 mt-2 space-y-1">
+      <div className="rounded-2xl border border-[#EDEDED] bg-white/[0.02] p-4">
+        <h3 className="text-xs font-black tracking-widest uppercase text-[#6B7280]">How approvals work</h3>
+        <ol className="list-decimal list-inside text-xs text-[#6B7280] mt-2 space-y-1">
           <li>Lead Finder → 100 companies via Apollo/Serply/Tavily</li>
           <li>Outreach Sender → sends personalized $500 offer (with Truth Clause)</li>
           <li>Reply Tracker → collects replies</li>
-          <li><b className="text-white/60">Approvals</b> → you review YES → click Approve</li>
+          <li><b className="text-[#6B7280]">Approvals</b> → you review YES → click Approve</li>
           <li>Campaign Planner → 7-day plan (10+10+10+2 posts)</li>
           <li>Content Generator → Groq creates all posts</li>
           <li>Delivery Helper → you post to real communities</li>
@@ -181,10 +181,10 @@ export default function Approvals() {
 
 function Stat({ label, value, sub, accent }) {
   return (
-    <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-4">
-      <div className="text-[11px] tracking-widest uppercase font-bold text-white/30">{label}</div>
-      <div className={`text-2xl font-black mt-1 ${accent?'text-emerald-400':'text-white'}`}>{value}</div>
-      <div className="text-xs text-white/25 mt-1">{sub}</div>
+    <div className="bg-white/[0.04] border border-[#EDEDED] rounded-2xl p-4">
+      <div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">{label}</div>
+      <div className={`text-2xl font-black mt-1 ${accent?'text-emerald-400':'text-[#0A0A0A]'}`}>{value}</div>
+      <div className="text-xs text-[#0A0A0A]/25 mt-1">{sub}</div>
     </div>
   )
 }

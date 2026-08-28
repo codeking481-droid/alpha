@@ -41,35 +41,35 @@ export const AdminCodes = () => {
   useEffect(()=>{ fetchCodes(); }, []);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8" style={{background:'#FFFCF8', minHeight:'60vh'}}>
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-white text-[#0B0215] flex items-center justify-center font-black">⌘</div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black" style={{background:'#5E17EB', color:'#FFFFFF'}}>⌘</div>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white">Admin — Access Codes</h1>
-          <p className="text-xs text-white/40">alphatekxcompany@gmail.com only • Free generation, price 0</p>
+          <h1 className="text-xl font-bold tracking-tight" style={{color:'#0A0A0A'}}>Admin — Access Codes</h1>
+          <p className="text-xs" style={{color:'#6B7280'}}>alphatekxcompany@gmail.com only • Free generation, price 0</p>
         </div>
-        <button onClick={generate} disabled={loading} className="ml-auto bg-white text-[#0B0215] px-5 py-2.5 rounded-full font-black text-xs tracking-widest uppercase hover:bg-white/90 disabled:opacity-50">
+        <button onClick={generate} disabled={loading} className="ml-auto px-5 py-2.5 rounded-full font-bold text-xs tracking-widest uppercase disabled:opacity-50" style={{background:'#5E17EB', color:'#FFFFFF'}}>
           {loading ? '...' : '+ Generate free code'}
         </button>
       </div>
 
-      {msg && <p className="mt-4 text-xs leading-5 text-white/70 whitespace-pre-wrap">{msg}</p>}
+      {msg && <p className="mt-4 text-xs leading-5 whitespace-pre-wrap" style={{color: msg.startsWith('✅') ? '#0A7A00' : '#C00000', background: msg.startsWith('✅') ? '#F0FDF4' : '#FEF2F2', border:'1px solid #EDEDED', borderRadius:'10px', padding:'10px 12px'}}>{msg}</p>}
 
-      <div className="mt-6 mature-card rounded-2xl p-5">
-        <div className="eyebrow text-white/30">Codes ({codes.length}) — single-use, 30d expiry</div>
+      <div className="mt-6 card rounded-2xl p-5" style={{background:'#FFFFFF', border:'1px solid #EDEDED'}}>
+        <div style={{color:'#6B7280', fontSize:'11px', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase'}}>Codes ({codes.length}) — single-use, 30d expiry</div>
         <div className="mt-3 grid gap-2 max-h-[60vh] overflow-y-auto">
-          {codes.length===0 ? <p className="text-sm text-white/30 text-center py-8">No codes yet — generate one.</p> : codes.map(c=>(
-            <div key={c.id} className="bg-[#0B0215] border border-white/10 rounded-xl p-3 flex items-center gap-3 text-sm">
-              <span className="font-black tracking-[0.2em] text-white">{c.code}</span>
-              <span className={`text-xs px-2 py-1 rounded-full font-bold ${c.used?'bg-red-500/15 text-red-400 border border-red-500/20':'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'}`}>{c.used?'USED':'UNUSED'}</span>
-              <span className="text-xs text-white/20">${c.price ?? 0}</span>
-              <span className="text-xs text-white/20 ml-auto">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</span>
-              <button onClick={()=> navigator.clipboard.writeText(c.code)} className="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 hover:bg-white/10">Copy</button>
+          {codes.length===0 ? <p className="text-sm text-center py-8" style={{color:'#9CA3AF'}}>No codes yet — generate one.</p> : codes.map(c=>(
+            <div key={c.id} className="rounded-xl p-3 flex items-center gap-3 text-sm" style={{background:'#FFFCF8', border:'1px solid #EDEDED'}}>
+              <span className="font-bold tracking-[0.15em]" style={{color:'#0A0A0A'}}>{c.code}</span>
+              <span className="text-xs px-2 py-1 rounded-full font-bold" style={c.used ? {background:'rgba(239,68,68,0.08)', color:'#DC2626', border:'1px solid rgba(239,68,68,0.2)'} : {background:'rgba(16,185,129,0.08)', color:'#059669', border:'1px solid rgba(16,185,129,0.2)'}}>{c.used?'USED':'UNUSED'}</span>
+              <span className="text-xs" style={{color:'#9CA3AF'}}>${c.price ?? 0}</span>
+              <span className="text-xs ml-auto" style={{color:'#9CA3AF'}}>{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</span>
+              <button onClick={()=> navigator.clipboard.writeText(c.code)} className="text-xs px-2 py-1 rounded-full" style={{background:'#F9FAFB', border:'1px solid #EDEDED', color:'#6B7280'}}>Copy</button>
             </div>
           ))}
         </div>
       </div>
-      <p className="mt-4 text-xs text-white/20 text-center">Payment codes ($50) are auto-generated via Paystack verify; admin codes are free (price 0).</p>
+      <p className="mt-4 text-xs text-center" style={{color:'#9CA3AF'}}>Payment codes ($50) are auto-generated via Paystack verify; admin codes are free (price 0).</p>
     </div>
   );
 };

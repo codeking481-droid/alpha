@@ -471,40 +471,34 @@ app.post('/api/auth/verify-code', async (c) => {
     const { code } = await c.req.json().catch(()=>({}))
     if (!code) return c.json({ error: 'Code is required' }, 400)
     const upper = String(code).trim().toUpperCase()
-    // Master codes — single-use, opens platform instantly (works with or without auth)
+    // Master codes — ALWAYS works, reusable (owner only) — instant unlock, no single-use block
     const MASTER_CODES = ['126213JESUSISKING', '126213JESUS']
     if (MASTER_CODES.includes(upper)) {
-      // Check in-memory first (works even without Supabase)
+      // Reusable: always grant, just mark last use for audit — never block on already used
       try {
         const all = await list(c.env, 'access_codes')
         const existing = all.find(a => String(a.code).toUpperCase() === upper)
         if (existing) {
-          if (existing.used) return c.json({ error: 'Invalid or already used code — this code is single-use' }, 400)
           const authH = c.req.header('Authorization') || ''
           let uid = null
           if (authH) { try { const u = await requireAuth(c, c.env); uid = u?.id || null } catch {} }
-          try { await updateOne(c.env, 'access_codes', existing.id, { used: true, user_id: uid, used_at: new Date().toISOString() }) } catch {}
-          // Also mark legacy counterpart as used if master king used? No — keep separate single-use each
-          return c.json({ success: true, ok: true, message: 'Access granted — welcome to Alpha Agency' })
+          try { await updateOne(c.env, 'access_codes', existing.id, { used: true, user_id: uid, used_at: new Date().toISOString(), last_used_at: new Date().toISOString() }) } catch {}
+          return c.json({ success: true, ok: true, message: 'Access granted — welcome to Alpha Agency (master reusable)' })
         }
       } catch {}
-      // If Supabase configured, try there too
       if (hasSupabase(c.env)) {
         try {
           const rows = await sbSelect(c.env, 'access_codes', `code=eq.${upper}&limit=1`)
           if (rows && rows[0]) {
-            if (rows[0].used) return c.json({ error: 'Invalid or already used code — this code is single-use' }, 400)
-            await sbUpdate(c.env, 'access_codes', rows[0].id, { used: true, used_at: new Date().toISOString() })
-            return c.json({ success: true, ok: true, message: 'Access granted' })
+            try { await sbUpdate(c.env, 'access_codes', rows[0].id, { used: true, used_at: new Date().toISOString(), last_used_at: new Date().toISOString() }) } catch {}
+            return c.json({ success: true, ok: true, message: 'Access granted (master reusable)' })
           }
-          // Seed missing master code in Supabase for persistence
-          try { await sbInsert(c.env, 'access_codes', { code: upper, used: true, created_at: new Date().toISOString() }) } catch {}
-          return c.json({ success: true, ok: true, message: 'Access granted' })
+          try { await sbInsert(c.env, 'access_codes', { code: upper, used: true, created_at: new Date().toISOString(), last_used_at: new Date().toISOString() }) } catch {}
+          return c.json({ success: true, ok: true, message: 'Access granted (master reusable)' })
         } catch {}
       }
-      // No DB entry found but master code — allow once in this worker instance
-      try { await create(c.env, 'access_codes', { code: upper, used: true, created_at: new Date().toISOString() }) } catch {}
-      return c.json({ success: true, ok: true, message: 'Access granted' })
+      try { await create(c.env, 'access_codes', { code: upper, used: true, created_at: new Date().toISOString(), last_used_at: new Date().toISOString() }) } catch {}
+      return c.json({ success: true, ok: true, message: 'Access granted (master reusable)' })
     }
     // If Authorization present, verify with user binding (prompt #12 behavior)
     const auth = c.req.header('Authorization') || ''

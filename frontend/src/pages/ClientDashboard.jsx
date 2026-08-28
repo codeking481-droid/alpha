@@ -42,7 +42,7 @@ export const ClientDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0215]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFFCF8]">
         <div className="text-center">
           <div className="text-4xl mb-4">📊</div>
           <p className="text-gray-400">Loading your dashboard...</p>
@@ -53,10 +53,10 @@ export const ClientDashboard = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0215] p-6">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFFCF8] p-6">
         <div className="glass p-8 text-center max-w-md">
           <div className="text-4xl mb-4">🔒</div>
-          <h2 className="text-xl font-bold text-white mb-2">Access Restricted</h2>
+          <h2 className="text-xl font-bold text-[#0A0A0A] mb-2">Access Restricted</h2>
           <p className="text-gray-400">{error}</p>
           <p className="text-gray-500 text-sm mt-4">Please contact your account manager for access.</p>
           <button onClick={fetchClientData} className="mt-6 px-6 py-2 rounded-xl bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase">Retry</button>
@@ -66,15 +66,15 @@ export const ClientDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0215] p-6">
+    <div className="min-h-screen bg-[#FFFCF8] p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215]">👁️</div>
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">YOUR DASHBOARD</h1>
+            <h1 className="text-3xl font-black text-[#0A0A0A] tracking-tight">YOUR DASHBOARD</h1>
             <p className="text-gray-400 text-sm">Here's a summary of your results — read-only, real-time.</p>
           </div>
-          <button onClick={fetchClientData} className="ml-auto text-xs px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 hover:bg-white/10">Refresh</button>
+          <button onClick={fetchClientData} className="ml-auto text-xs px-3 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] hover:bg-[#F3F4F6]">Refresh</button>
         </div>
 
         {summary && <ClientStats summary={summary} />}
@@ -85,12 +85,12 @@ export const ClientDashboard = () => {
 
         {outcomes.length > 0 && (
           <div className="glass p-6 mt-8">
-            <h3 className="text-sm font-bold tracking-widest uppercase text-white/60">Recent Outcomes</h3>
+            <h3 className="text-sm font-bold tracking-widest uppercase text-[#6B7280]">Recent Outcomes</h3>
             <div className="mt-3 space-y-2 max-h-72 overflow-y-auto">
               {outcomes.slice(0,10).map(o=> (
-                <div key={o.id} className="bg-[#0B0215] border border-white/10 rounded-xl p-3 flex items-center gap-3 text-sm">
-                  <span className="text-white/60 truncate flex-1">{(o.client_id || o.clientId || o.campaign_id || o.campaignId || '—')} — ${Number(o.revenue||0).toLocaleString()} / ${Number(o.cost||0).toLocaleString()} → {(Number(o.roi)||0).toFixed(1)}% ROI</span>
-                  <span className="text-xs text-white/30">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</span>
+                <div key={o.id} className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl p-3 flex items-center gap-3 text-sm">
+                  <span className="text-[#6B7280] truncate flex-1">{(o.client_id || o.clientId || o.campaign_id || o.campaignId || '—')} — ${Number(o.revenue||0).toLocaleString()} / ${Number(o.cost||0).toLocaleString()} → {(Number(o.roi)||0).toFixed(1)}% ROI</span>
+                  <span className="text-xs text-[#9CA3AF]">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</span>
                 </div>
               ))}
             </div>

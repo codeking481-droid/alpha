@@ -10,9 +10,7 @@ import ClientDashboard from "./pages/ClientDashboard.jsx"
 import Landing from "./pages/Landing.jsx"
 import Platform from "./pages/Platform.jsx"
 import PricingPage from "./pages/PricingPage.jsx"
-import Auth from "./pages/Auth.jsx"
 import AccessCode from "./pages/AccessCode.jsx"
-import Signup from "./pages/Signup.jsx"
 import Legal from "./pages/Legal.jsx"
 import Checkout from "./pages/Checkout.jsx"
 import AdminCodes from "./pages/AdminCodes.jsx"
@@ -28,21 +26,36 @@ import { logger } from "./lib/logger.js"
 function ProtectedRoute({ children }) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('alpha.token') : null;
   const granted = typeof window !== 'undefined' ? localStorage.getItem('alpha.access_granted') === '1' : false;
-  if (!token) return <Navigate to="/auth" replace />;
-  if (!granted) return <Navigate to="/access-code" replace />;
+  if (!token) return <Navigate to="/" replace />;
+  if (!granted) return <Navigate to="/access" replace />;
   return children;
 }
 function AdminRoute({ children }) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('alpha.token') : null;
   const granted = typeof window !== 'undefined' ? localStorage.getItem('alpha.access_granted') === '1' : false;
-  if (!token) return <Navigate to="/auth" replace />;
-  if (!granted) return <Navigate to="/access-code" replace />;
+  if (!token) return <Navigate to="/" replace />;
+  if (!granted) return <Navigate to="/access" replace />;
   return children;
+}
+
+function instantSignup() {
+  if (typeof window === 'undefined') return null;
+  let t = localStorage.getItem('alpha.token');
+  if (t) return t;
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+  const payload = (()=>{ try { return btoa(JSON.stringify({ sub:id, email:`user-${id.slice(0,8)}@alpha.local`, role:'member', iat:Date.now()})) } catch { return 'eyJzdWIiOiJpbnN0YW50In0' } })();
+  t = `instant-jwt.${payload}.sig`;
+  localStorage.setItem('alpha.token', t);
+  localStorage.setItem('alpha.user', JSON.stringify({ email:`user-${id.slice(0,8)}@alpha.local`, role:'member', instant:true }));
+  localStorage.setItem('alpha.signup_at', new Date().toISOString());
+  try { window.dispatchEvent(new Event('storage')); } catch {}
+  return t;
 }
 
 function TopNav() {
   const [open, setOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState(false);
+  const navigate = useNavigate();
   useEffect(()=>{
     const check = () => {
       const t = localStorage.getItem('alpha.token');
@@ -85,9 +98,11 @@ function TopNav() {
 
         <div className="ml-auto flex items-center gap-3">
           {hasAccess ? <CommandPalette /> : <Link to="/access" className="hidden sm:inline-flex items-center justify-center" style={{color:'#6B7280', fontSize:'13px', fontWeight:500, padding:'0 12px', height:'36px', textDecoration:'none'}}>Sign in</Link>}
-          <Link to={hasAccess ? "/dashboard" : "/signup"} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', textDecoration:'none'}}>
-            Get Access
-          </Link>
+          {hasAccess ? (
+            <Link to="/dashboard" className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', textDecoration:'none'}}>Open Dashboard</Link>
+          ) : (
+            <button onClick={()=>{ instantSignup(); navigate('/access'); }} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', border:'none', cursor:'pointer'}}>Get Started</button>
+          )}
           <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center" style={{border:'1px solid #EDEDED', color:'#0A0A0A'}} aria-label="Menu">
             <span className="text-base">{open ? "✕" : "☰"}</span>
           </button>
@@ -102,7 +117,7 @@ function TopNav() {
                 {l.label}
               </NavLink>
             ))}
-            <a href="/signup" className="mt-2 text-center font-semibold" style={{background:'#0A0A0A', color:'#FFFFFB', height:'44px', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'8px'}}>Get Access Token →</a>
+            <button onClick={()=>{ instantSignup(); navigate('/access'); setOpen(false); }} className="mt-2 text-center font-semibold w-full" style={{background:'#5E17EB', color:'#FFFFFF', height:'44px', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'8px', border:'none', cursor:'pointer'}}>Get Started →</button>
           </div>
         </div>
       )}
@@ -141,16 +156,16 @@ export default function App() {
           <TopNav />
           <Onboarding />
             <Routes>
-              {/* New pure architecture */}
+              {/* White massive OS — instant signup, no separate signup page */}
               <Route path="/" element={<Landing />} />
               <Route path="/platform" element={<Platform />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/access" element={<AccessCode />} />
-              <Route path="/signup" element={<Signup />} />
               <Route path="/legal/:type" element={<Legal />} />
-              {/* Legacy aliases */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/access-code" element={<AccessCode />} />
+              {/* Removed: /signup and /auth — Get Started does instant signup (no extra page, no black) */}
+              <Route path="/signup" element={<Navigate to="/access" replace />} />
+              <Route path="/auth" element={<Navigate to="/access" replace />} />
+              <Route path="/access-code" element={<Navigate to="/access" replace />} />
               <Route path="/checkout" element={<Checkout />} />
               {/* Protected OS */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

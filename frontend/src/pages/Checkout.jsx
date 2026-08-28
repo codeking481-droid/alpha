@@ -19,7 +19,6 @@ export const Checkout = () => {
 
   useEffect(()=>{ setPrice(initialPrice); }, [initialPrice]);
 
-  // Auto-verify when Paystack redirects back with ?reference=
   useEffect(()=>{
     if (refParam) {
       const verifyEmail = searchParams.get('email') || email || initialEmail || localStorage.getItem('alpha.pending_email') || '';
@@ -31,7 +30,6 @@ export const Checkout = () => {
         setVerifying(true);
         setMessage('Verifying Paystack payment…');
         try {
-          // Try GET first (works even if CORS preflight fails), fallback to POST
           let vRes = await fetch(`${API_URL}/api/payment/verify?reference=${encodeURIComponent(refParam)}&email=${encodeURIComponent(verifyEmail)}`);
           let vData = await vRes.json().catch(()=>({}));
           if (!vRes.ok) {
@@ -93,7 +91,6 @@ export const Checkout = () => {
     }
   };
 
-  // Manual verify helper — if user has reference but auto-verify missed email
   const handleManualVerify = async () => {
     if (!refParam) return;
     const verifyEmail = email || initialEmail || localStorage.getItem('alpha.pending_email') || '';
@@ -115,79 +112,81 @@ export const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0215] px-4 py-10">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{background:'#FFFCF8'}}>
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <Link to="/access-code" className="inline-flex items-center gap-2 text-white/40 hover:text-white text-xs tracking-widest uppercase font-bold">← Back to token</Link>
+          <Link to="/access" className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-bold" style={{color:'#6B7280'}}>← Back to token</Link>
         </div>
-        <div className="mature-card rounded-[20px] p-7 sm:p-8 text-center border border-white/[0.06]">
-          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mx-auto text-xl">💳</div>
-          <h1 className="text-xl font-black tracking-tight text-white mt-4">Purchase access token</h1>
-          <p className="text-white/40 text-xs mt-2 leading-5">Real Paystack payment in USD — token issued only after verified success. Single-use, 30-day expiry. {isMock && <span className="text-amber-400 font-bold">(Test mode)</span>}</p>
+        <div className="card rounded-[16px] p-7 sm:p-8 text-center" style={{background:'#FFFFFF', border:'1px solid #EDEDED'}}>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto text-xl" style={{background:'#F5F3FF', border:'1px solid #EDE9FF'}}>💳</div>
+          <h1 className="text-xl font-bold tracking-tight mt-4" style={{color:'#0A0A0A'}}>Purchase access token</h1>
+          <p className="text-xs mt-2 leading-5" style={{color:'#6B7280'}}>Real Paystack payment in USD — token issued only after verified success. Single-use, 30-day expiry. {isMock && <span style={{color:'#D97706', fontWeight:700}}>(Test mode)</span>}</p>
 
           {refParam && (
-            <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 text-left">
+            <div className="mt-4 p-3 rounded-xl text-xs text-left" style={{background:'#FFFBEB', border:'1px solid #FDE68A', color:'#92400E'}}>
               <div>Reference detected: <span className="font-mono font-bold break-all">{refParam}</span></div>
-              {!code && <button onClick={handleManualVerify} disabled={verifying} className="mt-2 px-3 py-1.5 rounded-full bg-white text-[#0B0215] font-bold text-xs disabled:opacity-50">{verifying ? 'Verifying…' : 'Verify now →'}</button>}
+              {!code && <button onClick={handleManualVerify} disabled={verifying} className="mt-2 px-3 py-1.5 rounded-full font-bold text-xs disabled:opacity-50" style={{background:'#0A0A0A', color:'#FFFFFF'}}>{verifying ? 'Verifying…' : 'Verify now →'}</button>}
             </div>
           )}
 
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button onClick={()=> setPrice(50)} className={`p-3 rounded-xl border text-center ${price===50?'bg-white text-[#0B0215] border-white':'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}>
-              <div className="font-black text-sm">$50 <span className="font-normal text-[11px] opacity-60">USD</span></div>
+            <button onClick={()=> setPrice(50)} className="p-3 rounded-xl border text-center" style={price===50?{background:'#5E17EB', color:'#FFFFFF', border:'2px solid #5E17EB'}:{background:'#FFFFFF', border:'1px solid #EDEDED', color:'#6B7280'}}>
+              <div className="font-bold text-sm">$50 <span className="font-normal text-[11px] opacity-60">USD</span></div>
               <div className="text-[11px]">Standard • $50 USD</div>
             </button>
-            <button onClick={()=> setPrice(99)} className={`p-3 rounded-xl border text-center ${price===99?'bg-[#FFD700] text-[#0B0215] border-[#FFD700]':'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}>
-              <div className="font-black text-sm">$99 <span className="font-normal text-[11px] opacity-60">USD</span></div>
+            <button onClick={()=> setPrice(99)} className="p-3 rounded-xl border text-center" style={price===99?{background:'#5E17EB', color:'#FFFFFF', border:'2px solid #5E17EB'}:{background:'#FFFFFF', border:'1px solid #EDEDED', color:'#6B7280'}}>
+              <div className="font-bold text-sm">$99 <span className="font-normal text-[11px] opacity-80">USD</span></div>
               <div className="text-[11px]">Premium • $99 USD</div>
             </button>
           </div>
 
           {!refParam && (
             <div className="mt-6 text-left space-y-3">
-              <label className="eyebrow text-white/30">Email for receipt + code</label>
+              <label style={{color:'#6B7280', fontSize:'11px', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase'}}>Email for receipt + code</label>
               <input
                 type="email"
                 placeholder="you@company.com"
                 value={email}
                 onChange={(e)=> setEmail(e.target.value)}
-                className="w-full p-3 bg-[#0B0215] text-white rounded-xl border border-white/10 focus:border-white/20 focus:outline-none placeholder:text-white/30 text-sm"
+                className="input"
+                style={{background:'#FFFFFF', border:'1px solid #EDEDED', color:'#0A0A0A'}}
               />
               <button
                 onClick={handlePayment}
                 disabled={loading || verifying}
-                className="w-full bg-white text-[#0B0215] py-3 rounded-full font-black text-xs tracking-widest uppercase hover:bg-white/90 disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center"
+                style={{background:'#5E17EB', color:'#FFFFFF', height:'48px', borderRadius:'10px', fontWeight:800, fontSize:'13px', border:'none', cursor:'pointer', opacity: loading||verifying?0.7:1}}
               >
                 {loading ? 'Redirecting…' : verifying ? 'Verifying…' : `Pay $${price} USD via Paystack →`}
               </button>
-              <p className="text-[11px] text-white/20 text-center">You’ll be charged in USD ($50 or $99). Test mode works without key. After success you return here automatically.</p>
+              <p className="text-[11px] text-center" style={{color:'#9CA3AF'}}>You’ll be charged in USD ($50 or $99). Test mode works without key. After success you return here automatically.</p>
             </div>
           )}
 
           {(message || code) && (
             <div className="mt-4 text-center">
-              {message && <p className={`text-xs leading-5 whitespace-pre-wrap break-words px-3 py-2 rounded-xl border ${message.startsWith('✅') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : message.startsWith('⚠️') ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-white/[0.04] border-white/10 text-white/70'}`}>{message}</p>}
+              {message && <p className="text-xs leading-5 whitespace-pre-wrap break-words px-3 py-2 rounded-xl border" style={message.startsWith('✅')?{background:'#F0FDF4', borderColor:'#BBF7D0', color:'#166534'}:message.startsWith('⚠️')?{background:'#FFFBEB', borderColor:'#FDE68A', color:'#92400E'}:{background:'#F9FAFB', borderColor:'#EDEDED', color:'#6B7280'}}>{message}</p>}
               {code && (
-                <div className="mt-3 p-4 rounded-xl bg-white text-[#0B0215] text-center">
-                  <div className="eyebrow text-[#0B0215]/50">Your {price===99?'Premium':'Standard'} code (${price}) {isMock && <span className="text-amber-600">(test)</span>}</div>
-                  <div className="text-2xl font-black tracking-[0.28em] mt-1 break-all">{code}</div>
-                  <button onClick={()=> navigator.clipboard.writeText(code)} className="mt-2 text-xs font-bold underline">Copy</button>
+                <div className="mt-3 p-4 rounded-xl text-center" style={{background:'#F5F3FF', border:'1px solid #EDE9FF'}}>
+                  <div style={{color:'#6B7280', fontSize:'11px', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase'}}>Your {price===99?'Premium':'Standard'} code (${price}) {isMock && <span style={{color:'#D97706'}}>(test)</span>}</div>
+                  <div className="font-bold tracking-[0.18em] mt-1 break-all" style={{color:'#0A0A0A', fontSize:'22px'}}>{code}</div>
+                  <button onClick={()=> navigator.clipboard.writeText(code)} className="mt-2 text-xs font-bold" style={{color:'#5E17EB', textDecoration:'underline', background:'none', border:'none', cursor:'pointer'}}>Copy</button>
                   <div className="mt-3">
-                    <button onClick={()=> navigate('/access-code')} className="w-full bg-[#0B0215] text-white py-2.5 rounded-full font-black text-xs tracking-widest uppercase">Enter token →</button>
+                    <button onClick={()=> navigate('/access')} className="w-full inline-flex items-center justify-center" style={{background:'#5E17EB', color:'#FFFFFF', height:'44px', borderRadius:'10px', fontWeight:800, fontSize:'13px', border:'none', cursor:'pointer'}}>Enter token →</button>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-white/25 flex-wrap">
+          <div className="mt-6 flex items-center justify-center gap-2 flex-wrap" style={{color:'#9CA3AF', fontSize:'11px'}}>
             <span>Secure by Paystack</span>
             <span>•</span>
             <span>Token only after success</span>
             <span>•</span>
-            <span className="text-emerald-400/70">Test mode ready</span>
+            <span style={{color:'#059669'}}>Test mode ready</span>
           </div>
-          <p className="text-[10px] text-white/20 mt-2 leading-4">Missing key? Add <span className="font-mono text-white/40">PAYSTACK_SECRET_KEY=sk_test_...</span> to backend/.dev.vars and run <span className="font-mono text-white/40">npm run dev</span>. Then set prod secret: <span className="font-mono text-white/40">npx wrangler secret put PAYSTACK_SECRET_KEY</span></p>
+          <p className="mt-2" style={{color:'#9CA3AF', fontSize:'10px', lineHeight:'1.4'}}>Missing key? Add <span className="font-mono" style={{color:'#6B7280'}}>PAYSTACK_SECRET_KEY=sk_test_...</span> to backend/.dev.vars then <span className="font-mono" style={{color:'#6B7280'}}>npx wrangler secret put PAYSTACK_SECRET_KEY</span></p>
         </div>
       </div>
     </div>

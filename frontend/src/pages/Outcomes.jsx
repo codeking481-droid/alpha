@@ -58,7 +58,7 @@ export const Outcomes = () => {
   };
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center text-white/40">Loading outcomes...</div>;
+    return <div className="min-h-[60vh] flex items-center justify-center text-[#6B7280]">Loading outcomes...</div>;
   }
 
   return (
@@ -66,45 +66,45 @@ export const Outcomes = () => {
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center text-[#0B0215]">📊</div>
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight">OUTCOMES</h2>
-          <p className="text-xs text-white/40 tracking-widest uppercase font-semibold">Proof layer — revenue, ROI, performance. Real data only.</p>
+          <h2 className="text-2xl font-black text-[#0A0A0A] tracking-tight">OUTCOMES</h2>
+          <p className="text-xs text-[#6B7280] tracking-widest uppercase font-semibold">Proof layer — revenue, ROI, performance. Real data only.</p>
         </div>
-        <button onClick={fetchData} className="ml-auto text-xs px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/60 hover:bg-white/10">Refresh</button>
+        <button onClick={fetchData} className="ml-auto text-xs px-3 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] hover:bg-[#F3F4F6]">Refresh</button>
       </div>
 
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="glass p-6 text-center">
-            <p className="text-white/40 text-xs tracking-widest uppercase font-bold">Total Revenue</p>
+            <p className="text-[#6B7280] text-xs tracking-widest uppercase font-bold">Total Revenue</p>
             <p className="text-3xl font-black text-[#FFD700] mt-2">${Number(summary.totalRevenue||0).toLocaleString()}</p>
           </div>
           <div className="glass p-6 text-center">
-            <p className="text-white/40 text-xs tracking-widest uppercase font-bold">ROI</p>
+            <p className="text-[#6B7280] text-xs tracking-widest uppercase font-bold">ROI</p>
             <p className={`text-3xl font-black mt-2 ${(summary.averageROI||0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {Number(summary.averageROI||0).toFixed(1)}%
             </p>
           </div>
           <div className="glass p-6 text-center">
-            <p className="text-white/40 text-xs tracking-widest uppercase font-bold">Views</p>
-            <p className="text-3xl font-black text-white mt-2">{Number(summary.totalViews||0).toLocaleString()}</p>
+            <p className="text-[#6B7280] text-xs tracking-widest uppercase font-bold">Views</p>
+            <p className="text-3xl font-black text-[#0A0A0A] mt-2">{Number(summary.totalViews||0).toLocaleString()}</p>
           </div>
           <div className="glass p-6 text-center">
-            <p className="text-white/40 text-xs tracking-widest uppercase font-bold">Conversions</p>
-            <p className="text-3xl font-black text-white mt-2">{Number(summary.totalConversions||0).toLocaleString()}</p>
-            <p className="text-xs text-white/20 mt-1">{summary.campaigns||0} campaigns</p>
+            <p className="text-[#6B7280] text-xs tracking-widest uppercase font-bold">Conversions</p>
+            <p className="text-3xl font-black text-[#0A0A0A] mt-2">{Number(summary.totalConversions||0).toLocaleString()}</p>
+            <p className="text-xs text-[#9CA3AF] mt-1">{summary.campaigns||0} campaigns</p>
           </div>
         </div>
       )}
 
       <div className="glass p-6">
-        <h3 className="text-sm font-bold tracking-widest uppercase text-white/60">Add Outcome</h3>
-        <p className="text-xs text-white/30 mt-1">Campaign ID + revenue/cost → auto ROI. Uses <code className="text-white/50">/api/outcomes</code></p>
+        <h3 className="text-sm font-bold tracking-widest uppercase text-[#6B7280]">Add Outcome</h3>
+        <p className="text-xs text-[#9CA3AF] mt-1">Campaign ID + revenue/cost → auto ROI. Uses <code className="text-[#6B7280]">/api/outcomes</code></p>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <input value={form.campaignId} onChange={e=>setForm({...form,campaignId:e.target.value})} placeholder="Campaign ID (e.g. cmp_123)" className="bg-[#0B0215] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30" />
-          <input value={form.revenue} onChange={e=>setForm({...form,revenue:e.target.value})} placeholder="Revenue (e.g. 5000)" type="number" className="bg-[#0B0215] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30" />
-          <input value={form.cost} onChange={e=>setForm({...form,cost:e.target.value})} placeholder="Cost (e.g. 1200)" type="number" className="bg-[#0B0215] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30" />
-          <input value={form.views} onChange={e=>setForm({...form,views:e.target.value})} placeholder="Views" type="number" className="bg-[#0B0215] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30" />
-          <input value={form.conversions} onChange={e=>setForm({...form,conversions:e.target.value})} placeholder="Conversions" type="number" className="bg-[#0B0215] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/30" />
+          <input value={form.campaignId} onChange={e=>setForm({...form,campaignId:e.target.value})} placeholder="Campaign ID (e.g. cmp_123)" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#9CA3AF]" />
+          <input value={form.revenue} onChange={e=>setForm({...form,revenue:e.target.value})} placeholder="Revenue (e.g. 5000)" type="number" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#9CA3AF]" />
+          <input value={form.cost} onChange={e=>setForm({...form,cost:e.target.value})} placeholder="Cost (e.g. 1200)" type="number" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#9CA3AF]" />
+          <input value={form.views} onChange={e=>setForm({...form,views:e.target.value})} placeholder="Views" type="number" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#9CA3AF]" />
+          <input value={form.conversions} onChange={e=>setForm({...form,conversions:e.target.value})} placeholder="Conversions" type="number" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#9CA3AF]" />
         </div>
         <button onClick={handleSave} disabled={saving} className="mt-3 px-6 py-2.5 rounded-xl bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase disabled:opacity-50">{saving ? 'Saving...' : 'Save Outcome'}</button>
       </div>
@@ -116,12 +116,12 @@ export const Outcomes = () => {
 
       {outcomes.length > 0 && (
         <div className="glass p-6">
-          <h3 className="text-sm font-bold tracking-widest uppercase text-white/60">Recent Outcomes</h3>
+          <h3 className="text-sm font-bold tracking-widest uppercase text-[#6B7280]">Recent Outcomes</h3>
           <div className="mt-3 space-y-2 max-h-80 overflow-y-auto">
             {outcomes.slice(0,10).map(o=>(
-              <div key={o.id} className="bg-[#0B0215] border border-white/10 rounded-xl p-3 flex items-center gap-3 text-sm">
-                <span className="text-white/60 truncate flex-1">{o.campaign_id || o.campaignId} — ${Number(o.revenue||0).toLocaleString()} / ${Number(o.cost||0).toLocaleString()} → {(Number(o.roi)||0).toFixed(1)}% ROI</span>
-                <span className="text-xs text-white/30">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</span>
+              <div key={o.id} className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl p-3 flex items-center gap-3 text-sm">
+                <span className="text-[#6B7280] truncate flex-1">{o.campaign_id || o.campaignId} — ${Number(o.revenue||0).toLocaleString()} / ${Number(o.cost||0).toLocaleString()} → {(Number(o.roi)||0).toFixed(1)}% ROI</span>
+                <span className="text-xs text-[#9CA3AF]">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</span>
               </div>
             ))}
           </div>
