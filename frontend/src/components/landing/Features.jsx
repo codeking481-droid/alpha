@@ -9,25 +9,26 @@ const items = [
 
 export const Features = () => {
   return (
-    <section id="platform" className="max-w-[1120px] mx-auto px-6 py-16" style={{background:'#FFFCF8'}}>
+    <section id="platform" className="max-w-[1040px] mx-auto px-6" style={{background:'#FFFCF8', paddingTop:'120px', paddingBottom:'0'}}>
       <div className="text-center max-w-2xl mx-auto">
-        <h2 className="font-semibold" style={{color:'#0A0A0A', fontSize:'32px', letterSpacing:'-0.02em'}}>Built for operators, <span style={{color:'#6B7280', fontStyle:'italic', fontWeight:400}}>not tourists.</span></h2>
+        <h2 style={{color:'#0A0A0A', fontSize:'28px', fontWeight:600, letterSpacing:'-0.02em'}}>Built for operators, <span style={{color:'#6B7280', fontStyle:'italic', fontWeight:400}}>not tourists.</span></h2>
         <p className="mt-3" style={{color:'#6B7280', fontSize:'15px'}}>Each module is quiet, fast and empty until you add. No sample data.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-10" style={{gap:'12px'}}>
         {items.map(it=>(
-          <div key={it.n} className="card" style={{background:'#FFFCF8', border:'1px solid #EDEDED', borderRadius:'12px', padding:'24px'}}>
-            <div className="label" style={{color:'#6B7280', fontSize:'12px', letterSpacing:'0.08em', fontWeight:500}}>{it.n} {it.k}</div>
-            <h3 className="font-semibold mt-3" style={{color:'#0A0A0A', fontSize:'16px'}}>{it.t}</h3>
-            <p className="mt-2" style={{color:'#6B7280', fontSize:'14px', lineHeight:'1.6'}}>{it.d}</p>
-            <ul className="mt-4 space-y-1.5">
+          <div key={it.n} className="card" style={{background:'#FFFFFF', border:'1px solid #EDEDED', borderRadius:'12px', padding:'24px', transition:'border-color 0.15s'}}>
+            <div style={{color:'#0A0A0A', opacity:0.4, fontSize:'11px', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase'}}>{it.n} {it.k}</div>
+            <h3 className="mt-3" style={{color:'#0A0A0A', fontSize:'15px', fontWeight:600}}>{it.t}</h3>
+            <p className="mt-2" style={{color:'#6B7280', fontSize:'14px', lineHeight:'1.5'}}>{it.d}</p>
+            <ul className="mt-4 space-y-1">
               {it.points.map(p=>(
-                <li key={p} className="flex items-center gap-2" style={{color:'#6B7280', fontSize:'13px'}}><span style={{color:'#5E17EB'}}>•</span>{p}</li>
+                <li key={p} className="flex items-center gap-2" style={{color:'#6B7280', fontSize:'13px'}}><span style={{color:'#EDEDED'}}>—</span>{p}</li>
               ))}
             </ul>
           </div>
         ))}
       </div>
+      <style>{`.card:hover{border-color:#D0D0D0 !important;}`}</style>
     </section>
   );
 };

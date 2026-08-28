@@ -56,13 +56,13 @@ export const AccessCode = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6" style={{background:'#FFFFFB'}}>
+    <div className="min-h-screen flex items-center justify-center px-6" style={{background:'#FFFCF8'}}>
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🔑</div>
           <h1 className="text-3xl font-bold" style={{color:'#0A0A0A'}}>Enter Access Token</h1>
-          <p className="mt-2" style={{color:'#555555'}}>
-            Enter your token to access Alpha Agency. <span style={{color:'#5E17EB', fontWeight:600}}>Secure • Single-use</span>
+          <p className="mt-2" style={{color:'#6B7280'}}>
+            Enter your token to access Alpha Agency. <span style={{color:'#0A0A0A', fontWeight:600}}>Secure • Single-use</span>
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export const AccessCode = () => {
             type="submit"
             disabled={loading}
             className="btn-primary w-full py-4 text-lg justify-center"
-            style={{background:'#5E17EB'}}
+            style={{background:'#0A0A0A'}}
           >
             {loading ? 'Verifying...' : '🔓 Unlock Platform'}
           </button>
@@ -91,22 +91,22 @@ export const AccessCode = () => {
         {message && <p className="mt-4 text-center text-sm" style={{color: message.startsWith('✅') ? '#0A7A00' : '#C00000'}}>{message}</p>}
 
         <div className="text-center mt-8">
-          <p className="text-sm" style={{color:'#777777'}}>
+          <p className="text-sm" style={{color:'#6B7280'}}>
             Don't have a token?{' '}
-            <Link to="/checkout?price=50" className="font-medium hover:underline" style={{color:'#5E17EB'}}>
+            <Link to="/checkout?price=50" className="font-medium hover:underline" style={{color:'#0A0A0A'}}>
               Purchase one for $50 USD
             </Link>
-            {' '}<span style={{color:'#CCCCCC'}}>•</span>{' '}
-            <Link to="/checkout?price=99" className="font-medium hover:underline" style={{color:'#5E17EB'}}>
+            {' '}<span style={{color:'#EDEDED'}}>•</span>{' '}
+            <Link to="/checkout?price=99" className="font-medium hover:underline" style={{color:'#0A0A0A'}}>
               $99 Premium
             </Link>
           </p>
-          <p className="text-xs mt-2" style={{color:'#999999'}}>
+          <p className="text-xs mt-2" style={{color:'#6B7280'}}>
             One-time payment. Lifetime access. Paystack USD.
           </p>
           <div className="mt-4 flex gap-2 justify-center">
-            <Link to="/checkout?price=50" className="px-4 py-2 rounded-full text-xs font-bold" style={{background:'#0A0A0A', color:'#FFFFFB'}}>Buy $50 →</Link>
-            <Link to="/checkout?price=99" className="px-4 py-2 rounded-full text-xs font-bold" style={{background:'#5E17EB', color:'#FFFFFB'}}>Buy $99 →</Link>
+            <Link to="/checkout?price=50" className="px-4 py-2 rounded-lg text-xs font-semibold" style={{background:'#0A0A0A', color:'#FFFCF8', borderRadius:'8px'}}>Buy $50 →</Link>
+            <Link to="/checkout?price=99" className="px-4 py-2 rounded-lg text-xs font-semibold" style={{background:'#FFFFFF', color:'#0A0A0A', border:'1px solid #EDEDED', borderRadius:'8px'}}>Buy $99 →</Link>
           </div>
         </div>
 

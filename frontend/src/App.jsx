@@ -68,17 +68,17 @@ function TopNav() {
   const links = hasAccess ? privateLinks : publicLinks;
   return (
     <nav className="sticky top-0 z-50 border-b flex items-center" style={{height:'64px', background:'rgba(255,252,248,0.8)', borderColor:'#EDEDED', backdropFilter:'blur(8px)'}}>
-      <div className="max-w-[1120px] mx-auto w-full px-6 flex items-center">
+      <div className="max-w-[1040px] mx-auto w-full px-6 flex items-center">
         <a href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold" style={{background:'#5E17EB', width:'32px', height:'32px'}}>α</div>
           <span className="font-semibold" style={{color:'#0A0A0A', fontSize:'15px'}}>Alpha</span>
-          <span className="hidden sm:inline" style={{color:'#6B7280', fontSize:'12px'}}>• OS v1.0</span>
+          <span className="hidden sm:inline-flex items-center gap-1.5" style={{color:'#6B7280', fontSize:'12px'}}><span style={{width:'4px', height:'4px', borderRadius:'999px', background:'#5E17EB', display:'inline-block'}} /> OS v1.0</span>
         </a>
 
         <div className="hidden md:flex items-center gap-6 mx-auto">
           {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end} className="flex items-center gap-1.5" style={({ isActive }) => ({color: isActive ? '#0A0A0A' : '#6B7280', fontSize:'12px', fontWeight:500, textTransform:'uppercase', letterSpacing:'0.08em'})}>
-              {({ isActive }) => (<><span className={isActive ? 'dot-violet' : ''} style={{width:isActive?'6px':'0', height:'6px'}} />{l.label}</>)}
+            <NavLink key={l.to} to={l.to} end={l.end} className="flex items-center gap-1.5" style={({ isActive }) => ({color: isActive ? '#0A0A0A' : '#6B7280', fontSize:'11px', fontWeight:500, textTransform:'uppercase', letterSpacing:'0.06em'})}>
+              {({ isActive }) => (<><span className={isActive ? 'dot-violet' : ''} style={{width:isActive?'6px':'0', height:'6px', borderRadius:'999px'}} />{l.label}</>)}
             </NavLink>
           ))}
         </div>

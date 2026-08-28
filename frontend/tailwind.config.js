@@ -18,7 +18,7 @@ export default {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
       },
       maxWidth: {
-        content: "1120px",
+        content: "1040px",
       },
       borderRadius: {
         card: "12px",
