@@ -12,6 +12,8 @@ import Auth from "./pages/Auth.jsx"
 import AccessCode from "./pages/AccessCode.jsx"
 import Checkout from "./pages/Checkout.jsx"
 import AdminCodes from "./pages/AdminCodes.jsx"
+import Team from "./pages/Team.jsx"
+import Campaigns from "./pages/Campaigns.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
 
@@ -26,6 +28,8 @@ function TopNav() {
     { to: "/deals", label: "💰 Deal Desk" },
     { to: "/outcomes", label: "📊 Outcomes" },
     { to: "/client", label: "👁️ Client" },
+    { to: "/team", label: "◐ Team" },
+    { to: "/campaigns", label: "⬢ Campaigns" },
   ]
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/90 border-b border-white/10">
@@ -115,6 +119,8 @@ export default function App() {
           <Route path="/access-code" element={<AccessCode />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/admin" element={<AdminCodes />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/content" element={<ContentStudio />} />
           <Route path="/outreach" element={<OutreachEngine />} />

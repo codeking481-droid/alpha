@@ -9,6 +9,9 @@ import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
 import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/replyTracker.js'
 import { saveOutcome, getOutcomes, getOutcomeSummary } from './lib/outcomeTracker.js'
+import { listTeam, addTeamMember, updateTeamRole, removeTeamMember } from './lib/team.js'
+import { listCampaigns, createCampaign, getCampaign, updateCampaign, deleteCampaign, setCampaignStatus } from './lib/campaigns.js'
+import { scheduleCampaign, getAutomationStatus, pauseAutomation, resumeAutomation, tickAutomation } from './lib/automation.js'
 
 const app = new Hono()
 app.use('*', cors())
@@ -20,7 +23,7 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase not configured — all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], outcomes: [], client_outcomes: [], outcomes: [], client_outcomes: [] }
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], outcomes: [], client_outcomes: [], team: [], campaigns: [], outcomes: [], client_outcomes: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -325,6 +328,185 @@ app.post('/api/deals/contracts', async (c) => {
 })
 
 // â”€â”€ Auth / Access Codes
+// ── Team Management (Prompt scaling #1)
+app.get('/api/team', async (c) => {
+  try {
+    const user = await requireAuth(c, c.env);
+    if (!user) return c.json({ error: 'Unauthorized' }, 401);
+    const sup = await listTeam(c.env);
+    if (sup !== null) return c.json(sup);
+    const all = await list(c.env, 'team');
+    return c.json(all);
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/team', async (c) => {
+  try {
+    const user = await requireAuth(c, c.env);
+    if (!user) return c.json({ error: 'Unauthorized' }, 401);
+    const me = await requireAdmin(c, c.env);
+    if (!me) return c.json({ error: 'Forbidden: admin only' }, 403);
+    const { email, role, name } = await c.req.json().catch(()=>({}));
+    if (!email) return c.json({ error: 'email required' }, 400);
+    if (hasSupabase(c.env)) {
+      const row = await addTeamMember(c.env, { email, role, name });
+      return c.json(row, 201);
+    }
+    const row = await addTeamMember(c.env, { email, role, name });
+    const saved = await create(c.env, 'team', row);
+    return c.json(saved, 201);
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.put('/api/team/:id', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env);
+    if (!admin) return c.json({ error: 'Forbidden: admin only' }, 403);
+    const { role } = await c.req.json().catch(()=>({}));
+    const id = c.req.param('id');
+    if (hasSupabase(c.env)) {
+      const updated = await updateTeamRole(c.env, id, role);
+      return c.json(updated);
+    }
+    const updated = await updateOne(c.env, 'team', id, { role: (role||'member').toLowerCase() });
+    return updated ? c.json(updated) : c.json({ error: 'not found' }, 404);
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.delete('/api/team/:id', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env);
+    if (!admin) return c.json({ error: 'Forbidden: admin only' }, 403);
+    const id = c.req.param('id');
+    if (hasSupabase(c.env)) {
+      await removeTeamMember(c.env, id);
+      return c.json({ ok:true });
+    }
+    const ok = await deleteOne(c.env, 'team', id);
+    return ok ? c.json({ ok:true }) : c.json({ error:'not found' },404);
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
+// ── Campaign Manager (Prompt scaling #2)
+app.get('/api/campaigns', async (c) => {
+  try {
+    const sup = await listCampaigns(c.env);
+    if (sup !== null) return c.json(sup);
+    return c.json(await list(c.env, 'campaigns'));
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/campaigns', async (c) => {
+  try {
+    const body = await c.req.json().catch(()=>({}));
+    const user = await requireAuth(c, c.env);
+    if (!hasSupabase(c.env)) {
+      const tmp = await createCampaign(c.env, { ...body, created_by: user?.id || null });
+      const saved = await create(c.env, 'campaigns', tmp);
+      return c.json(saved, 201);
+    }
+    const created = await createCampaign(c.env, { ...body, created_by: user?.id || null, createdBy: user?.id || null });
+    return c.json(created, 201);
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.get('/api/campaigns/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    if (hasSupabase(c.env)) {
+      const row = await getCampaign(c.env, id);
+      if (row) return c.json(row);
+    }
+    const row = await getOne(c.env, 'campaigns', id);
+    return row ? c.json(row) : c.json({ error:'not found' },404);
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.put('/api/campaigns/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const patch = await c.req.json().catch(()=>({}));
+    if (hasSupabase(c.env)) {
+      const updated = await updateCampaign(c.env, id, patch);
+      return c.json(updated);
+    }
+    const updated = await updateOne(c.env, 'campaigns', id, patch);
+    return updated ? c.json(updated) : c.json({ error:'not found' },404);
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.delete('/api/campaigns/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    if (hasSupabase(c.env)) {
+      await deleteCampaign(c.env, id);
+      return c.json({ ok:true });
+    }
+    const ok = await deleteOne(c.env, 'campaigns', id);
+    return ok ? c.json({ ok:true }) : c.json({ error:'not found' },404);
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/campaigns/:id/start', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const row = hasSupabase(c.env) ? await setCampaignStatus(c.env, id, 'active') : await updateOne(c.env, 'campaigns', id, { status:'active' });
+    return c.json(row || { id, status:'active' });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/campaigns/:id/pause', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const row = hasSupabase(c.env) ? await setCampaignStatus(c.env, id, 'paused') : await updateOne(c.env, 'campaigns', id, { status:'paused' });
+    return c.json(row || { id, status:'paused' });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/campaigns/:id/complete', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const row = hasSupabase(c.env) ? await setCampaignStatus(c.env, id, 'completed') : await updateOne(c.env, 'campaigns', id, { status:'completed' });
+    return c.json(row || { id, status:'completed' });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+
+// ── Email Automation (Prompt scaling #3)
+app.post('/api/automation/schedule', async (c) => {
+  try {
+    const { campaignId, campaign_id, leads, template, schedule, perDay, atHour } = await c.req.json().catch(()=>({}));
+    const cid = campaignId || campaign_id;
+    if (!cid) return c.json({ error:'campaignId required' },400);
+    const sched = schedule || { type: 'daily', perDay: Number(perDay)||10, atHour: Number(atHour)||9 };
+    const job = await scheduleCampaign(c.env, cid, { leads: leads || [], template: template || '', schedule: sched });
+    return c.json({ success:true, job });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.get('/api/automation/status', async (c) => {
+  try {
+    const campaignId = c.req.query('campaignId') || c.req.query('campaign_id') || null;
+    const status = await getAutomationStatus(c.env, campaignId);
+    return c.json(Array.isArray(status) ? { queues: status } : { status });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/automation/pause', async (c) => {
+  try {
+    const { campaignId, campaign_id } = await c.req.json().catch(()=>({}));
+    const cid = campaignId || campaign_id || c.req.query('campaignId');
+    if (!cid) return c.json({ error:'campaignId required' },400);
+    const job = await pauseAutomation(c.env, cid);
+    return c.json({ success:true, job });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/automation/resume', async (c) => {
+  try {
+    const { campaignId, campaign_id } = await c.req.json().catch(()=>({}));
+    const cid = campaignId || campaign_id || c.req.query('campaignId');
+    if (!cid) return c.json({ error:'campaignId required' },400);
+    const job = await resumeAutomation(c.env, cid);
+    return c.json({ success:true, job });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+app.post('/api/automation/tick', async (c) => {
+  try {
+    const { campaignId, campaign_id, perDay } = await c.req.json().catch(()=>({}));
+    const cid = campaignId || campaign_id;
+    if (!cid) return c.json({ error:'campaignId required' },400);
+    const result = await tickAutomation(c.env, cid, perDay ? Number(perDay) : undefined);
+    return c.json({ success:true, ...result });
+  } catch (e) { return c.json({ error:e.message },500) }
+})
+
 app.post('/api/auth/login', async (c) => {
   const { email, password } = await c.req.json().catch(()=>({}))
   if (!email) return c.json({ error: 'email required' }, 400)
