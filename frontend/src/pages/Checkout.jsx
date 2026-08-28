@@ -42,7 +42,7 @@ export const Checkout = () => {
           if (c) localStorage.setItem('alpha.pending_code', c);
           setMessage(`✅ Payment verified — ${verifyEmail} — code: ${c || '(issued)'} — keep it safe, single-use.`);
         } catch (e) {
-          setMessage('❌ ' + e.message + ' — If you paid, contact hello@alphatekx.name.ng with reference ' + refParam);
+          setMessage('❌ ' + e.message + ' — If you paid, contact alphatekxcompany@gmail.com with reference ' + refParam);
         } finally { setVerifying(false); }
       })();
     }

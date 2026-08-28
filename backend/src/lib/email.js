@@ -3,7 +3,7 @@
 
 export async function sendEmailResend(env, { to, subject, html, text, from }) {
   const key = env.RESEND_API_KEY
-  const fromEmail = from || env.FROM_EMAIL || 'noreply@alphatekx.name.ng'
+  const fromEmail = from || env.FROM_EMAIL || 'alphatekxcompany@gmail.com'
   if (!key) throw new Error('RESEND_API_KEY not set — set it in Worker secrets')
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',

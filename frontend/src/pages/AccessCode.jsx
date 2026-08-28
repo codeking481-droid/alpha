@@ -108,7 +108,7 @@ export const AccessCode = () => {
             <span>•</span>
             <Link to="/checkout?price=99" className="hover:text-white underline">Buy $99 premium</Link>
             <span>•</span>
-            <a href="mailto:hello@alphatekx.name.ng" className="hover:text-white underline">Contact admin</a>
+            <a href="mailto:alphatekxcompany@gmail.com" className="hover:text-white underline">alphatekxcompany@gmail.com</a>
           </div>
         </div>
       </div>

@@ -32,7 +32,7 @@ export const Footer = () => {
             <div>
               <div className="eyebrow text-white/40">Company</div>
               <ul className="mt-3 space-y-2 text-white/40">
-                <li><a href="mailto:hello@alphatekx.name.ng" className="hover:text-white">hello@alphatekx.name.ng</a></li>
+                <li><a href="mailto:alphatekxcompany@gmail.com" className="hover:text-white">alphatekxcompany@gmail.com</a></li>
                 <li><a href="#" className="hover:text-white">Privacy • Terms</a></li>
                 <li><span className="text-white/20">30-day refund</span></li>
               </ul>
