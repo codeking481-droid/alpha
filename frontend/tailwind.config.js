@@ -7,13 +7,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        alpha: {
-          dark: "#0B0215",
-          card: "#14141f",
-          accent: "#FFD700",
-          gold: "#FFD700"
-        }
-      }
+        paper: "#FFFCF8",
+        ink: "#0A0A0A",
+        violet: "#5E17EB",
+        muted: "#6B7280",
+        border: "#EDEDED",
+        success: "#10B981",
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+      },
+      maxWidth: {
+        content: "1120px",
+      },
+      borderRadius: {
+        card: "12px",
+        btn: "8px",
+        input: "8px",
+      },
     },
   },
   plugins: [],

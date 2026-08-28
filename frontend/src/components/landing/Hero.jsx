@@ -2,29 +2,24 @@ import { Link } from 'react-router-dom';
 
 export const Hero = () => {
   return (
-    <section className="max-w-6xl mx-auto px-6 py-20 text-center">
-      <div className="inline-block bg-violet/10 text-violet px-4 py-1.5 rounded-full text-sm font-medium tracking-wide mb-6" style={{background:'rgba(94,23,235,0.08)', color:'#5E17EB'}}>
-        Alpha Agency OS
-      </div>
-      <h1 className="text-5xl sm:text-6xl font-bold text-black tracking-tight leading-[1.1]" style={{color:'#0A0A0A'}}>
+    <section className="max-w-[1120px] mx-auto px-6 py-20 text-center" style={{background:'#FFFCF8'}}>
+      <div className="label mb-6" style={{color:'#6B7280', letterSpacing:'0.08em', fontSize:'12px', fontWeight:500}}>PLATFORM • 6 MODULES • ONE OS</div>
+      <h1 className="font-semibold leading-tight" style={{color:'#0A0A0A', fontSize:'56px', letterSpacing:'-0.02em'}}>
         The Invisible OS for<br />
-        <span style={{color:'#5E17EB'}}>Modern Agencies</span>
+        <span style={{color:'#0A0A0A', borderBottom:'3px solid #5E17EB', paddingBottom:'2px'}}>Modern Agencies</span>
       </h1>
-      <p className="text-lg max-w-2xl mx-auto mt-6" style={{color:'#555555'}}>
-        Find leads. Create content. Send outreach. Prove ROI.
-        All from one platform. No noise. Just results.
+      <p className="mx-auto mt-6" style={{color:'#6B7280', fontSize:'18px', maxWidth:'560px', lineHeight:'1.6'}}>
+        Find leads. Create content. Send outreach. Prove ROI. All from one platform. No noise. Just results.
       </p>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-        <Link to="/auth" className="btn-primary text-lg px-10 py-4" style={{background:'#5E17EB', color:'#FFFFFB'}}>
-          Get Started →
+      <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+        <Link to="/signup" className="btn-primary" style={{background:'#0A0A0A', height:'44px', padding:'0 24px', borderRadius:'8px'}}>
+          Get Access Token →
         </Link>
-        <Link to="/auth" className="btn-outline text-lg px-10 py-4" style={{color:'#5E17EB', borderColor:'#5E17EB'}}>
-          View Pricing
+        <Link to="/platform" className="btn-secondary" style={{height:'44px', borderRadius:'8px'}}>
+          View Platform
         </Link>
       </div>
-      <p className="text-sm mt-6" style={{color:'#999999'}}>
-        Free to start. Pay only when you deliver.
-      </p>
+      <p className="mt-4" style={{color:'#6B7280', fontSize:'13px'}}>Free to start. Pay only when you deliver.</p>
     </section>
   );
 };

@@ -8,8 +8,12 @@ import DealDesk from "./pages/DealDesk.jsx"
 import Outcomes from "./pages/Outcomes.jsx"
 import ClientDashboard from "./pages/ClientDashboard.jsx"
 import Landing from "./pages/Landing.jsx"
+import Platform from "./pages/Platform.jsx"
+import PricingPage from "./pages/PricingPage.jsx"
 import Auth from "./pages/Auth.jsx"
 import AccessCode from "./pages/AccessCode.jsx"
+import Signup from "./pages/Signup.jsx"
+import Legal from "./pages/Legal.jsx"
 import Checkout from "./pages/Checkout.jsx"
 import AdminCodes from "./pages/AdminCodes.jsx"
 import Campaigns from "./pages/Campaigns.jsx"
@@ -50,57 +54,55 @@ function TopNav() {
     const id = setInterval(check, 1000);
     return ()=> { window.removeEventListener('storage', check); clearInterval(id); };
   }, []);
-  const base = "relative px-3 sm:px-4 py-2.5 text-xs font-medium transition min-h-[44px] flex items-center"
-  const fullLinks = [
-    { to: "/dashboard", label: "Dashboard", end: true },
-    { to: "/content", label: "Content" },
-    { to: "/outreach", label: "Outreach" },
-    { to: "/approvals", label: "Approvals" },
-    { to: "/campaigns", label: "Campaigns" },
-    { to: "/analytics", label: "Analytics" },
-    { to: "/deals", label: "Deals" },
-  ];
+  // Brand law: 12px uppercase, gray, violet dot on active
   const publicLinks = [
-    { to: "/", label: "Home", end: true },
-    { to: "/auth", label: "Sign up" },
-    { to: "/access-code", label: "Access" },
+    { to: "/platform", label: "Platform" },
+    { to: "/pricing", label: "Pricing" },
+    { to: "/access", label: "Access" },
   ];
-  const links = hasAccess ? fullLinks : publicLinks;
+  const privateLinks = [
+    { to: "/dashboard", label: "Dashboard", end: true },
+    { to: "/platform", label: "Platform" },
+    { to: "/pricing", label: "Pricing" },
+  ];
+  const links = hasAccess ? privateLinks : publicLinks;
   return (
-    <nav className="sticky top-0 z-50 border-b" style={{background:'#FFFFFB', borderColor:'#EAEAEA'}}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0" style={{background:'#5E17EB'}}>α</div>
-          <span className="font-bold tracking-tight text-sm truncate" style={{color:'#0A0A0A'}}>ALPHA</span>
-          <span className="hidden lg:inline text-xs font-medium px-2 py-1 rounded-full" style={{background:'rgba(94,23,235,0.08)', color:'#5E17EB'}}>OS • v1.0</span>
-        </div>
+    <nav className="sticky top-0 z-50 border-b flex items-center" style={{height:'64px', background:'rgba(255,252,248,0.8)', borderColor:'#EDEDED', backdropFilter:'blur(8px)'}}>
+      <div className="max-w-[1120px] mx-auto w-full px-6 flex items-center">
+        <a href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold" style={{background:'#5E17EB', width:'32px', height:'32px'}}>α</div>
+          <span className="font-semibold" style={{color:'#0A0A0A', fontSize:'15px'}}>Alpha</span>
+          <span className="hidden sm:inline" style={{color:'#6B7280', fontSize:'12px'}}>• OS v1.0</span>
+        </a>
 
-        <div className="hidden lg:flex items-center gap-1 ml-4">
+        <div className="hidden md:flex items-center gap-6 mx-auto">
           {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `${base} rounded-lg ${isActive ? "text-white" : "hover:bg-gray-50"}`} style={({ isActive }) => isActive ? {background:'#5E17EB', color:'#FFFFFB'} : {color:'#555555'}}>
-              {l.label}
+            <NavLink key={l.to} to={l.to} end={l.end} className="flex items-center gap-1.5" style={({ isActive }) => ({color: isActive ? '#0A0A0A' : '#6B7280', fontSize:'12px', fontWeight:500, textTransform:'uppercase', letterSpacing:'0.08em'})}>
+              {({ isActive }) => (<><span className={isActive ? 'dot-violet' : ''} style={{width:isActive?'6px':'0', height:'6px'}} />{l.label}</>)}
             </NavLink>
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          {hasAccess ? <CommandPalette /> : <a href="/auth" className="hidden sm:inline-flex px-4 py-2 rounded-lg font-semibold text-sm" style={{background:'#0A0A0A', color:'#FFFFFB'}}>Sign up →</a>}
-          <span className="hidden sm:flex items-center gap-1.5 text-xs font-medium" style={{color:'#5E17EB'}}><span className="w-2 h-2 rounded-full" style={{background:'#5E17EB'}}/> {hasAccess ? 'Private' : 'Public'}</span>
-          {!hasAccess && <a href="/checkout?price=50" className="hidden sm:inline-flex px-4 py-2 rounded-lg font-bold text-xs" style={{background:'#5E17EB', color:'#FFFFFB'}}>Buy $50</a>}
-          <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 rounded-lg flex items-center justify-center border" style={{borderColor:'#EAEAEA', color:'#0A0A0A'}} aria-label="Menu">
-            <span className="text-lg">{open ? "✕" : "☰"}</span>
+        <div className="ml-auto flex items-center gap-3">
+          {hasAccess ? <CommandPalette /> : <a href="/access" className="hidden sm:inline-flex items-center justify-center" style={{color:'#6B7280', fontSize:'13px', fontWeight:500, padding:'0 12px', height:'36px'}}>Sign in</a>}
+          <a href={hasAccess ? "/dashboard" : "/signup"} className="inline-flex items-center justify-center font-semibold" style={{background:'#0A0A0A', color:'#FFFFFB', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px'}}>
+            Get Access
+          </a>
+          <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center" style={{border:'1px solid #EDEDED', color:'#0A0A0A'}} aria-label="Menu">
+            <span className="text-base">{open ? "✕" : "☰"}</span>
           </button>
         </div>
       </div>
 
       {open && (
-        <div className="lg:hidden border-t" style={{background:'#FFFFFB', borderColor:'#EAEAEA'}}>
-          <div className="px-4 py-3 grid gap-1">
+        <div className="md:hidden absolute top-16 left-0 right-0 border-b" style={{background:'#FFFCF8', borderColor:'#EDEDED'}}>
+          <div className="px-6 py-3 grid gap-1">
             {links.map((l) => (
-              <NavLink key={l.to} to={l.to} end={l.end} onClick={() => setOpen(false)} className="px-4 py-3 rounded-lg text-sm font-medium flex items-center" style={({ isActive }) => isActive ? {background:'#5E17EB', color:'#FFFFFB'} : {background:'#FAFAFA', color:'#555555', border:'1px solid #EAEAEA'}}>
+              <NavLink key={l.to} to={l.to} end={l.end} onClick={() => setOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium" style={({ isActive }) => isActive ? {background:'#5E17EB', color:'#FFFFFB'} : {color:'#6B7280'}}>
                 {l.label}
               </NavLink>
             ))}
+            <a href="/signup" className="mt-2 text-center font-semibold" style={{background:'#0A0A0A', color:'#FFFFFB', height:'44px', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'8px'}}>Get Access Token →</a>
           </div>
         </div>
       )}
@@ -135,14 +137,22 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <div className="min-h-screen" style={{background:'#FFFFFB'}}>
+        <div className="min-h-screen" style={{background:'#FFFCF8', overflowX:'hidden'}}>
           <TopNav />
           <Onboarding />
             <Routes>
+              {/* New pure architecture */}
               <Route path="/" element={<Landing />} />
+              <Route path="/platform" element={<Platform />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/access" element={<AccessCode />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/legal/:type" element={<Legal />} />
+              {/* Legacy aliases */}
               <Route path="/auth" element={<Auth />} />
               <Route path="/access-code" element={<AccessCode />} />
               <Route path="/checkout" element={<Checkout />} />
+              {/* Protected OS */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/content" element={<ProtectedRoute><ContentStudio /></ProtectedRoute>} />
               <Route path="/outreach" element={<ProtectedRoute><OutreachEngine /></ProtectedRoute>} />
