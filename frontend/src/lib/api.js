@@ -83,4 +83,21 @@ export const api = {
     roi: () => req("/api/outcomes/roi"),
     report: (d) => req("/api/outcomes/report", { method: "POST", body: JSON.stringify(d) }),
   },
+  // Ad Engine — One-Week Campaigns
+  community: {
+    get: () => req("/api/community"),
+  },
+  adEngine: {
+    findLeads: (d) => req("/api/ad-engine/find-leads", { method: "POST", body: JSON.stringify(d) }),
+    sendOffers: (d) => req("/api/ad-engine/send-offers", { method: "POST", body: JSON.stringify(d) }),
+    previewOffers: (d) => req("/api/ad-engine/preview-offers", { method: "POST", body: JSON.stringify(d) }),
+    plan: (d) => req("/api/ad-engine/plan", { method: "POST", body: JSON.stringify(d) }),
+    generateContent: (d) => req("/api/ad-engine/generate-content", { method: "POST", body: JSON.stringify(d) }),
+    delivery: (d) => req("/api/ad-engine/delivery", { method: "POST", body: JSON.stringify(d) }),
+    template: () => req("/api/ad-engine/template"),
+  },
+  approvals: {
+    list: () => req("/api/approvals"),
+    approve: (id, d) => req(`/api/approvals/${id}/approve`, { method: "POST", body: JSON.stringify(d||{}) }),
+  },
 }

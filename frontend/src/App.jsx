@@ -14,6 +14,7 @@ import AccessCode from "./pages/AccessCode.jsx"
 import Checkout from "./pages/Checkout.jsx"
 import AdminCodes from "./pages/AdminCodes.jsx"
 import Campaigns from "./pages/Campaigns.jsx"
+import Approvals from "./pages/Approvals.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.jsx"
@@ -56,11 +57,12 @@ function TopNav() {
     { to: "/dashboard", label: "🚀 Command Hub", end: true },
     { to: "/content", label: "✍️ Content" },
     { to: "/outreach", label: "📧 Outreach" },
+    { to: "/approvals", label: "✓ Approvals" },
+    { to: "/campaigns", label: "⬢ Campaigns" },
     { to: "/analytics", label: "📊 Analytics" },
     { to: "/deals", label: "💰 Deal Desk" },
     { to: "/outcomes", label: "📊 Outcomes" },
     { to: "/client", label: "👁️ Client" },
-    { to: "/campaigns", label: "⬢ Campaigns" },
   ];
   const publicLinks = [
     { to: "/", label: "Home", end: true },
@@ -175,6 +177,7 @@ export default function App() {
               <Route path="/outcomes" element={<ProtectedRoute><Outcomes /></ProtectedRoute>} />
               <Route path="/client" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
               <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
+              <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminCodes /></AdminRoute>} />
             </Routes>
           </Suspense>

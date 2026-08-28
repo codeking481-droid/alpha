@@ -11,6 +11,10 @@ import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/r
 import { saveOutcome, getOutcomes, getOutcomeSummary } from './lib/outcomeTracker.js'
 import { listCampaigns, createCampaign, getCampaign, updateCampaign, deleteCampaign, setCampaignStatus } from './lib/campaigns.js'
 import { scheduleCampaign, getAutomationStatus, pauseAutomation, resumeAutomation, tickAutomation } from './lib/automation.js'
+import { COMMUNITY, PRICING, getTotalReach, getCampaignDeliverables } from './lib/community.js'
+import { generateCampaignPlan } from './lib/campaignPlanner.js'
+import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
+import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
 
 const app = new Hono()
 app.use('*', cors())
@@ -732,6 +736,122 @@ app.get('/api/client/outcomes', async (c) => {
     return c.json({ success: true, outcomes });
   } catch (e) { return c.json({ error: e.message }, 500) }
 });
+
+// ── Alpha Ad Engine — One-Week Campaigns ──
+app.get('/api/community', (c) => c.json({ community: COMMUNITY, pricing: PRICING, reach: getTotalReach(), deliverables: getCampaignDeliverables() }))
+
+// Ad Engine: find 100+ leads via Apollo/Serply/Tavily/Overpass
+app.post('/api/ad-engine/find-leads', async (c) => {
+  try {
+    const { city, niche, limit, query, industry } = await c.req.json().catch(()=>({}))
+    const cityVal = city || query || 'Lagos'
+    const nicheVal = niche || industry || 'tech'
+    const lim = Math.min(Number(limit)||100, 150)
+    const leads = await findLeads(c.env, cityVal, nicheVal, lim)
+    return c.json({ success: true, leads, count: leads.length, city: cityVal, niche: nicheVal, source: leads[0]?.source || 'mixed' })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/ad-engine/find-leads', async (c) => {
+  try {
+    const city = c.req.query('city') || c.req.query('query') || 'Lagos'
+    const niche = c.req.query('niche') || c.req.query('industry') || 'tech'
+    const limit = Math.min(Number(c.req.query('limit'))||100, 150)
+    const leads = await findLeads(c.env, city, niche, limit)
+    return c.json({ success: true, leads, count: leads.length, city, niche })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
+// Ad Engine: send offers bulk
+app.post('/api/ad-engine/send-offers', async (c) => {
+  try {
+    const { leads, useAI, from, subject, body } = await c.req.json().catch(()=>({}))
+    if (!leads || !Array.isArray(leads) || leads.length===0) return c.json({ error: 'leads array required (100 for full campaign)' }, 400)
+    const result = await sendBulkOffers(c.env, leads, { useAI: !!useAI, from, subject, body })
+    // persist sent messages to memory for tracker
+    for (const r of result.results) {
+      if (r.success) try { await create(c.env, 'messages', { to: r.to, subject: r.subject, content: r.text, sent_at: r.sentAt, source: 'ad-engine' }) } catch {}
+    }
+    return c.json({ success: true, ...result })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/ad-engine/preview-offers', async (c) => {
+  try {
+    const { leads, n } = await c.req.json().catch(()=>({}))
+    if (!leads || !Array.isArray(leads)) return c.json({ error: 'leads required' }, 400)
+    return c.json({ success: true, previews: previewOffers(leads, n||3), offer: { price: PRICING.oneWeekCampaign.price, deliverables: PRICING.oneWeekCampaign.deliverables } })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/ad-engine/offer-preview', (c) => {
+  const mockLead = { name: 'CEO', company: 'Demo Co', industry: 'tech', location: 'Lagos' }
+  return c.json({ success: true, ...personalizeOffer(mockLead), community: COMMUNITY, pricing: PRICING })
+})
+
+// Approvals — Yes replies dashboad
+app.get('/api/approvals', async (c) => {
+  try {
+    const all = await list(c.env, 'replies')
+    const q = c.req.query('q') || ''
+    const status = c.req.query('status') || ''
+    let filtered = all
+    if (q) filtered = filtered.filter(r=> `${r.content||r.text||''} ${r.from||''}`.toLowerCase().includes(q.toLowerCase()))
+    if (status.toLowerCase()==='yes') filtered = filtered.filter(r=> `${r.content||r.text||''}`.toLowerCase().includes('yes'))
+    return c.json({ success: true, approvals: filtered, count: filtered.length })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/approvals/:id/approve', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const { company, niche } = await c.req.json().catch(()=>({}))
+    // mark reply or lead as approved, create campaign plan
+    const plan = generateCampaignPlan({ company: company || 'Approved Company', niche: niche || 'business' })
+    let campaign = null
+    try {
+      campaign = await create(c.env, 'campaigns', { name: `${plan.company} — 1 Week`, company: plan.company, niche: plan.niche, status: 'draft', plan, source: 'approval', approval_id: id })
+    } catch {}
+    return c.json({ success: true, plan, campaign })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
+// Campaign Planner — 7-day plan
+app.post('/api/ad-engine/plan', async (c) => {
+  try {
+    const { company, niche, industry, startDate, offer } = await c.req.json().catch(()=>({}))
+    if (!company) return c.json({ error: 'company required' }, 400)
+    const plan = generateCampaignPlan({ company, niche: niche||industry, industry, startDate, offer })
+    return c.json({ success: true, plan })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/ad-engine/plan', async (c) => {
+  const company = c.req.query('company') || 'Demo Company'
+  const niche = c.req.query('niche') || c.req.query('industry') || 'business'
+  const plan = generateCampaignPlan({ company, niche })
+  return c.json({ success: true, plan })
+})
+
+// Content Generator — 32 posts
+app.post('/api/ad-engine/generate-content', async (c) => {
+  try {
+    const { company, niche, plan } = await c.req.json().catch(()=>({}))
+    if (!company && !plan?.company) return c.json({ error: 'company required' }, 400)
+    const pack = await generateWeekContent(c.env, { company: company || plan.company, niche: niche || plan.niche, plan })
+    const delivery = prepareDelivery(pack)
+    return c.json({ success: true, content: pack, delivery })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/ad-engine/delivery', async (c) => {
+  try {
+    const { content, items } = await c.req.json().catch(()=>({}))
+    const pack = content || { items: items || [], company: 'Company', total: (items||[]).length, breakdown: {} }
+    if (!pack.items || pack.items.length===0) return c.json({ error: 'content pack required' }, 400)
+    // if breakdown missing, compute
+    if (!pack.breakdown || !pack.breakdown.linkedin) {
+      pack.breakdown = { linkedin: pack.items.filter(i=>i.platform==='linkedin').length, whatsapp: pack.items.filter(i=>i.platform==='whatsapp').length, telegram: pack.items.filter(i=>i.platform==='telegram').length, youtube: pack.items.filter(i=>i.platform==='youtube').length }
+    }
+    const delivery = prepareDelivery(pack)
+    return c.json({ success: true, delivery })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/ad-engine/template', (c) => c.json({ success: true, template: generateCampaignPlan({ company: 'Demo', niche: 'demo' }).days, pricing: PRICING, community: COMMUNITY }))
 
 export default app
 

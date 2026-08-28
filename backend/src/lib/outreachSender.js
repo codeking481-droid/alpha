@@ -1,0 +1,104 @@
+import { sendEmailResend } from './email.js'
+import { groqGenerate } from './groq.js'
+import { COMMUNITY, PRICING } from './community.js'
+
+export const OFFER_TEMPLATE = {
+  subject: 'Quick win for {{company}} — 1-week campaign to your real audience?',
+  body: `Hi {{name}},
+
+Saw {{company}} in {{industry}} — love what you're doing in {{city}}.
+
+We run a 1-week Ad Campaign that puts you in front of a real, engaged audience (no fake followers):
+
+• LinkedIn — {{linkedinReach}} followers/connections → 10 posts
+• WhatsApp — {{whatsappReach}} members (2 groups) → 10 posts
+• Telegram — {{telegramReach}} members → 10 posts
+• YouTube — {{youtubeReach}}+ subscribers → 2 videos
+
+That's 32 pieces in 7 days — announcement → problem/solution → social proof → educational → insight → CTA → recap/final push.
+
+Flat {{price}} for the full week. We create everything, you approve, we deliver. You pay only when you say Yes.
+
+Want the 1-week plan for {{company}}? Reply YES and I'll send calendar + samples in 10 mins.
+
+— AlphaTekX Agency
+alphatekxcompany@gmail.com
+`,
+}
+
+function renderTemplate(str, vars) {
+  let out = str
+  for (const [k, v] of Object.entries(vars)) {
+    out = out.replaceAll(`{{${k}}}`, String(v ?? ''))
+  }
+  return out
+}
+
+export function personalizeOffer(lead, opts = {}) {
+  const totalWhatsapp = COMMUNITY.whatsapp.groups.reduce((s,g)=>s+g.members,0)
+  const vars = {
+    name: lead.name || lead.contact || 'there',
+    company: lead.company || lead.name || 'your company',
+    industry: lead.industry || lead.niche || 'your industry',
+    city: lead.location || lead.city || 'your city',
+    linkedinReach: `${COMMUNITY.linkedin.followers}+ followers, ${COMMUNITY.linkedin.connections}+ connections`,
+    whatsappReach: String(totalWhatsapp),
+    telegramReach: String(COMMUNITY.telegram.members),
+    youtubeReach: String(COMMUNITY.youtube.subscribers),
+    price: `$${PRICING.oneWeekCampaign.price}`,
+    ...opts.vars,
+  }
+  return {
+    subject: renderTemplate(opts.subject || OFFER_TEMPLATE.subject, vars),
+    text: renderTemplate(opts.body || OFFER_TEMPLATE.body, vars),
+    html: `<pre style="font-family:system-ui;white-space:pre-wrap">${renderTemplate(opts.body || OFFER_TEMPLATE.body, vars)}</pre>`,
+    vars,
+  }
+}
+
+export async function personalizeWithGroq(env, lead, opts = {}) {
+  const base = personalizeOffer(lead, opts)
+  if (!env.GROQ_API_KEY) return base
+  try {
+    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: 1-week campaign 32 posts $500 across LinkedIn/WhatsApp/Telegram/YouTube with real audiences. Tone friendly expert. Keep subject + body. No fake numbers beyond given. Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
+    const { text } = await groqGenerate(env, { prompt })
+    // simple split: first line subject
+    const lines = text.split('\n').filter(Boolean)
+    const subj = lines.find(l=>l.toLowerCase().includes('subject'))?.replace(/.*subject\s*:\s*/i,'') || base.subject
+    return { subject: subj.slice(0,120), text, html: `<pre style="font-family:system-ui;white-space:pre-wrap">${text}</pre>`, vars: base.vars, ai: true }
+  } catch { return base }
+}
+
+export async function sendOffer(env, lead, opts = {}) {
+  const to = lead.email
+  if (!to || !String(to).includes('@')) throw new Error(`No email for ${lead.company || lead.name}`)
+  const { subject, text, html } = opts.useAI ? await personalizeWithGroq(env, lead, opts) : personalizeOffer(lead, opts)
+  const res = await sendEmailResend(env, { to, subject, html, text, from: opts.from })
+  return { lead, to, subject, text, res, sentAt: new Date().toISOString() }
+}
+
+export async function sendBulkOffers(env, leads, opts = {}) {
+  const limit = Math.min(leads.length, opts.limit || 100)
+  const slice = leads.slice(0, limit)
+  const results = []
+  const batch = Number(opts.batchSize) || 10
+  for (let i = 0; i < slice.length; i += batch) {
+    const chunk = slice.slice(i, i + batch)
+    const settled = await Promise.allSettled(chunk.map(l => sendOffer(env, l, opts)))
+    for (const s of settled) {
+      if (s.status === 'fulfilled') results.push({ success: true, ...s.value })
+      else results.push({ success: false, error: s.reason?.message || String(s.reason) })
+    }
+    if (opts.delayMs && i + batch < slice.length) await new Promise(r => setTimeout(r, opts.delayMs))
+  }
+  return {
+    total: slice.length,
+    sent: results.filter(r=>r.success).length,
+    failed: results.filter(r=>!r.success).length,
+    results,
+  }
+}
+
+export function previewOffers(leads, n = 3) {
+  return leads.slice(0, n).map(l => ({ lead: l.company || l.name, ...personalizeOffer(l) }))
+}
