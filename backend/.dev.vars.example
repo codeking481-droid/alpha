@@ -2,4 +2,12 @@
 # cp .dev.vars.example .dev.vars  (then fill)
 SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
 SUPABASE_ANON_KEY="YOUR_ANON_KEY_HERE"
+SUPABASE_SERVICE_KEY="YOUR_SERVICE_ROLE_KEY_HERE"
 GROQ_API_KEY="gsk_YOUR_GROQ_KEY_HERE"
+# Paystack — https://dashboard.paystack.com/#/settings/developer
+# Test: sk_test_...  Live: sk_live_...
+PAYSTACK_SECRET_KEY="sk_test_YOUR_KEY_HERE"
+# Optional: currency and rate
+PAYSTACK_CURRENCY="NGN"
+PAYSTACK_NGN_RATE="1500"
+FRONTEND_URL="http://localhost:5173"

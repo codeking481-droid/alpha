@@ -562,14 +562,50 @@ app.post('/api/admin/generate-code', async (c) => {
     return c.json({ success: true, code: saved })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
-// ── Payment — Paystack ($50 access codes)
+// ── Payment — Paystack ($50/$99 access codes) — fixed: callback, amount, mock fallback
 app.post('/api/payment/initialize', async (c) => {
   try {
-    const { email, amount, price } = await c.req.json().catch(()=>({}));
+    const { email, amount, price, callback_url, callbackUrl } = await c.req.json().catch(()=>({}));
     if (!email) return c.json({ error: 'Email is required' }, 400);
+    const origin = c.req.header('Origin');
+    const cb = callback_url || callbackUrl || (origin ? `${origin.replace(/\/$/,'')}/checkout` : null);
     const amt = Number(price)===99 ? 9900 : Number(amount) ? Number(amount) : 5000;
-    const checkoutUrl = await initializePayment(c.env, email, amt);
-    return c.json({ success: true, checkoutUrl });
+    const initRes = await initializePayment(c.env, email, amt, cb, price);
+    // initializePayment may return string or {url,mock}
+    const checkoutUrl = typeof initRes === 'string' ? initRes : (initRes && initRes.url) || null;
+    const isMock = typeof initRes === 'object' && initRes.mock;
+    if (!checkoutUrl) return c.json({ error: 'No checkout URL from Paystack' }, 500);
+    return c.json({ success: true, checkoutUrl, mock: !!isMock, reference: initRes.reference || null, note: initRes.note || null });
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/payment/verify', async (c) => {
+  try {
+    const reference = c.req.query('reference') || c.req.query('trxref') || c.req.query('ref') || null;
+    const email = c.req.query('email') || null;
+    if (!reference) return c.json({ error: 'Reference required (?reference=...)' }, 400);
+    if (!email) return c.json({ error: 'Email required (?email=...)' }, 400);
+    const payment = await verifyPayment(c.env, reference);
+    if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
+    const mock = !!payment.mock;
+    // Infer price from Paystack amount (kobo) — handle both NGN (7500000) and USD (9900/5000)
+    let price = 50;
+    if (mock) price = String(reference).includes('99') ? 99 : 50; // fallback
+    else {
+      const amt = Number(payment.amount) || 0;
+      const cur = String(payment.currency || 'NGN').toUpperCase();
+      if (cur === 'USD' || cur === 'GHS') price = amt === 9900 ? 99 : 50;
+      else price = amt >= 1000000 ? (amt === 990000 ? 99 : amt >= 14000000 ? 99 : 50) : (amt === 9900 ? 99 : 50);
+      // Prefer metadata if present
+      if (payment.metadata && payment.metadata.price) price = Number(payment.metadata.price) === 99 ? 99 : 50;
+    }
+    let codeRow;
+    if (hasSupabase(c.env)) {
+      try { codeRow = await generatePaidAccessCode(c.env, email, price); } catch (e) { codeRow = await generatePaidAccessCode(c.env, email, price); }
+    } else {
+      const row = await generatePaidAccessCode(c.env, email, price);
+      codeRow = await create(c.env, 'access_codes', row);
+    }
+    return c.json({ success: true, code: codeRow.code, row: codeRow, mock, payment: { reference: payment.reference || reference, amount: payment.amount, currency: payment.currency } });
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.post('/api/payment/verify', async (c) => {
@@ -578,17 +614,27 @@ app.post('/api/payment/verify', async (c) => {
     if (!reference || !email) return c.json({ error: 'Reference and email are required' }, 400);
     const payment = await verifyPayment(c.env, reference);
     if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
-    // Generate paid code
-    const price = payment.amount === 9900 || payment.amount === 99 ? 99 : 50;
+    const mock = !!payment.mock;
+    let price = 50;
+    if (mock) {
+      price = String(reference).includes('99') ? 99 : 50;
+    } else {
+      if (payment.metadata && payment.metadata.price) price = Number(payment.metadata.price) === 99 ? 99 : 50;
+      else {
+        const amt = Number(payment.amount) || 0;
+        const cur = String(payment.currency || 'NGN').toUpperCase();
+        if (cur === 'USD' || cur === 'GHS') price = amt === 9900 ? 99 : 50;
+        else price = amt >= 12000000 ? 99 : amt >= 1000000 ? (amt === 990000 ? 99 : amt >= 10000000 ? 99 : 50) : (amt === 9900 ? 99 : 50);
+      }
+    }
     let codeRow;
     if (hasSupabase(c.env)) {
       try { codeRow = await generatePaidAccessCode(c.env, email, price); } catch (e) { codeRow = await generatePaidAccessCode(c.env, email, price); }
     } else {
-      const price2 = payment.amount === 9900 ? 99 : 50;
-      const row = await generatePaidAccessCode(c.env, email, price2);
+      const row = await generatePaidAccessCode(c.env, email, price);
       codeRow = await create(c.env, 'access_codes', row);
     }
-    return c.json({ success: true, code: codeRow.code || codeRow.code, row: codeRow });
+    return c.json({ success: true, code: codeRow.code, row: codeRow, mock });
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 

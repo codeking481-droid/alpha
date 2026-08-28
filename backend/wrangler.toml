@@ -6,28 +6,32 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ENV = "production"
 
-# Supabase â€” create project at https://supabase.com then set:
+# Supabase — create project at https://supabase.com then set:
 # npx wrangler secret put SUPABASE_URL
 # npx wrangler secret put SUPABASE_ANON_KEY
 # Optional service key for writes: SUPABASE_SERVICE_KEY
 # See supabase.sql for tables (backend/supabase.sql)
 
-# Groq â€” https://console.groq.com/keys
+# Groq — https://console.groq.com/keys
 # npx wrangler secret put GROQ_API_KEY
 # npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
 
-# D1 (alternative to Supabase) â€” npx wrangler d1 create alphatekx-db
+# Paystack — https://dashboard.paystack.com/#/settings/developer
+# npx wrangler secret put PAYSTACK_SECRET_KEY   # sk_test_... or sk_live_...
+# Optional: npx wrangler secret put PAYSTACK_CURRENCY  # NGN (default) or USD
+# Optional: npx wrangler secret put PAYSTACK_NGN_RATE   # e.g. 1500 (USD->NGN rate for $50/$99)
+# Optional: npx wrangler secret put FRONTEND_URL        # e.g. https://alphatekx.name.ng
+
+# D1 (alternative to Supabase) — npx wrangler d1 create alphatekx-db
 # [[d1_databases]]
 # binding = "DB"
 # database_name = "alphatekx-db"
 # database_id = "REPLACE_AFTER_CREATE"
 
-# R2 â€” npx wrangler r2 bucket create alphatekx-storage
+# R2 — npx wrangler r2 bucket create alphatekx-storage
 # [[r2_buckets]]
 # binding = "STORAGE"
 # bucket_name = "alphatekx-storage"
 
 # [observability]
 # enabled = true
-
-

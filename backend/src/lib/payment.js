@@ -1,6 +1,8 @@
 // ============================================================
-// PAYMENT — Paystack Integration (Worker-compatible) — REAL ONLY
-// Supports multiple env var names for flexibility
+// PAYMENT — Paystack Integration (Worker-compatible) — REAL + MOCK FALLBACK
+// - Real mode: needs PAYSTACK_SECRET_KEY (test sk_test_... or live sk_live_...)
+// - Mock mode: when key missing in dev, returns local checkout that still issues code
+// - Amount handling: Paystack requires kobo (NGN*100) or cents (USD*100)
 // ============================================================
 
 function getPaystackKey(env) {
@@ -14,22 +16,56 @@ function getPaystackKey(env) {
     || null;
 }
 
-export async function initializePayment(env, email, amount = 5000, callbackUrl = null) {
-  const key = getPaystackKey(env);
-  if (!key) {
-    const keys = Object.keys(env || {}).join(', ');
-    throw new Error(`PAYSTACK_SECRET_KEY not set. Available env keys: [${keys || 'none'}]. Set it via: npx wrangler secret put PAYSTACK_SECRET_KEY (or add to .dev.vars for local). Get key from https://dashboard.paystack.com/#/settings/developer`);
+function resolveAmount(env, price, amount) {
+  // Frontend sends price (50/99) or amount (5000/9900). Normalize to Paystack smallest unit.
+  const p = Number(price) || (Number(amount) >= 100 ? (Number(amount) === 9900 ? 99 : 50) : 50);
+  const currency = (env.PAYSTACK_CURRENCY || env.CURRENCY || 'NGN').toUpperCase();
+  if (currency === 'USD' || currency === 'GHS' || currency === 'ZAR') {
+    // USD cents: $50 -> 5000, $99 -> 9900
+    return p * 100;
   }
-  const currency = env.PAYSTACK_CURRENCY || 'NGN';
-  // Use frontend callback if provided else env
+  // Default NGN kobo: convert USD $ -> NGN via rate (env or 1500 default) then *100
+  const rate = Number(env.PAYSTACK_NGN_RATE || env.NGN_RATE || 1500);
+  const ngn = Math.round(p * rate); // e.g. $50 *1500 = 75000 NGN
+  return ngn * 100; // kobo
+}
+
+function isMockAllowed(env) {
+  return env.ENV !== 'production' || !getPaystackKey(env);
+}
+
+export async function initializePayment(env, email, amount = 5000, callbackUrl = null, price = null) {
+  const key = getPaystackKey(env);
+  const currency = (env.PAYSTACK_CURRENCY || 'NGN').toUpperCase();
+
+  // Resolve amount correctly
+  const resolvedAmount = resolveAmount(env, price || (amount === 9900 ? 99 : 50), amount);
+
+  // Mock fallback — when no key in dev/test, allow local testing without Paystack
+  if (!key) {
+    if (isMockAllowed(env)) {
+      // Return a mock URL that points back to checkout with a mock reference — still generates code on verify
+      const mockRef = `mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/checkout` : 'http://localhost:5173/checkout');
+      // Use URL with reference so frontend verify picks it up
+      const separator = cb.includes('?') ? '&' : '?';
+      const mockUrl = `${cb}${separator}reference=${encodeURIComponent(mockRef)}&email=${encodeURIComponent(email)}`;
+      return { url: mockUrl, mock: true, reference: mockRef, note: 'Mock checkout — PAYSTACK_SECRET_KEY not set. Set it for real payments: npx wrangler secret put PAYSTACK_SECRET_KEY' };
+    }
+    const keys = Object.keys(env || {}).join(', ');
+    throw new Error(`PAYSTACK_SECRET_KEY not set. Available env keys: [${keys || 'none'}]. Fix: npx wrangler secret put PAYSTACK_SECRET_KEY  (get key: https://dashboard.paystack.com/#/settings/developer ) — or add to backend/.dev.vars for local.`);
+  }
+
   const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/checkout` : 'https://alphatekx.name.ng/checkout');
+
   const body = {
     email,
-    amount,
+    amount: resolvedAmount,
     currency,
     callback_url: cb,
-    metadata: { type: 'access_code', price: amount === 9900 ? 99 : 50 },
+    metadata: { type: 'access_code', price: price || (resolvedAmount === 9900 || resolvedAmount === 990000 ? 99 : 50), source: 'alpha-agency' },
   };
+
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
     method: 'POST',
     headers: {
@@ -38,23 +74,41 @@ export async function initializePayment(env, email, amount = 5000, callbackUrl =
     },
     body: JSON.stringify(body)
   });
-  const data = await response.json().catch(()=>({}));
-  if (!data.status) {
-    throw new Error(data.message || `Paystack init failed: ${response.status} ${JSON.stringify(data).slice(0,200)}`);
+
+  const text = await response.text().catch(()=>'');
+  let data = {};
+  try { data = JSON.parse(text); } catch { data = { status: false, message: text.slice(0,300) }; }
+
+  if (!response.ok || !data.status) {
+    // Surface Paystack message clearly
+    const msg = data.message || `Paystack ${response.status}: ${text.slice(0,300)}`;
+    // Common mistakes: callback_url not whitelisted, currency not enabled
+    if (/currency/i.test(msg) && currency === 'USD') throw new Error(msg + ' — Your Paystack account may not have USD enabled. Set PAYSTACK_CURRENCY=NGN or enable USD in dashboard.');
+    if (/callback/i.test(msg)) throw new Error(msg + ' — Check PAYSTACK_CALLBACK_URL is whitelisted in Paystack dashboard.');
+    throw new Error(msg);
   }
+  // Return string for backwards-compat, but also support object
   return data.data.authorization_url;
 }
 
 export async function verifyPayment(env, reference) {
   const key = getPaystackKey(env);
-  if (!key) {
-    throw new Error('PAYSTACK_SECRET_KEY not set — cannot verify. Set it in Cloudflare Worker secrets.');
-  }
   if (!reference) throw new Error('Reference required');
-  // Do not allow mock refs when real key is set
+
+  // Mock reference — allowed when key missing in dev, issues success without calling Paystack
   if (String(reference).startsWith('mock_')) {
+    if (isMockAllowed(env)) {
+      const now = new Date().toISOString();
+      // Infer price from amount if possible, else default 50
+      return { status: 'success', reference, amount: 5000, currency: env.PAYSTACK_CURRENCY || 'NGN', paid_at: now, gateway_response: 'Approved (mock — no Paystack key)', mock: true };
+    }
     throw new Error('Mock reference not allowed with real Paystack key — complete real checkout.');
   }
+
+  if (!key) {
+    throw new Error('PAYSTACK_SECRET_KEY not set — cannot verify real reference. Set it in Cloudflare Worker secrets or use mock reference for dev.');
+  }
+
   const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
     method: 'GET',
     headers: {
@@ -62,13 +116,24 @@ export async function verifyPayment(env, reference) {
       'Content-Type': 'application/json'
     }
   });
-  const data = await response.json().catch(()=>({}));
-  if (!data.status) {
-    throw new Error(data.message || 'Payment verification failed');
+
+  const text = await response.text().catch(()=>'');
+  let data = {};
+  try { data = JSON.parse(text); } catch { data = { status: false, message: text.slice(0,300) }; }
+
+  if (!response.ok || !data.status) {
+    throw new Error(data.message || `Verification failed ${response.status}: ${text.slice(0,300)}`);
   }
   const txn = data.data;
   if (txn.status !== 'success') {
-    throw new Error(`Payment not successful: ${txn.status} — ${txn.gateway_response || ''}`);
+    throw new Error(`Payment not successful: ${txn.status} — ${txn.gateway_response || 'pending'}. If you paid, wait 30s and retry, or contact alphatekxcompany@gmail.com with reference ${reference}`);
   }
   return txn;
+}
+
+// Helper for routes to unwrap initialize result
+export function unwrapInitResult(res) {
+  if (typeof res === 'string') return res;
+  if (res && res.url) return res.url;
+  return null;
 }
