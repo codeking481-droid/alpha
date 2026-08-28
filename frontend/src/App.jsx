@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom"
+import { lazy, Suspense } from "react"
 import Dashboard from "./pages/Dashboard.jsx"
 import ContentStudio from "./pages/ContentStudio.jsx"
 import OutreachEngine from "./pages/OutreachEngine.jsx"
@@ -15,6 +16,10 @@ import AdminCodes from "./pages/AdminCodes.jsx"
 import Campaigns from "./pages/Campaigns.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
+import { ErrorBoundary } from "./components/ui/ErrorBoundary.jsx"
+import { Toast } from "./components/ui/Toast.jsx"
+import { Spinner } from "./components/ui/Spinner.jsx"
+import { logger } from "./lib/logger.js"
 
 function ProtectedRoute({ children }) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('alpha.token') : null;
@@ -123,6 +128,11 @@ function TopNav() {
 }
 
 export default function App() {
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type='success') => setToast({ message, type });
+  const hideToast = () => setToast(null);
+  // expose globally for any component to trigger toast + logger
+  useEffect(()=>{ window.showAlphaToast = showToast; window.AlphaLogger = logger; }, []);
   // 🧹 Kill ALL mock data forever — clears old Genesis/Dominion/AlphaTekX on load
   useEffect(() => {
     const keys = ['alpha.companies', 'alpha.content', 'alpha.campaigns', 'alpha.invoices', 'alpha.contracts', 'alpha.clients', 'alpha.leads', 'alpha.replies', 'alpha.drafts', 'alpha.activities', 'alpha.team']
@@ -134,39 +144,43 @@ export default function App() {
         if (hasMock) {
           keys.forEach((k) => localStorage.removeItem(k))
           localStorage.removeItem('alpha.onboardingDismissed')
-          // also clear any mock with launch
           window.location.reload()
         }
       }
     } catch {
-      // if parsing fails, clear everything
       keys.forEach((k) => localStorage.removeItem(k))
     }
+    logger.log('Alpha Agency mounted', { hasAccess: !!localStorage.getItem('alpha.token') });
   }, [])
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-[#0B0215] animate-fadeIn overflow-x-hidden">
-        <TopNav />
-        <Onboarding />
-        <Routes>
-          {/* Public — no auth needed */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/access-code" element={<AccessCode />} />
-          <Route path="/checkout" element={<Checkout />} />
-          {/* Protected — requires login + access token */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/content" element={<ProtectedRoute><ContentStudio /></ProtectedRoute>} />
-          <Route path="/outreach" element={<ProtectedRoute><OutreachEngine /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/deals" element={<ProtectedRoute><DealDesk /></ProtectedRoute>} />
-          <Route path="/outcomes" element={<ProtectedRoute><Outcomes /></ProtectedRoute>} />
-          <Route path="/client" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
-          <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
-          <Route path="/admin" element={<AdminRoute><AdminCodes /></AdminRoute>} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <div className="min-h-screen bg-[#0B0215] animate-fadeIn overflow-x-hidden">
+          <TopNav />
+          <Onboarding />
+          <Suspense fallback={<Spinner label="Loading Alpha…" />}>
+            <Routes>
+              {/* Public — no auth needed */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/access-code" element={<AccessCode />} />
+              <Route path="/checkout" element={<Checkout />} />
+              {/* Protected — requires login + access token */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/content" element={<ProtectedRoute><ContentStudio /></ProtectedRoute>} />
+              <Route path="/outreach" element={<ProtectedRoute><OutreachEngine /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/deals" element={<ProtectedRoute><DealDesk /></ProtectedRoute>} />
+              <Route path="/outcomes" element={<ProtectedRoute><Outcomes /></ProtectedRoute>} />
+              <Route path="/client" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+              <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><AdminCodes /></AdminRoute>} />
+            </Routes>
+          </Suspense>
+          {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
+        </div>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
