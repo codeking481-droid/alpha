@@ -6,6 +6,7 @@ import { verifyAccessCode, getUserFromRequest } from './lib/auth.js'
 import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
 import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/replyTracker.js'
+import { saveOutcome, getOutcomes, getOutcomeSummary } from './lib/outcomeTracker.js'
 
 const app = new Hono()
 app.use('*', cors())
@@ -16,8 +17,8 @@ app.use('*', async (c, next) => {
   }
 })
 
-// In-memory fallback when Supabase not configured â€” all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [] }
+// In-memory fallback when Supabase not configured — all real, empty until you add
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], outcomes: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -340,6 +341,51 @@ app.get('/api/auth/me', (c) => {
 app.post('/api/auth/logout', (c) => c.json({ ok: true }))
 
 // â”€â”€ Outcomes
+// ── Outcomes — Prompt #9 (proof layer) — primary
+app.post('/api/outcomes', async (c) => {
+  try {
+    const { campaignId, campaign_id, revenue, cost, views, conversions } = await c.req.json().catch(() => ({}))
+    const cid = campaignId || campaign_id
+    if (!cid) return c.json({ error: 'Campaign ID is required' }, 400)
+    if (hasSupabase(c.env)) {
+      const outcome = await saveOutcome(c.env, { campaignId: cid, revenue, cost, views, conversions })
+      return c.json({ success: true, outcome })
+    }
+    const outcome = await create(c.env, 'outcomes', { campaign_id: cid, campaignId: cid, revenue: Number(revenue) || 0, cost: Number(cost) || 0, views: Number(views) || 0, conversions: Number(conversions) || 0, roi: (Number(cost) > 0 ? ((Number(revenue)-Number(cost))/Number(cost))*100 : 0) })
+    return c.json({ success: true, outcome })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/outcomes', async (c) => {
+  try {
+    const campaignId = c.req.query('campaignId') || c.req.query('campaign_id') || null
+    if (hasSupabase(c.env)) {
+      const outcomes = await getOutcomes(c.env, campaignId)
+      if (outcomes !== null) return c.json({ success: true, outcomes })
+    }
+    const all = await list(c.env, 'outcomes')
+    const filtered = campaignId ? all.filter(o => String(o.campaign_id) === String(campaignId) || String(o.campaignId) === String(campaignId)) : all
+    return c.json({ success: true, outcomes: filtered })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/outcomes/summary', async (c) => {
+  try {
+    if (hasSupabase(c.env)) {
+      const summary = await getOutcomeSummary(c.env)
+      if (summary !== null) return c.json({ success: true, summary })
+    }
+    const all = await list(c.env, 'outcomes')
+    const summary = { totalRevenue: 0, totalCost: 0, averageROI: 0, totalViews: 0, totalConversions: 0, campaigns: all.length }
+    all.forEach((item) => {
+      summary.totalRevenue += Number(item.revenue) || 0
+      summary.totalCost += Number(item.cost) || 0
+      summary.totalViews += Number(item.views) || 0
+      summary.totalConversions += Number(item.conversions) || 0
+    })
+    summary.averageROI = summary.totalCost > 0 ? ((summary.totalRevenue - summary.totalCost) / summary.totalCost) * 100 : 0
+    return c.json({ success: true, summary })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+// ── Outcomes — legacy / analytics compat
 app.get('/api/outcomes/revenue', async (c) => {
   const invoices = await list(c.env, 'invoices')
   return c.json({ revenue: invoices.reduce((s,i)=>s+(Number(i.amount)||0),0), invoices, note: 'Real revenue attribution' })
