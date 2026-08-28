@@ -7,6 +7,7 @@ import Analytics from "./pages/Analytics.jsx"
 import DealDesk from "./pages/DealDesk.jsx"
 import Outcomes from "./pages/Outcomes.jsx"
 import ClientDashboard from "./pages/ClientDashboard.jsx"
+import Landing from "./pages/Landing.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
 
@@ -14,7 +15,7 @@ function TopNav() {
   const [open, setOpen] = useState(false)
   const base = "relative px-3 sm:px-4 py-2.5 text-xs font-black tracking-widest uppercase transition-all duration-300 min-h-[44px] flex items-center"
   const links = [
-    { to: "/", label: "🚀 Command Hub", end: true },
+    { to: "/dashboard", label: "🚀 Command Hub", end: true },
     { to: "/content", label: "✍️ Content" },
     { to: "/outreach", label: "📧 Outreach" },
     { to: "/analytics", label: "📊 Analytics" },
@@ -105,7 +106,8 @@ export default function App() {
         <TopNav />
         <Onboarding />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/content" element={<ContentStudio />} />
           <Route path="/outreach" element={<OutreachEngine />} />
           <Route path="/analytics" element={<Analytics />} />

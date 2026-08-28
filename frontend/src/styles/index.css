@@ -63,6 +63,27 @@ button, a, [role="button"] { min-height: 44px; min-width: 44px; }
   opacity: 0.5;
   cursor: not-allowed;
 }
+.btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: white;
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,215,0,0.2);
+}
 
 /* Glassmorphism — performance aware (lighter blur on mobile) */
 .glass { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); }
