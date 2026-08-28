@@ -5,6 +5,7 @@ import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
 import { verifyAccessCode, getUserFromRequest } from './lib/auth.js'
 import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
+import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/replyTracker.js'
 
 const app = new Hono()
 app.use('*', cors())
@@ -167,23 +168,71 @@ app.post('/api/messages', async (c) => {
   }
   return c.json(await create(c.env, 'messages', body), 201)
 })
-// Explicit send endpoint for outreach
+// Explicit send endpoint for outreach — also persists via replyTracker when Supabase configured
 app.post('/api/outreach/send', async (c) => {
   const body = await c.req.json().catch(() => ({}))
   if (!body.to || !body.subject) return c.json({ error: 'to and subject required' }, 400)
   try {
     const sent = await sendEmailResend(c.env, { to: body.to, subject: body.subject, html: body.html, text: body.text || body.content, from: body.from })
-    const saved = await create(c.env, 'messages', { ...body, resend_id: sent.id, sent_at: new Date().toISOString() })
-    return c.json({ success: true, sent, saved })
+    // Persist via unified helper (keeps Supabase logic in one place) + in-memory fallback
+    let saved
+    if (hasSupabase(c.env) && body.leadId) {
+      try { saved = await saveSentMessage(c.env, { to: body.to, subject: body.subject, html: body.html || body.text, leadId: body.leadId }) } catch {}
+    }
+    if (!saved) saved = await create(c.env, 'messages', { ...body, resend_id: sent.id, sent_at: new Date().toISOString(), replied: false })
+    return c.json({ success: true, message: 'Email sent and tracked', sent, saved, result: sent })
   } catch (e) {
     return c.json({ error: e.message }, 500)
   }
 })
-app.get('/api/replies', async (c) => c.json(await list(c.env, 'replies')))
-app.get('/api/outreach/replies', async (c) => c.json(await list(c.env, 'replies')))
+app.get('/api/replies', async (c) => {
+  try {
+    const leadId = c.req.query('leadId') || c.req.query('lead_id') || null
+    if (leadId && hasSupabase(c.env)) {
+      const replies = await getReplies(c.env, leadId)
+      return c.json({ success: true, replies, count: replies.length })
+    }
+    const all = await list(c.env, 'replies')
+    // Support ?leadId filtering even on in-memory
+    const filtered = leadId ? all.filter(r => String(r.lead_id) === String(leadId) || String(r.message_id) === String(leadId)) : all
+    // Return wrapped shape for new inbox; plain array also accepted by frontend
+    return c.json({ success: true, replies: filtered, count: filtered.length })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+app.get('/api/outreach/replies', async (c) => {
+  try {
+    const leadId = c.req.query('leadId') || c.req.query('lead_id') || null
+    const all = await list(c.env, 'replies')
+    const filtered = leadId ? all.filter(r => String(r.lead_id) === String(leadId) || String(r.message_id) === String(leadId)) : all
+    return c.json({ success: true, replies: filtered, count: filtered.length })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
 app.post('/api/outreach/replies', async (c) => {
   const body = await c.req.json().catch(() => ({}))
+  // If Supabase configured, use replyTracker to also mark message replied
+  if (body.messageId || body.message_id) {
+    try {
+      const saved = await saveReply(c.env, { messageId: body.messageId || body.message_id, content: body.content || body.text || '', from: body.from })
+      if (saved && saved.id && !String(saved.id).startsWith('mem_')) return c.json({ success: true, reply: saved }, 201)
+    } catch {}
+  }
   return c.json(await create(c.env, 'replies', body), 201)
+})
+app.get('/api/messages/sent', async (c) => {
+  try {
+    const leadId = c.req.query('leadId') || c.req.query('lead_id') || null
+    if (hasSupabase(c.env)) {
+      const messages = await getSentMessages(c.env, leadId)
+      return c.json({ success: true, messages, count: messages.length })
+    }
+    const all = await list(c.env, 'messages')
+    const filtered = leadId ? all.filter(m => String(m.lead_id) === String(leadId) || String(m.to) === String(leadId)) : all
+    return c.json({ success: true, messages: filtered, count: filtered.length })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
 })
 app.get('/api/outreach/analytics', async (c) => c.json({ leadsFound: (await list(c.env, 'leads')).length, sent: (await list(c.env, 'messages')).length, replyRate: 0, meetings: 0, openRate: 0, note: 'Real' }))
 

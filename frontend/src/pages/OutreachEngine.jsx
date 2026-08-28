@@ -5,6 +5,7 @@ import MessageDraft from "../components/outreach/MessageDraft"
 import { MessageSender } from "../components/outreach/MessageSender"
 import CampaignManager from "../components/outreach/CampaignManager"
 import ReplyTracker from "../components/outreach/ReplyTracker"
+import { ReplyInbox } from "../components/outreach/ReplyInbox"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
 import EmptyState from "../components/ui/EmptyState.jsx"
 import AISuggestion from "../components/ui/AISuggestion.jsx"
@@ -140,6 +141,7 @@ export default function OutreachEngine() {
           setSelectedLead(lead);
           console.log(`Sent to ${lead.email}: ${subject}`);
         }} />
+        <ReplyInbox leadId={selectedLead?.id} />
         <ReplyTracker />
       </main>
 
