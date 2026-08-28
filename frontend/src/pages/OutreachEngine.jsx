@@ -52,25 +52,25 @@ export default function OutreachEngine() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 space-y-6">
         {/* Real stats — 0 until you add */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-4 sm:p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-4 sm:p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Real Leads</div>
             <div className="text-2xl sm:text-3xl font-black mt-2">{stats.leads}</div>
             <div className="text-xs text-[#9CA3AF] mt-1">You added</div>
             <div className="mt-3 h-1.5 bg-[#F9FAFB] rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[#FFD700] to-amber-500 rounded-full" style={{ width: `${Math.min(stats.leads * 20, 100)}%` }} /></div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-4 sm:p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-4 sm:p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Campaigns</div>
             <div className="text-2xl sm:text-3xl font-black mt-2">{stats.campaigns}</div>
             <div className="text-xs text-[#9CA3AF] mt-1">Real groups</div>
             <div className="mt-3 h-1.5 bg-[#F9FAFB] rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[#FFD700] to-amber-500 rounded-full" style={{ width: `${Math.min(stats.campaigns * 30, 100)}%` }} /></div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-4 sm:p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-4 sm:p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Drafts Saved</div>
             <div className="text-2xl sm:text-3xl font-black mt-2 text-[#FFD700]">{stats.drafts}</div>
             <div className="text-xs text-[#9CA3AF] mt-1">Real emails</div>
             <div className="mt-3 h-1.5 bg-[#F9FAFB] rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full" style={{ width: `${Math.min(stats.drafts * 25, 100)}%` }} /></div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-4 sm:p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-4 sm:p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Replies Logged</div>
             <div className="text-2xl sm:text-3xl font-black mt-2 text-emerald-400">{stats.replies}</div>
             <div className="text-xs text-[#9CA3AF] mt-1">Real replies</div>
@@ -98,7 +98,7 @@ export default function OutreachEngine() {
           <div className="lg:col-span-2">
             <CampaignManager />
           </div>
-          <div className="bg-white/[0.04] backdrop-blur-xl border border-[#EDEDED] rounded-2xl p-6">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-6">
             <h3 className="text-sm font-bold tracking-widest uppercase text-[#6B7280]">Live Activity — Real</h3>
             <p className="text-xs text-[#6B7280] mt-1">Only your real actions, no demo filler</p>
             <div className="mt-4">
@@ -124,7 +124,7 @@ export default function OutreachEngine() {
               <div className="text-xs font-bold tracking-widest uppercase text-[#9CA3AF]">Recent Real Events</div>
               <div className="mt-2 space-y-2">
                 {events.length === 0 ? <p className="text-xs text-[#9CA3AF] text-center py-4">No events yet — add a lead or save a draft and it appears here.</p> : events.map((e) => (
-                  <div key={e.id} className="bg-white/[0.03] border border-[#EDEDED] rounded-xl p-2.5 flex items-center gap-2">
+                  <div key={e.id} className="bg-white border border-[#EDEDED] rounded-xl p-2.5 flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${e.type === "lead" ? "bg-[#FFD700]" : "bg-sky-400"}`} />
                     <span className="text-xs text-[#0A0A0A]/70 flex-1 truncate">{e.text}</span>
                     <span className="text-xs text-[#9CA3AF]">{e.time}</span>

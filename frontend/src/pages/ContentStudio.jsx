@@ -59,19 +59,19 @@ export default function ContentStudio() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Total Projects</div>
             <div className="text-3xl font-black mt-2">{projects.length}</div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Drafts</div>
             <div className="text-3xl font-black mt-2 text-[#0A0A0A]/80">{projects.filter(p=>p.status==="draft").length}</div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">In Review</div>
             <div className="text-3xl font-black mt-2 text-amber-400">{projects.filter(p=>p.status==="review").length}</div>
           </div>
-          <div className="bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-2xl p-5">
+          <div className="bg-white border-[#EDEDED] rounded-2xl p-5">
             <div className="text-xs tracking-widest uppercase font-bold text-[#6B7280]">Published</div>
             <div className="text-3xl font-black mt-2 text-emerald-400">{projects.filter(p=>p.status==="published").length}</div>
           </div>
@@ -86,7 +86,7 @@ export default function ContentStudio() {
         </div>
 
         {/* Library Header */}
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-[#EDEDED] rounded-2xl p-4 flex flex-wrap items-center gap-3">
+        <div className="bg-white border-[#EDEDED] rounded-2xl p-4 flex flex-wrap items-center gap-3">
           <h3 className="text-sm font-bold tracking-widest uppercase text-[#0A0A0A]/80">Content Library</h3>
           <span className="text-xs text-[#9CA3AF]">{filtered.length} items</span>
           <input

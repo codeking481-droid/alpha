@@ -164,7 +164,7 @@ export const Campaigns = () => {
         <button onClick={fetchAll} className="ml-auto text-xs px-3 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] hover:bg-[#F3F4F6]">Refresh</button>
       </div>
 
-      <div className="flex gap-2 p-1 rounded-full bg-white/[0.04] border border-[#EDEDED] w-fit">
+      <div className="flex gap-2 p-1 rounded-full bg-white border border-[#EDEDED] w-fit">
         <button onClick={()=>setTab('manage')} className={`px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase ${tab==='manage'?'bg-[#FFD700] text-[#0B0215]':'text-[#6B7280]'}`}>Manage</button>
         <button onClick={()=>setTab('one-week')} className={`px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase ${tab==='one-week'?'bg-[#FFD700] text-[#0B0215]':'text-[#6B7280]'}`}>✨ One-Week Ad Engine</button>
         <a href="/approvals" className="px-4 py-2 rounded-full text-xs font-bold text-[#6B7280] hover:text-[#0A0A0A]">Approvals →</a>
@@ -177,10 +177,10 @@ export const Campaigns = () => {
           {/* Community strip */}
           {community && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="rounded-2xl bg-white/[0.04] border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">LinkedIn</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.linkedin?.followers} followers</div><div className="text-xs text-[#9CA3AF]">{community.community?.linkedin?.connections}+ connections • 10 posts</div></div>
-              <div className="rounded-2xl bg-white/[0.04] border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">WhatsApp (Main Group)</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.whatsapp?.groups?.find(g=>g.name.includes('Main'))?.members || 130} members</div><div className="text-xs text-[#9CA3AF]">10 posts</div></div>
-              <div className="rounded-2xl bg-white/[0.04] border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">WhatsApp (Cyber Security)</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.whatsapp?.groups?.find(g=>g.name.includes('Cyber'))?.members || 85} members</div><div className="text-xs text-[#9CA3AF]">10 posts</div></div>
-              <div className="rounded-2xl bg-white/[0.04] border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">Telegram + YouTube</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.telegram?.members} TG • {community.community?.youtube?.subscribers}+ YT</div><div className="text-xs text-[#9CA3AF]">10 TG posts • 2 videos</div></div>
+              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">LinkedIn</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.linkedin?.followers} followers</div><div className="text-xs text-[#9CA3AF]">{community.community?.linkedin?.connections}+ connections • 10 posts</div></div>
+              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">WhatsApp (Main Group)</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.whatsapp?.groups?.find(g=>g.name.includes('Main'))?.members || 130} members</div><div className="text-xs text-[#9CA3AF]">10 posts</div></div>
+              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">WhatsApp (Cyber Security)</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.whatsapp?.groups?.find(g=>g.name.includes('Cyber'))?.members || 85} members</div><div className="text-xs text-[#9CA3AF]">10 posts</div></div>
+              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">Telegram + YouTube</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.telegram?.members} TG • {community.community?.youtube?.subscribers}+ YT</div><div className="text-xs text-[#9CA3AF]">10 TG posts • 2 videos</div></div>
             </div>
           )}
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
@@ -188,7 +188,7 @@ export const Campaigns = () => {
             <p className="text-xs text-[#6B7280] mt-2 leading-relaxed">{community?.truthClause || 'We have real communities, not bots. LinkedIn (700 followers, 500+ connections): 10 posts. WhatsApp (215+ members across 2 groups): 10 posts. Telegram (54 members): 10 posts. YouTube (3,000+ subscribers): 2 videos. We do not guarantee views, likes, or conversions. We guarantee we will deliver the content to real people who have chosen to follow us. The rest is organic.'}</p>
           </div>
 
-          <div className="rounded-2xl border border-[#EDEDED] bg-white/[0.04] p-4 sm:p-6">
+          <div className="rounded-2xl border border-[#EDEDED] bg-white p-4 sm:p-6">
             <h3 className="text-sm font-black tracking-widest uppercase text-[#0A0A0A]">Generate 1-Week Campaign</h3>
             <p className="text-xs text-[#6B7280] mt-1">Pick approved company → generate 7-day plan → generate 32 posts → prepare delivery</p>
             <form onSubmit={handleGeneratePlan} className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -229,7 +229,7 @@ export const Campaigns = () => {
 
           {/* Generated content */}
           {awContent && (
-            <div className="rounded-2xl border border-[#EDEDED] bg-white/[0.04] p-4 sm:p-6">
+            <div className="rounded-2xl border border-[#EDEDED] bg-white p-4 sm:p-6">
               <h3 className="text-sm font-black text-[#0A0A0A]">Content — {awContent.total} posts • {awContent.breakdown?.linkedin} LI • {awContent.breakdown?.whatsapp} WA • {awContent.breakdown?.telegram} TG • {awContent.breakdown?.youtube} YT</h3>
               <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-[520px] overflow-auto pr-1">
                 {awContent.items.map((it, i)=> (

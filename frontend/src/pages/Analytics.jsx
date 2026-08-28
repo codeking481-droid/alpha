@@ -36,7 +36,7 @@ export default function Analytics() {
             <p className="text-xs text-[#6B7280] tracking-widest uppercase font-semibold">Usefulness: see what's real — what's working, what's not, so you fix fast. No fake charts.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-white/[0.04] backdrop-blur border border-[#EDEDED] rounded-full p-1">
+        <div className="flex items-center gap-2 bg-white border-[#EDEDED] rounded-full p-1">
           {[
             ["7d", "7D"],
             ["30d", "30D"],

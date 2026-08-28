@@ -116,7 +116,7 @@ export default function Approvals() {
         </div>
       </div>
 
-      {msg && <div className="rounded-xl border border-[#EDEDED] bg-white/[0.04] px-4 py-3 text-xs text-[#0A0A0A]/80 whitespace-pre-wrap">{msg}</div>}
+      {msg && <div className="rounded-xl border border-[#EDEDED] bg-white px-4 py-3 text-xs text-[#0A0A0A]/80 whitespace-pre-wrap">{msg}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Stat label="Replies" value={replies.length} sub="total" />
@@ -137,7 +137,7 @@ export default function Approvals() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map((item, idx)=> (
-            <div key={idx} className="rounded-2xl border border-[#EDEDED] bg-white/[0.04] backdrop-blur p-4 sm:p-5 flex flex-col gap-3">
+            <div key={idx} className="rounded-2xl border border-[#EDEDED] bg-white backdrop-blur p-4 sm:p-5 flex flex-col gap-3">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-[#0B0215] font-black text-sm">{String(item.company||'?').slice(0,2).toUpperCase()}</div>
                 <div className="flex-1 min-w-0">
@@ -181,7 +181,7 @@ export default function Approvals() {
 
 function Stat({ label, value, sub, accent }) {
   return (
-    <div className="bg-white/[0.04] border border-[#EDEDED] rounded-2xl p-4">
+    <div className="bg-white border border-[#EDEDED] rounded-2xl p-4">
       <div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">{label}</div>
       <div className={`text-2xl font-black mt-1 ${accent?'text-emerald-400':'text-[#0A0A0A]'}`}>{value}</div>
       <div className="text-xs text-[#0A0A0A]/25 mt-1">{sub}</div>

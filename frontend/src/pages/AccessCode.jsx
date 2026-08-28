@@ -107,7 +107,7 @@ export const AccessCode = () => {
     <div className="min-h-[80vh] flex items-center justify-center px-6 py-12" style={{background:'#FFFCF8'}}>
       <div className="max-w-[520px] w-full">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto text-white text-2xl" style={{background:'#5E17EB'}}>🔑</div>
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto text-[#0A0A0A] text-2xl" style={{background:'#5E17EB'}}>🔑</div>
           <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full" style={{background:'#F5F3FF', border:'1px solid #EDE9FF'}}>
             <span style={{width:'6px', height:'6px', borderRadius:'999px', background:'#5E17EB', display:'inline-block'}} />
             <span style={{color:'#5E17EB', fontSize:'11px', fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase'}}>Instant signup complete • Token required</span>

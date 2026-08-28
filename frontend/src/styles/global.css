@@ -70,13 +70,13 @@ h1 { font-size: 3.5rem; line-height: 1.05; } /* 56px */
 
 /* Cards — LAW: 12px, 1px #EDEDED, white bg, NO shadows, NO blur, NO gradients */
 .card {
-  background: var(--paper);
+  background: #FFFFFF;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
 }
 .input {
-  background: var(--paper);
+  background: #FFFFFF;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;

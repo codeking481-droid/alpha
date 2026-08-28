@@ -33,7 +33,7 @@ export default function CommandPalette() {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.06] border border-white/10 text-white/50 hover:text-white hover:bg-white/10 transition text-xs">
+      <button onClick={() => setOpen(true)} className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-[#EDEDED] text-[#6B7280] hover:text-[#0A0A0A] hover:bg-[#F9FAFB] hover:border-[#D0D0D0] transition text-xs shadow-sm">
         <span>⌘K</span> <span>Search</span>
       </button>
     )
