@@ -9,7 +9,6 @@ import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
 import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/replyTracker.js'
 import { saveOutcome, getOutcomes, getOutcomeSummary } from './lib/outcomeTracker.js'
-import { listTeam, addTeamMember, updateTeamRole, removeTeamMember } from './lib/team.js'
 import { listCampaigns, createCampaign, getCampaign, updateCampaign, deleteCampaign, setCampaignStatus } from './lib/campaigns.js'
 import { scheduleCampaign, getAutomationStatus, pauseAutomation, resumeAutomation, tickAutomation } from './lib/automation.js'
 
@@ -23,7 +22,7 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase not configured — all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [{ id: 'seed-jesus', code: '126213JESUS', used: false, price: 0, email: null, created_by: 'system', created_at: new Date().toISOString(), user_id: null }], outcomes: [], client_outcomes: [], team: [], campaigns: [] }
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [{ id: 'seed-jesus', code: '126213JESUS', used: false, price: 0, email: null, created_by: 'system', created_at: new Date().toISOString(), user_id: null }], outcomes: [], client_outcomes: [], campaigns: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -328,62 +327,6 @@ app.post('/api/deals/contracts', async (c) => {
 })
 
 // â”€â”€ Auth / Access Codes
-// ── Team Management (Prompt scaling #1)
-app.get('/api/team', async (c) => {
-  try {
-    const user = await requireAuth(c, c.env);
-    if (!user) return c.json({ error: 'Unauthorized' }, 401);
-    const sup = await listTeam(c.env);
-    if (sup !== null) return c.json(sup);
-    const all = await list(c.env, 'team');
-    return c.json(all);
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
-app.post('/api/team', async (c) => {
-  try {
-    const user = await requireAuth(c, c.env);
-    if (!user) return c.json({ error: 'Unauthorized' }, 401);
-    const me = await requireAdmin(c, c.env);
-    if (!me) return c.json({ error: 'Forbidden: admin only' }, 403);
-    const { email, role, name } = await c.req.json().catch(()=>({}));
-    if (!email) return c.json({ error: 'email required' }, 400);
-    if (hasSupabase(c.env)) {
-      const row = await addTeamMember(c.env, { email, role, name });
-      return c.json(row, 201);
-    }
-    const row = await addTeamMember(c.env, { email, role, name });
-    const saved = await create(c.env, 'team', row);
-    return c.json(saved, 201);
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
-app.put('/api/team/:id', async (c) => {
-  try {
-    const admin = await requireAdmin(c, c.env);
-    if (!admin) return c.json({ error: 'Forbidden: admin only' }, 403);
-    const { role } = await c.req.json().catch(()=>({}));
-    const id = c.req.param('id');
-    if (hasSupabase(c.env)) {
-      const updated = await updateTeamRole(c.env, id, role);
-      return c.json(updated);
-    }
-    const updated = await updateOne(c.env, 'team', id, { role: (role||'member').toLowerCase() });
-    return updated ? c.json(updated) : c.json({ error: 'not found' }, 404);
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
-app.delete('/api/team/:id', async (c) => {
-  try {
-    const admin = await requireAdmin(c, c.env);
-    if (!admin) return c.json({ error: 'Forbidden: admin only' }, 403);
-    const id = c.req.param('id');
-    if (hasSupabase(c.env)) {
-      await removeTeamMember(c.env, id);
-      return c.json({ ok:true });
-    }
-    const ok = await deleteOne(c.env, 'team', id);
-    return ok ? c.json({ ok:true }) : c.json({ error:'not found' },404);
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
-
 // ── Campaign Manager (Prompt scaling #2)
 app.get('/api/campaigns', async (c) => {
   try {
