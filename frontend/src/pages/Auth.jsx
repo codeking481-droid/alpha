@@ -32,10 +32,20 @@ export const Auth = () => {
           setMessage('✅ Check your email for confirmation!');
         } else if (data.session?.access_token) {
           localStorage.setItem('alpha.token', data.session.access_token);
-          setMessage('✅ Welcome — redirecting to access code...');
-          setTimeout(() => navigate('/access-code'), 800);
+          // Admin bypass per Prompt #12
+          if (String(email).toLowerCase() === 'alphatekxcompany@gmail.com') {
+            setMessage('✅ Admin access — opening dashboard...');
+            setTimeout(() => navigate('/dashboard'), 800);
+          } else {
+            setMessage('✅ Welcome — redirecting to access code...');
+            setTimeout(() => navigate('/access-code'), 800);
+          }
         } else if (data.user && isLogin) {
-          navigate('/access-code');
+          if (String(email).toLowerCase() === 'alphatekxcompany@gmail.com') {
+            navigate('/dashboard');
+          } else {
+            navigate('/access-code');
+          }
         }
       } else {
         // Fallback to backend mock login (works without Supabase)
@@ -48,8 +58,13 @@ export const Auth = () => {
         if (!res.ok) throw new Error(data.error || 'Login failed');
         if (data.token) localStorage.setItem('alpha.token', data.token);
         if (data.user) localStorage.setItem('alpha.user', JSON.stringify(data.user));
-        setMessage('✅ Signed in (dev) — continue to access code');
-        setTimeout(() => navigate('/access-code'), 600);
+        if (String(email).toLowerCase() === 'alphatekxcompany@gmail.com') {
+          setMessage('✅ Admin access (dev) — opening dashboard...');
+          setTimeout(() => navigate('/dashboard'), 600);
+        } else {
+          setMessage('✅ Signed in (dev) — continue to access code');
+          setTimeout(() => navigate('/access-code'), 600);
+        }
       }
     } catch (err) {
       setMessage('❌ ' + (err.message || 'Failed'));

@@ -328,7 +328,10 @@ app.post('/api/auth/login', async (c) => {
   const { email, password } = await c.req.json().catch(()=>({}))
   if (!email) return c.json({ error: 'email required' }, 400)
   // TODO: verify via Supabase Auth when configured
-  return c.json({ ok: true, user: { email }, token: 'mock-jwt-' + Date.now(), note: 'Set SUPABASE_URL+KEY for real auth' })
+  const role = String(email).toLowerCase() === 'alphatekxcompany@gmail.com' ? 'admin' : 'member'
+  const payload = (()=>{ try { return btoa(JSON.stringify({ sub: email, email, role })) } catch { return 'eyJzdWIiOiJtb2NrIn0' } })()
+  const token = `mock-jwt.${payload}.sig`
+  return c.json({ ok: true, user: { email, role }, token, note: 'Set SUPABASE_URL+KEY for real auth' })
 })
 app.post('/api/auth/verify-code', async (c) => {
   try {

@@ -1,6 +1,8 @@
 // Auth + Access Codes — Supabase Auth + simple code table (Worker-compatible)
 import { sbSelect, sbInsert, sbUpdate, getSupabase } from "./supabase.js"
 
+const ADMIN_EMAIL = 'alphatekxcompany@gmail.com'
+
 export async function verifyAccessCode(env, code) {
   if (!code) return { ok: false, error: 'code required' }
   // Try Supabase
@@ -24,8 +26,12 @@ export function getUserFromRequest(c) {
   const auth = c.req.header('Authorization') || ''
   const token = auth.replace(/^Bearer\s+/i, '')
   if (!token) return null
-  // mock-jwt-xxx from /api/auth/login
-  if (token.startsWith('mock-jwt-')) {
+  // mock-jwt from /api/auth/login (supports both mock-jwt-xxx and mock-jwt.<payload>.sig)
+  if (token.startsWith('mock-jwt')) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] || ''))
+      if (payload && payload.email) return { id: payload.sub || payload.email, email: payload.email, role: payload.role || 'member', token }
+    } catch {}
     return { id: token, email: 'mock@local', role: 'member', token }
   }
   try {
@@ -39,7 +45,7 @@ export async function requireAuth(c, env) {
   const user = getUserFromRequest(c)
   if (!user) return null
   // If Supabase configured, optionally verify profile exists
-  if (env && getSupabase(env) && user.id && !String(user.id).startsWith('mock-jwt-')) {
+  if (env && getSupabase(env) && user.id && !String(user.id).startsWith('mock-jwt')) {
     try {
       const rows = await sbSelect(env, 'profiles', `id=eq.${user.id}&limit=1`)
       if (rows && rows[0] && rows[0].role) user.role = rows[0].role
@@ -51,7 +57,9 @@ export async function requireAuth(c, env) {
 export async function requireAdmin(c, env) {
   const user = await requireAuth(c, env)
   if (!user) return null
-  // ENV ADMIN_EMAILS comma-separated overrides
+  // Hardcoded admin email per Prompt #12 (always admin, bypass codes)
+  if (user.email && String(user.email).toLowerCase() === ADMIN_EMAIL.toLowerCase()) return { ...user, role: 'admin' }
+  // ENV ADMIN_EMAILS comma-separated overrides (additional admins)
   const adminEmails = (env.ADMIN_EMAILS || '').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)
   if (adminEmails.length && user.email && adminEmails.includes(String(user.email).toLowerCase())) return { ...user, role: 'admin' }
   if (user.role === 'admin') return user
