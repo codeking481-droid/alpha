@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import { API_URL } from '../lib/api.js';
 
-const MASTER_HINT = '126213JESUSISKING';
-
 export const AccessCode = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,8 +25,6 @@ export const AccessCode = () => {
       }
     } catch {}
 
-    // Allow anonymous master code — create a token on the fly so platform opens instantly
-    const isMaster = upper === '126213JESUSISKING' || upper === '126213JESUS';
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -55,8 +51,8 @@ export const AccessCode = () => {
         setTimeout(() => navigate('/dashboard'), 600);
       } else {
         const err = data.error || 'Invalid or already used code — this code is single-use';
-        if (isMaster && err.toLowerCase().includes('already used')) {
-          setMessage('⚠️ This master code was already used once (single-use). Contact alphatekxcompany@gmail.com for a new code or use /admin to generate one.');
+        if (err.toLowerCase().includes('already used')) {
+          setMessage('⚠️ This code was already used once (single-use). Contact alphatekxcompany@gmail.com for a new code or generate one at /admin.');
         } else {
           setMessage('❌ ' + err);
         }
@@ -78,18 +74,18 @@ export const AccessCode = () => {
           <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mx-auto text-xl shadow-gold">🔑</div>
           <h1 className="text-[22px] font-black tracking-tight text-white mt-4">Enter access token</h1>
           <p className="text-white/55 text-[13px] mt-2 leading-5">
-            Single-use token. Enter <span className="text-white font-bold">126213JESUSISKING</span> to unlock instantly — no login required. Or purchase below.
+            Single-use token. Enter your code to unlock instantly — no login required. Or purchase below.
           </p>
           <div className="mt-3 flex items-center justify-center gap-2">
             <Link to="/checkout?price=50" className="px-4 py-2.5 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-white/90">$50 access</Link>
             <Link to="/checkout?price=99" className="px-4 py-2.5 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-[#ffdf33]">$99 premium</Link>
           </div>
-          <p className="text-white/25 text-[11px] mt-2 tracking-wide">Master code is single-use • Expires after one unlock • Admin: /admin</p>
+          <p className="text-white/25 text-[11px] mt-2 tracking-wide">Tokens are single-use • Expires after one unlock • Admin: /admin</p>
 
           <form onSubmit={handleSubmit} className="mt-6">
             <input
               type="text"
-              placeholder={MASTER_HINT}
+              placeholder="A1B2C3D4"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className="w-full p-3.5 bg-[#0B0215] text-white rounded-xl border border-white/10 focus:border-[#E6C87A]/30 focus:outline-none focus:ring-1 focus:ring-[#E6C87A]/20 text-center text-[18px] tracking-[0.22em] font-black uppercase placeholder:tracking-normal placeholder:text-sm placeholder:text-white/25"
@@ -97,10 +93,6 @@ export const AccessCode = () => {
               autoComplete="off"
               autoFocus
             />
-            <div className="mt-2 flex items-center justify-between text-[11px]">
-              <span className="text-white/25">Try: {MASTER_HINT}</span>
-              <button type="button" onClick={()=> setCode(MASTER_HINT)} className="text-[#E6C87A] hover:text-white font-bold tracking-widest uppercase text-[11px]">Fill master →</button>
-            </div>
             <button
               type="submit"
               disabled={loading}
@@ -115,7 +107,7 @@ export const AccessCode = () => {
           <div className="mt-6 p-4 rounded-xl bg-white/[0.03] border border-white/5 text-left">
             <div className="eyebrow text-white/30 text-[11px]">How it works — instant</div>
             <ol className="text-xs text-white/45 mt-2 space-y-1.5 list-decimal list-inside leading-5">
-              <li>Enter <span className="text-white font-bold">{MASTER_HINT}</span> → platform opens immediately</li>
+              <li>Enter your <span className="text-white font-bold">access code</span> → platform opens immediately</li>
               <li>Code is <span className="text-amber-300 font-bold">single-use</span> — after one unlock it is invalid</li>
               <li>Need another? Ask admin or generate at <Link to="/admin" className="text-[#E6C87A] underline">/admin</Link></li>
             </ol>
