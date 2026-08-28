@@ -2,7 +2,8 @@
 import { cors } from 'hono/cors'
 import { sbSelect, sbInsert, sbUpdate, sbDelete, sbGetOne, getSupabase } from './lib/supabase.js'
 import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
-import { verifyAccessCode, getUserFromRequest } from './lib/auth.js'
+import { verifyAccessCode, getUserFromRequest, requireAuth, requireAdmin } from './lib/auth.js'
+import { generateAccessCode, verifyAccessCodeWithUser, getAccessCodes } from './lib/accessCodes.js'
 import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
 import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/replyTracker.js'
@@ -18,7 +19,7 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase not configured — all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], outcomes: [], client_outcomes: [], outcomes: [], client_outcomes: [] }
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], outcomes: [], client_outcomes: [], outcomes: [], client_outcomes: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -330,9 +331,51 @@ app.post('/api/auth/login', async (c) => {
   return c.json({ ok: true, user: { email }, token: 'mock-jwt-' + Date.now(), note: 'Set SUPABASE_URL+KEY for real auth' })
 })
 app.post('/api/auth/verify-code', async (c) => {
-  const { code } = await c.req.json().catch(()=>({}))
-  const res = await verifyAccessCode(c.env, code)
-  return res.ok ? c.json({ ok: true }) : c.json(res, 400)
+  try {
+    const { code } = await c.req.json().catch(()=>({}))
+    if (!code) return c.json({ error: 'Code is required' }, 400)
+    // If Authorization present, verify with user binding (prompt #12 behavior)
+    const auth = c.req.header('Authorization') || ''
+    if (auth) {
+      const user = await requireAuth(c, c.env)
+      if (!user) return c.json({ error: 'Unauthorized: No token provided' }, 401)
+      const result = await verifyAccessCodeWithUser(c.env, code, user.id)
+      if (!result.valid) return c.json({ error: result.error }, 400)
+      // Also create a mem record for consistency
+      try { await create(c.env, 'access_codes', { code: String(code).trim().toUpperCase(), used: true, user_id: user.id }) } catch {}
+      return c.json({ success: true, message: 'Access granted', ok: true })
+    }
+    // Fallback: legacy simple verification (no auth)
+    const res = await verifyAccessCode(c.env, code)
+    return res.ok ? c.json({ ok: true, success: true }) : c.json(res, 400)
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/admin/generate-code', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env)
+    if (!admin) return c.json({ error: 'Forbidden: Admin access required' }, 403)
+    // Try Supabase path
+    if (hasSupabase(c.env)) {
+      const row = await generateAccessCode(c.env, admin.id)
+      return c.json({ success: true, code: row })
+    }
+    // In-memory fallback
+    const row = await generateAccessCode(c.env, admin.id)
+    const saved = await create(c.env, 'access_codes', row)
+    return c.json({ success: true, code: saved })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/admin/codes', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env)
+    if (!admin) return c.json({ error: 'Forbidden: Admin access required' }, 403)
+    if (hasSupabase(c.env)) {
+      const codes = await getAccessCodes(c.env)
+      if (codes !== null) return c.json({ success: true, codes })
+    }
+    const codes = await list(c.env, 'access_codes')
+    return c.json({ success: true, codes })
+  } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.get('/api/auth/me', (c) => {
   const user = getUserFromRequest(c)

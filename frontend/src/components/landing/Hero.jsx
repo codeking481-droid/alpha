@@ -39,10 +39,10 @@ export const Hero = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 mt-7">
-              <Link to="/dashboard" className="bg-white text-[#0B0215] px-7 py-3.5 rounded-full font-black text-xs tracking-widest uppercase hover:bg-white/90 transition inline-flex items-center justify-center gap-2">
-                Open Command Hub — free <span className="w-5 h-5 rounded-full bg-[#0B0215] text-white flex items-center justify-center text-[10px]">→</span>
+              <Link to="/auth" className="bg-white text-[#0B0215] px-7 py-3.5 rounded-full font-black text-xs tracking-widest uppercase hover:bg-white/90 transition inline-flex items-center justify-center gap-2">
+                Get access — $50 code <span className="w-5 h-5 rounded-full bg-[#0B0215] text-white flex items-center justify-center text-[10px]">→</span>
               </Link>
-              <a href="#proof" className="hairline px-7 py-3.5 rounded-full font-black text-xs tracking-widest uppercase text-white/70 hover:text-white hover:bg-white/[0.04] transition inline-flex items-center justify-center">Read proof memo →</a>
+              <Link to="/dashboard" className="hairline px-7 py-3.5 rounded-full font-black text-xs tracking-widest uppercase text-white/70 hover:text-white hover:bg-white/[0.04] transition inline-flex items-center justify-center">Preview dashboard →</Link>
             </div>
 
             <div className="flex flex-wrap gap-6 mt-6 text-xs">
