@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom"
-import { lazy, Suspense } from "react"
 import Dashboard from "./pages/Dashboard.jsx"
 import ContentStudio from "./pages/ContentStudio.jsx"
 import OutreachEngine from "./pages/OutreachEngine.jsx"
@@ -34,7 +33,6 @@ function AdminRoute({ children }) {
   const granted = typeof window !== 'undefined' ? localStorage.getItem('alpha.access_granted') === '1' : false;
   if (!token) return <Navigate to="/auth" replace />;
   if (!granted) return <Navigate to="/access-code" replace />;
-  // allow only admin email additionally? keep simple: any granted can see admin, but backend enforces
   return children;
 }
 
@@ -52,17 +50,15 @@ function TopNav() {
     const id = setInterval(check, 1000);
     return ()=> { window.removeEventListener('storage', check); clearInterval(id); };
   }, []);
-  const base = "relative px-3 sm:px-4 py-2.5 text-[11.5px] font-bold tracking-widest uppercase transition-all duration-200 min-h-[44px] flex items-center"
+  const base = "relative px-3 sm:px-4 py-2.5 text-xs font-medium transition min-h-[44px] flex items-center"
   const fullLinks = [
-    { to: "/dashboard", label: "🚀 Command Hub", end: true },
-    { to: "/content", label: "✍️ Content" },
-    { to: "/outreach", label: "📧 Outreach" },
-    { to: "/approvals", label: "✓ Approvals" },
-    { to: "/campaigns", label: "⬢ Campaigns" },
-    { to: "/analytics", label: "📊 Analytics" },
-    { to: "/deals", label: "💰 Deal Desk" },
-    { to: "/outcomes", label: "📊 Outcomes" },
-    { to: "/client", label: "👁️ Client" },
+    { to: "/dashboard", label: "Dashboard", end: true },
+    { to: "/content", label: "Content" },
+    { to: "/outreach", label: "Outreach" },
+    { to: "/approvals", label: "Approvals" },
+    { to: "/campaigns", label: "Campaigns" },
+    { to: "/analytics", label: "Analytics" },
+    { to: "/deals", label: "Deals" },
   ];
   const publicLinks = [
     { to: "/", label: "Home", end: true },
@@ -71,57 +67,40 @@ function TopNav() {
   ];
   const links = hasAccess ? fullLinks : publicLinks;
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/80 border-b border-white/[0.06]">
+    <nav className="sticky top-0 z-50 border-b" style={{background:'#FFFFFB', borderColor:'#EAEAEA'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-lg bg-white text-[#0B0215] flex items-center justify-center font-black text-xs shrink-0">α</div>
-          <span className="font-black tracking-tight text-white text-[13px] truncate">ALPHA</span>
-          <span className="hidden lg:inline text-[10px] text-white/30 tracking-[0.16em] uppercase font-bold ml-2 px-2 py-1 rounded-full bg-white/[0.04] border border-white/5">Lagos • London • SOC-2 • Real data</span>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0" style={{background:'#5E17EB'}}>α</div>
+          <span className="font-bold tracking-tight text-sm truncate" style={{color:'#0A0A0A'}}>ALPHA</span>
+          <span className="hidden lg:inline text-xs font-medium px-2 py-1 rounded-full" style={{background:'rgba(94,23,235,0.08)', color:'#5E17EB'}}>OS • v1.0</span>
         </div>
 
-        {/* Desktop nav */}
         <div className="hidden lg:flex items-center gap-1 ml-4">
           {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `${base} ${isActive ? "text-[#FFD700]" : "text-white/60 hover:text-[#FFD700]"}`}>
-              {({ isActive }) => (
-                <span className="relative whitespace-nowrap">
-                  {l.label}
-                  {isActive && <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-[#FFD700] rounded-full shadow-gold"></span>}
-                </span>
-              )}
+            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `${base} rounded-lg ${isActive ? "text-white" : "hover:bg-gray-50"}`} style={({ isActive }) => isActive ? {background:'#5E17EB', color:'#FFFFFB'} : {color:'#555555'}}>
+              {l.label}
             </NavLink>
           ))}
         </div>
 
-        {/* Right */}
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={()=> { const dp=window.__alphaDeferredPrompt; if(dp){ dp.prompt(); dp.userChoice?.then(r=>{ if(r.outcome==='accepted') window.__alphaDeferredPrompt=null; }); return; } const el=document.getElementById('download-app'); if(el) el.scrollIntoView({behavior:'smooth'}); else window.location.href='/#download-app'; setTimeout(()=>{ if(!window.__alphaDeferredPrompt) alert('To install: Chrome → ⋮ → Install app. iPhone: Share → Add to Home Screen.'); }, 400); }} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 font-bold text-xs tracking-widest uppercase hover:bg-white/10 hover:text-white">
-            <span>⬇</span> Download App
-          </button>
-          {hasAccess ? <CommandPalette /> : <a href="/auth" className="hidden sm:inline-flex px-4 py-2 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase">Sign up →</a>}
-          <span className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 font-semibold"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/> {hasAccess ? 'Private' : 'Public'}</span>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-sm border border-white/10 shrink-0">👑</div>
-          {!hasAccess && <a href="/checkout?price=50" className="hidden sm:inline-flex px-4 py-2 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase">Buy $50</a>}
-          {/* Hamburger */}
-          <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition shrink-0" aria-label="Menu">
+          {hasAccess ? <CommandPalette /> : <a href="/auth" className="hidden sm:inline-flex px-4 py-2 rounded-lg font-semibold text-sm" style={{background:'#0A0A0A', color:'#FFFFFB'}}>Sign up →</a>}
+          <span className="hidden sm:flex items-center gap-1.5 text-xs font-medium" style={{color:'#5E17EB'}}><span className="w-2 h-2 rounded-full" style={{background:'#5E17EB'}}/> {hasAccess ? 'Private' : 'Public'}</span>
+          {!hasAccess && <a href="/checkout?price=50" className="hidden sm:inline-flex px-4 py-2 rounded-lg font-bold text-xs" style={{background:'#5E17EB', color:'#FFFFFB'}}>Buy $50</a>}
+          <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 rounded-lg flex items-center justify-center border" style={{borderColor:'#EAEAEA', color:'#0A0A0A'}} aria-label="Menu">
             <span className="text-lg">{open ? "✕" : "☰"}</span>
           </button>
         </div>
       </div>
 
-      {/* Mobile drawer */}
       {open && (
-        <div className="lg:hidden border-t border-white/10 bg-[#0B0215] animate-fadeIn">
+        <div className="lg:hidden border-t" style={{background:'#FFFFFB', borderColor:'#EAEAEA'}}>
           <div className="px-4 py-3 grid gap-1">
             {links.map((l) => (
-              <NavLink key={l.to} to={l.to} end={l.end} onClick={() => setOpen(false)} className={({ isActive }) => `px-4 py-3 rounded-xl text-sm font-black tracking-widest uppercase flex items-center transition min-h-[48px] ${isActive ? "bg-[#FFD700] text-[#0B0215]" : "bg-white/[0.04] text-white/70 border border-white/5 hover:bg-white/[0.08]"}`}>
+              <NavLink key={l.to} to={l.to} end={l.end} onClick={() => setOpen(false)} className="px-4 py-3 rounded-lg text-sm font-medium flex items-center" style={({ isActive }) => isActive ? {background:'#5E17EB', color:'#FFFFFB'} : {background:'#FAFAFA', color:'#555555', border:'1px solid #EAEAEA'}}>
                 {l.label}
               </NavLink>
             ))}
-            <div className="mt-2 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-white/30">
-              <span>5 badges • Premium OS</span>
-              <span className="text-emerald-400 font-bold">● System Live</span>
-            </div>
           </div>
         </div>
       )}
@@ -133,9 +112,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const showToast = (message, type='success') => setToast({ message, type });
   const hideToast = () => setToast(null);
-  // expose globally for any component to trigger toast + logger
   useEffect(()=>{ window.showAlphaToast = showToast; window.AlphaLogger = logger; }, []);
-  // 🧹 Kill ALL mock data forever — clears old Genesis/Dominion/AlphaTekX on load
   useEffect(() => {
     const keys = ['alpha.companies', 'alpha.content', 'alpha.campaigns', 'alpha.invoices', 'alpha.contracts', 'alpha.clients', 'alpha.leads', 'alpha.replies', 'alpha.drafts', 'alpha.activities', 'alpha.team']
     try {
@@ -158,17 +135,14 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#0B0215] animate-fadeIn overflow-x-hidden">
+        <div className="min-h-screen" style={{background:'#FFFFFB'}}>
           <TopNav />
           <Onboarding />
-          <Suspense fallback={<Spinner label="Loading Alpha…" />}>
             <Routes>
-              {/* Public — no auth needed */}
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/access-code" element={<AccessCode />} />
               <Route path="/checkout" element={<Checkout />} />
-              {/* Protected — requires login + access token */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/content" element={<ProtectedRoute><ContentStudio /></ProtectedRoute>} />
               <Route path="/outreach" element={<ProtectedRoute><OutreachEngine /></ProtectedRoute>} />
@@ -180,7 +154,6 @@ export default function App() {
               <Route path="/approvals" element={<ProtectedRoute><Approvals /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminCodes /></AdminRoute>} />
             </Routes>
-          </Suspense>
           {toast && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
         </div>
       </BrowserRouter>

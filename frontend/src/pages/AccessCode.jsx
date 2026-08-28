@@ -13,10 +13,8 @@ export const AccessCode = () => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
-
     const upper = code.trim().toUpperCase();
     if (!upper) { setMessage('❌ Enter a code'); setLoading(false); return; }
-
     let token = localStorage.getItem('alpha.token') || '';
     try {
       if (import.meta.env.VITE_SUPABASE_URL) {
@@ -24,19 +22,16 @@ export const AccessCode = () => {
         token = session.data.session?.access_token || token;
       }
     } catch {}
-
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
-
     try {
       const response = await fetch(`${API_URL}/api/auth/verify-code`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ code: upper }),
+        body: JSON.stringify({ code: upper })
       });
       const data = await response.json().catch(()=>({}));
       if (response.ok && (data.success || data.ok)) {
-        // Ensure a token exists so ProtectedRoute passes — master code grants instant access
         if (!token) {
           const payload = btoa(JSON.stringify({ sub: 'master-'+Date.now(), email: 'master@alphatekx.local', role: 'admin' }));
           token = `mock-jwt.${payload}.sig`;
@@ -46,16 +41,12 @@ export const AccessCode = () => {
         localStorage.setItem('alpha.access_granted', '1');
         localStorage.setItem('alpha.access_code', upper);
         localStorage.setItem('alpha.access_at', new Date().toISOString());
-        setMessage(`✅ Access granted — opening Alpha Agency…`);
-        // Instant navigation, no second step
-        setTimeout(() => navigate('/dashboard'), 600);
+        setMessage('✅ Access granted! Redirecting...');
+        setTimeout(() => navigate('/dashboard'), 800);
       } else {
-        const err = data.error || 'Invalid or already used code — this code is single-use';
-        if (err.toLowerCase().includes('already used')) {
-          setMessage('⚠️ This code was already used once (single-use). Contact alphatekxcompany@gmail.com for a new code or generate one at /admin.');
-        } else {
-          setMessage('❌ ' + err);
-        }
+        const err = data.error || 'Invalid or already used code';
+        if (err.toLowerCase().includes('already used')) setMessage('⚠️ This code was already used (single-use). Contact alphatekxcompany@gmail.com or generate a new one.');
+        else setMessage('❌ ' + err);
       }
     } catch (error) {
       setMessage('❌ ' + error.message);
@@ -65,92 +56,63 @@ export const AccessCode = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0215] px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <Link to="/" className="inline-flex items-center gap-2 text-white/40 hover:text-white text-xs tracking-widest uppercase font-bold">← Back to home</Link>
-        </div>
-        <div className="mature-card rounded-[24px] p-8 sm:p-9 text-center border border-white/[0.06] shadow-[0_24px_64px_rgba(0,0,0,0.4)]">
-          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mx-auto text-xl shadow-gold">🔑</div>
-          <h1 className="text-[22px] font-black tracking-tight text-white mt-4">Enter access token</h1>
-          <p className="text-white/55 text-[13px] mt-2 leading-5">
-            Single-use token. Enter your code to unlock instantly — no login required. Or purchase below.
+    <div className="min-h-screen flex items-center justify-center px-6" style={{background:'#FFFFFB'}}>
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <div className="text-5xl mb-4">🔑</div>
+          <h1 className="text-3xl font-bold" style={{color:'#0A0A0A'}}>Enter Access Token</h1>
+          <p className="mt-2" style={{color:'#555555'}}>
+            Enter your token to access Alpha Agency. <span style={{color:'#5E17EB', fontWeight:600}}>Secure • Single-use</span>
           </p>
-          <div className="mt-3 flex items-center justify-center gap-2">
-            <Link to="/checkout?price=50" className="px-4 py-2.5 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-white/90">$50 access</Link>
-            <Link to="/checkout?price=99" className="px-4 py-2.5 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-[#ffdf33]">$99 premium</Link>
-          </div>
-          <p className="text-white/25 text-[11px] mt-2 tracking-wide">Tokens are single-use • Expires after one unlock • Admin: /admin</p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="mt-6">
-            <input
-              type="text"
-              placeholder="A1B2C3D4"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="w-full p-3.5 bg-[#0B0215] text-white rounded-xl border border-white/10 focus:border-[#E6C87A]/30 focus:outline-none focus:ring-1 focus:ring-[#E6C87A]/20 text-center text-[18px] tracking-[0.22em] font-black uppercase placeholder:tracking-normal placeholder:text-sm placeholder:text-white/25"
-              required
-              autoComplete="off"
-              autoFocus
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-[#0B0215] py-3.5 rounded-full font-black text-xs tracking-widest uppercase mt-4 hover:bg-white/90 disabled:opacity-50 shadow-gold transition"
-            >
-              {loading ? 'Verifying…' : 'Unlock platform →'}
-            </button>
-          </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            placeholder="A1B2C3D4"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            className="input text-center text-2xl tracking-widest py-4"
+            style={{borderColor:'#E0E0E0'}}
+            required
+            autoComplete="off"
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full py-4 text-lg justify-center"
+            style={{background:'#5E17EB'}}
+          >
+            {loading ? 'Verifying...' : '🔓 Unlock Platform'}
+          </button>
+        </form>
 
-          {message && <p className={`mt-4 text-xs leading-5 whitespace-pre-wrap break-words px-3 py-2 rounded-xl border ${message.startsWith('✅') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : message.startsWith('⚠️') ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>{message}</p>}
+        {message && <p className="mt-4 text-center text-sm" style={{color: message.startsWith('✅') ? '#0A7A00' : '#C00000'}}>{message}</p>}
 
-          <div className="mt-6 p-4 rounded-xl bg-white/[0.03] border border-white/5 text-left">
-            <div className="eyebrow text-white/30 text-[11px]">How it works — instant</div>
-            <ol className="text-xs text-white/45 mt-2 space-y-1.5 list-decimal list-inside leading-5">
-              <li>Enter your <span className="text-white font-bold">access code</span> → platform opens immediately</li>
-              <li>Code is <span className="text-amber-300 font-bold">single-use</span> — after one unlock it is invalid</li>
-              <li>Need another? Ask admin or generate at <Link to="/admin" className="text-[#E6C87A] underline">/admin</Link></li>
-            </ol>
-          </div>
-
-          {/* Post-signup buy path — crystal clear */}
-          <div className="mt-6 pt-6 border-t border-white/5">
-            <div className="eyebrow text-white/30 text-[11px]">Don't have a token? — Buy one</div>
-            <p className="text-xs text-white/40 mt-1">Pay via Paystack (USD), token issued instantly after success.</p>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <Link to="/checkout?price=50" className="group rounded-2xl bg-white p-4 text-left hover:bg-white/90 transition border border-white">
-                <div className="text-[11px] tracking-widest uppercase font-black text-[#0B0215]/50">Standard</div>
-                <div className="text-xl font-black text-[#0B0215] mt-1">$50 <span className="text-xs font-bold text-[#0B0215]/40">USD</span></div>
-                <ul className="text-[11px] text-[#0B0215]/60 mt-2 space-y-1 leading-4">
-                  <li>• Single-use token</li>
-                  <li>• 30-day expiry</li>
-                  <li>• Full OS access</li>
-                </ul>
-                <div className="mt-3 text-xs font-black tracking-widest uppercase text-[#0B0215] group-hover:underline">Buy $50 →</div>
-              </Link>
-              <Link to="/checkout?price=99" className="group rounded-2xl bg-[#FFD700] p-4 text-left hover:bg-[#ffdf33] transition border border-[#FFD700]">
-                <div className="text-[11px] tracking-widest uppercase font-black text-[#0B0215]/60">Premium • Most chosen</div>
-                <div className="text-xl font-black text-[#0B0215] mt-1">$99 <span className="text-xs font-bold text-[#0B0215]/50">USD</span></div>
-                <ul className="text-[11px] text-[#0B0215]/70 mt-2 space-y-1 leading-4">
-                  <li>• Premium token</li>
-                  <li>• Priority support</li>
-                  <li>• Client dashboards</li>
-                </ul>
-                <div className="mt-3 text-xs font-black tracking-widest uppercase text-[#0B0215] group-hover:underline">Buy $99 →</div>
-              </Link>
-            </div>
-            <p className="text-[11px] text-white/25 mt-3 text-center">Secure by Paystack • USD charged • Token after verification</p>
-          </div>
-
-          <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-white/25 flex-wrap">
-            <span className="inline-flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/> Encrypted</span>
-            <span>•</span>
-            <span>Trusted by 215+ community</span>
-            <span>•</span>
-            <a href="mailto:alphatekxcompany@gmail.com" className="hover:text-white underline">Support</a>
+        <div className="text-center mt-8">
+          <p className="text-sm" style={{color:'#777777'}}>
+            Don't have a token?{' '}
+            <Link to="/checkout?price=50" className="font-medium hover:underline" style={{color:'#5E17EB'}}>
+              Purchase one for $50 USD
+            </Link>
+            {' '}<span style={{color:'#CCCCCC'}}>•</span>{' '}
+            <Link to="/checkout?price=99" className="font-medium hover:underline" style={{color:'#5E17EB'}}>
+              $99 Premium
+            </Link>
+          </p>
+          <p className="text-xs mt-2" style={{color:'#999999'}}>
+            One-time payment. Lifetime access. Paystack USD.
+          </p>
+          <div className="mt-4 flex gap-2 justify-center">
+            <Link to="/checkout?price=50" className="px-4 py-2 rounded-full text-xs font-bold" style={{background:'#0A0A0A', color:'#FFFFFB'}}>Buy $50 →</Link>
+            <Link to="/checkout?price=99" className="px-4 py-2 rounded-full text-xs font-bold" style={{background:'#5E17EB', color:'#FFFFFB'}}>Buy $99 →</Link>
           </div>
         </div>
-        <p className="text-center text-[11px] text-white/20 mt-4">By unlocking you agree to Privacy & Terms. No view guarantees — real access to real people.</p>
+
+        <p className="text-center text-xs mt-6" style={{color:'#AAAAAA'}}>
+          Single-use tokens • 30-day expiry • No view guarantees — real access to real people.
+        </p>
       </div>
     </div>
   );
