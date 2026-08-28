@@ -88,6 +88,9 @@ function TopNav() {
 
         {/* Right */}
         <div className="ml-auto flex items-center gap-2">
+          <button onClick={()=> { const el=document.getElementById('download-app'); if(el) el.scrollIntoView({behavior:'smooth'}); else window.location.href='/#download-app'; }} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 font-bold text-xs tracking-widest uppercase hover:bg-white/10 hover:text-white">
+            <span>⬇</span> Download App
+          </button>
           {hasAccess ? <CommandPalette /> : <a href="/auth" className="hidden sm:inline-flex px-4 py-2 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase">Sign up →</a>}
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 font-semibold"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/> {hasAccess ? 'Private' : 'Public'}</span>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-sm border border-white/10 shrink-0">👑</div>

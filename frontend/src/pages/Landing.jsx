@@ -5,6 +5,7 @@ import { HowItWorks } from '../components/landing/HowItWorks';
 import { Testimonials } from '../components/landing/Testimonials';
 import { Pricing } from '../components/landing/Pricing';
 import { FAQ } from '../components/landing/FAQ';
+import { DownloadApp } from '../components/landing/DownloadApp';
 import { FinalCTA } from '../components/landing/FinalCTA';
 import { Footer } from '../components/landing/Footer';
 
@@ -18,6 +19,7 @@ export const Landing = () => {
       <Testimonials />
       <Pricing />
       <FAQ />
+      <DownloadApp />
       <FinalCTA />
       <Footer />
     </div>

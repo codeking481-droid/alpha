@@ -1,9 +1,8 @@
 import { useState } from 'react';
 
 const plans = [
-  { name:'Starter', sub:'Solo founders', price:'$0', note:'/ forever', bullets:['3 companies','Free lead finder','Content Studio (Groq)','50 sends / month'], cta:'Start free', fill:false },
-  { name:'Pro', sub:'$3k — $15k agencies', price:'$29', note:'/ month', bullets:['Unlimited companies & searches','Apollo + Overpass','Automation & inbox','Outcomes proof + charts','Deal Desk','Priority support'], cta:'Start Pro', fill:true, badge:'Most agencies start here' },
-  { name:'Scale', sub:'Teams', price:'$99', note:'/ month', bullets:['Everything in Pro','White-label & domain','Client dashboards','API & webhooks','Success manager'], cta:'Scale agency', fill:false },
+  { name:'Access', sub:'Single token • $50', price:'$50', note:'one-time', bullets:['Access token (single-use, 30d)','Companies + outreach access','DM companies directly','Outcome proof'], cta:'Get Access Token', fill:false },
+  { name:'Premium Access', sub:'Best for pros • $99', price:'$99', note:'one-time', bullets:['Premium token + priority','Everything in Access','Client dashboards','API & webhooks','Success manager'], cta:'Get Premium Access', fill:true, badge:'Most chosen' },
 ];
 
 export const Pricing = () => {
@@ -12,17 +11,12 @@ export const Pricing = () => {
     <section id="pricing" className="py-16 px-4 border-t border-white/5">
       <div className="max-w-[1160px] mx-auto">
         <div className="max-w-2xl">
-          <div className="eyebrow text-white/30">Pricing • No seat fees • Cancel anytime</div>
-          <h2 className="text-3xl font-black tracking-tight text-white mt-3">Pay for outcomes, not seats.</h2>
-          <p className="text-sm text-white/40 mt-2">Start free. Upgrade when the OS is earning. Annual saves 17%.</p>
+          <div className="eyebrow text-white/30">Access • Pay once • Own your pipeline</div>
+          <h2 className="text-3xl font-black tracking-tight text-white mt-3">No free access. <span className="text-white/40 font-normal mature-serif italic">Token only.</span></h2>
+          <p className="text-sm text-white/40 mt-2">Payment confirmed → access token issued instantly. Admin gives tokens after verification. No token, no company DM.</p>
         </div>
 
-        <div className="inline-flex mt-6 p-1 rounded-full hairline bg-white/[0.03]">
-          <button onClick={()=>setAnnual(false)} className={`px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase ${!annual?'bg-white text-[#0B0215]':'text-white/50'}`}>Monthly</button>
-          <button onClick={()=>setAnnual(true)} className={`px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase ${annual?'bg-white text-[#0B0215]':'text-white/50'}`}>Annual • 2 months free</button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-3xl mx-auto">
           {plans.map(p=>(
             <div key={p.name} className={`rounded-[20px] p-6 flex flex-col ${p.fill?'bg-white text-[#0B0215]':'mature-card'}`}>
               {p.badge && <div className="eyebrow text-[#0B0215]/50">{p.badge}</div>}
@@ -39,8 +33,8 @@ export const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <a href="/dashboard" className={`mt-6 text-center py-3 rounded-full font-black text-xs tracking-widest uppercase ${p.fill?'bg-[#0B0215] text-white hover:bg-black':'bg-white text-[#0B0215] hover:bg-white/90'}`}>{p.cta}</a>
-              <div className={`text-center text-[11px] mt-2 ${p.fill?'text-[#0B0215]/40':'text-white/25'}`}>No credit card • 2-min setup</div>
+              <a href="/checkout?price=50" onClick={(e)=>{ if(p.price==='$99'){e.preventDefault(); window.location.href='/checkout?price=99';} else {e.preventDefault(); window.location.href='/checkout?price=50';}}} className={`mt-6 text-center py-3 rounded-full font-black text-xs tracking-widest uppercase ${p.fill?'bg-[#0B0215] text-white hover:bg-black':'bg-white text-[#0B0215] hover:bg-white/90'}`}>{p.cta}</a>
+              <div className={`text-center text-[11px] mt-2 ${p.fill?'text-[#0B0215]/40':'text-white/25'}`}>Paystack • Token after verified payment</div>
             </div>
           ))}
         </div>

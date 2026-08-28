@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
     <meta name="theme-color" content="#0B0215" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Alpha Agency" />
     <meta name="description" content="Alpha Agency — Invisible operations dashboard. 5 badges: Command Hub, Content Studio, Outreach Engine, Analytics, Deal Desk." />
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>α</text></svg>" />
@@ -14,5 +17,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(r => console.log('✅ SW registered', r.scope))
+            .catch(e => console.log('SW failed', e));
+        });
+      }
+    </script>
   </body>
 </html>
