@@ -59,34 +59,35 @@ export default function AIWriter({ initialTopic = "", initialFormat = "post", on
   // expose helper for parent via window event (simple)
   // instead parent can call setTopic directly via prop sync
   return (
-    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+    <div className="bg-white border border-[#EDEDED] rounded-2xl p-6">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-lg bg-[#FFD700] flex items-center justify-center text-[#0B0215]">✦</div>
-        <h3 className="text-sm font-bold tracking-widest uppercase text-white/80">AI Writer</h3>
+        <h3 className="text-sm font-bold tracking-widest uppercase" style={{color:'#0A0A0A'}}>AI Writer</h3>
         <span className="ml-auto text-xs px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-semibold">Groq • Fast</span>
       </div>
-      <p className="text-xs text-white/40 mt-1">Powered by Groq via Workers AI — generate in 1.2s</p>
+      <p className="text-xs mt-1" style={{color:'#6B7280'}}>Powered by Groq via Workers AI — generate in 1.2s</p>
 
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-3">
         <div className="lg:col-span-2">
-          <label className="text-xs font-bold tracking-widest uppercase text-white/50">Topic / Keywords</label>
+          <label className="text-xs font-bold tracking-widest uppercase" style={{color:'#6B7280'}}>Topic / Keywords</label>
           <textarea
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="e.g. The invisible system that handles everything for agency owners..."
             rows={3}
-            className="mt-2 w-full bg-[#0B0215] border border-white/10 rounded-xl p-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#FFD700]/50 focus:ring-1 focus:ring-[#FFD700]/20 transition"
+            className="mt-2 w-full bg-[#FFFCF8] border border-[#EDEDED] rounded-xl p-3 text-sm focus:outline-none focus:border-[#5E17EB]/30"
+            style={{color:'#0A0A0A'}}
           />
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-bold tracking-widest uppercase text-white/50">Format</label>
+            <label className="text-xs font-bold tracking-widest uppercase" style={{color:'#6B7280'}}>Format</label>
             <div className="mt-2 grid grid-cols-2 gap-2">
               {formats.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setFormat(f.id)}
-                  className={`py-2.5 rounded-xl text-xs font-black tracking-widest uppercase border transition ${format === f.id ? "bg-[#FFD700] text-[#0B0215] border-[#FFD700]" : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"}`}
+                  className={`py-2.5 rounded-xl text-xs font-black tracking-widest uppercase border transition ${format === f.id ? "bg-[#5E17EB] text-white border-[#5E17EB]" : "bg-[#F9FAFB] text-[#6B7280] border-[#EDEDED] hover:bg-white"}`}
                 >
                   {f.label}
                 </button>
@@ -94,11 +95,12 @@ export default function AIWriter({ initialTopic = "", initialFormat = "post", on
             </div>
           </div>
           <div>
-            <label className="text-xs font-bold tracking-widest uppercase text-white/50">Company</label>
+            <label className="text-xs font-bold tracking-widest uppercase" style={{color:'#6B7280'}}>Company</label>
             <select
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              className="mt-2 w-full bg-[#0B0215] border border-white/10 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-[#FFD700]/50"
+              className="mt-2 w-full bg-white border border-[#EDEDED] rounded-xl p-2.5 text-sm focus:outline-none focus:border-[#5E17EB]/50"
+              style={{color:'#0A0A0A'}}
             >
               {companies.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -123,19 +125,19 @@ export default function AIWriter({ initialTopic = "", initialFormat = "post", on
       {output && (
         <div className="mt-4">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold tracking-widest uppercase text-white/50">Output</label>
+            <label className="text-xs font-bold tracking-widest uppercase" style={{color:'#6B7280'}}>Output</label>
             <div className="flex gap-2">
-              <button onClick={() => navigator.clipboard.writeText(output)} className="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition">Copy</button>
-              <button onClick={() => setOutput("")} className="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/5 text-white/60 hover:bg-white/10 transition">Clear</button>
+              <button onClick={() => navigator.clipboard.writeText(output)} className="text-xs px-3 py-1 rounded-full bg-white border border-[#EDEDED] hover:bg-[#F9FAFB] transition" style={{color:'#0A0A0A'}}>Copy</button>
+              <button onClick={() => setOutput("")} className="text-xs px-3 py-1 rounded-full bg-[#F9FAFB] border border-[#EDEDED] hover:bg-white transition" style={{color:'#6B7280'}}>Clear</button>
             </div>
           </div>
-          <pre className="mt-2 bg-[#0B0215] border border-white/10 rounded-xl p-4 text-sm text-white/90 whitespace-pre-wrap leading-relaxed max-h-[320px] overflow-auto">
+          <pre className="mt-2 bg-[#FFFCF8] border border-[#EDEDED] rounded-xl p-4 text-sm whitespace-pre-wrap leading-relaxed max-h-[320px] overflow-auto" style={{color:'#0A0A0A'}}>
             {output}
           </pre>
         </div>
       )}
 
-      <p className="mt-3 text-[11px] text-white/25 text-center">Mock mode — wire <code className="text-white/40">/api/ai/generate</code> to Groq + Workers AI with <code className="text-white/40">GROQ_API_KEY</code> in .env</p>
+      <p className="mt-3 text-[11px] text-center" style={{color:'#9CA3AF'}}>Mock mode — wire <code style={{color:'#6B7280'}}>/api/ai/generate</code> to Groq + Workers AI with <code style={{color:'#6B7280'}}>GROQ_API_KEY</code> in .env</p>
     </div>
   )
 }

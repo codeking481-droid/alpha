@@ -101,7 +101,7 @@ function TopNav() {
           {hasAccess ? (
             <Link to="/dashboard" className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', textDecoration:'none'}}>Open Dashboard</Link>
           ) : (
-            <button onClick={()=>{ instantSignup(); navigate('/access'); }} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', border:'none', cursor:'pointer'}}>Get Started</button>
+            <button onClick={()=>{ instantSignup(); navigate('/access'); }} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', border:'none', cursor:'pointer', boxShadow:'0 2px 8px rgba(94,23,235,0.2)'}}>Sign Up Free</button>
           )}
           <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center" style={{border:'1px solid #EDEDED', color:'#0A0A0A'}} aria-label="Menu">
             <span className="text-base">{open ? "✕" : "☰"}</span>
@@ -117,7 +117,7 @@ function TopNav() {
                 {l.label}
               </NavLink>
             ))}
-            <button onClick={()=>{ instantSignup(); navigate('/access'); setOpen(false); }} className="mt-2 text-center font-semibold w-full" style={{background:'#5E17EB', color:'#FFFFFF', height:'44px', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'8px', border:'none', cursor:'pointer'}}>Get Started →</button>
+            <button onClick={()=>{ instantSignup(); navigate('/access'); setOpen(false); }} className="mt-2 text-center font-semibold w-full" style={{background:'#5E17EB', color:'#FFFFFF', height:'44px', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'8px', border:'none', cursor:'pointer'}}>Sign Up Free →</button>
           </div>
         </div>
       )}

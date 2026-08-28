@@ -75,14 +75,14 @@ export default function LeadFinder({ onAddToCampaign, onSelect }) {
   }
 
   return (
-    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+    <div className="bg-white border border-[#EDEDED] rounded-2xl p-6">
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="w-8 h-8 rounded-lg bg-[#FFD700] flex items-center justify-center text-[#0B0215]">🔍</div>
+        <div className="w-8 h-8 rounded-lg bg-[#5E17EB] flex items-center justify-center text-white">🔍</div>
         <div>
-          <h3 className="text-sm font-bold tracking-widest uppercase text-white/80">Lead Finder</h3>
-          <p className="text-xs text-white/30">Find people who need your service. Add them, then send personalized outreach. No fakes — only your real leads.</p>
+          <h3 className="text-sm font-bold tracking-widest uppercase" style={{color:'#0A0A0A'}}>Lead Finder</h3>
+          <p className="text-xs" style={{color:'#6B7280'}}>Find people who need your service. Add them, then send personalized outreach. No fakes — only your real leads.</p>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} className="ml-auto px-4 py-2 rounded-full bg-gradient-to-r from-[#FFD700] to-[#F59E0B] text-black text-xs font-black tracking-widest uppercase">+ Add Real Lead</button>
+        <button onClick={() => setShowAdd(!showAdd)} className="ml-auto px-4 py-2 rounded-full text-white text-xs font-black tracking-widest uppercase" style={{background:'#5E17EB'}}>+ Add Real Lead</button>
       </div>
 
       {showAdd && (

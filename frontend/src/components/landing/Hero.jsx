@@ -41,9 +41,9 @@ export const Hero = () => {
         <button
           onClick={handleGetStarted}
           className="inline-flex items-center justify-center font-semibold"
-          style={{background:'#5E17EB', color:'#FFFFFF', fontSize:'15px', fontWeight:700, letterSpacing:'0.01em', padding:'16px 32px', height:'52px', borderRadius:'10px', minWidth:'240px', border:'none', cursor:'pointer'}}
+          style={{background:'#5E17EB', color:'#FFFFFF', fontSize:'16px', fontWeight:800, letterSpacing:'-0.02em', padding:'16px 32px', height:'52px', borderRadius:'10px', minWidth:'260px', border:'none', cursor:'pointer', boxShadow:'0 4px 14px rgba(94,23,235,0.25)'}}
         >
-          Get Started — Instant Signup →
+          Sign Up — Instant, Free →
         </button>
         <Link
           to="/pricing"
@@ -53,10 +53,10 @@ export const Hero = () => {
           View Plans — $50 / $99
         </Link>
       </div>
-      <p className="mt-4 flex items-center justify-center gap-2" style={{color:'#9CA3AF', fontSize:'12px'}}>
-        <span style={{width:'6px', height:'6px', borderRadius:'999px', background:'#10B981', display:'inline-block'}} /> Instant signup — no password, no extra page. Token required after.
+      <p className="mt-4 flex items-center justify-center gap-2" style={{color:'#5E17EB', fontSize:'12px', fontWeight:600}}>
+        <span style={{width:'6px', height:'6px', borderRadius:'999px', background:'#10B981', display:'inline-block'}} /> No form. 1-click signup → instant token gate.
       </p>
-      <p className="mt-6" style={{color:'#6B7280', fontSize:'13px'}}>Free to enter. <span style={{color:'#0A0A0A', fontWeight:600}}>Access token unlocks everything.</span> Only token holders get in.</p>
+      <p className="mt-6" style={{color:'#6B7280', fontSize:'13px'}}>Free to sign up. <span style={{color:'#0A0A0A', fontWeight:700}}>Access token unlocks everything.</span> Only token holders get in.</p>
     </section>
   );
 };
