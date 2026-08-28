@@ -69,6 +69,9 @@ export const AccessCode = () => {
           <p className="text-white/40 text-xs mt-2 leading-5">
             Codes are single-use. Ask your admin or buy at $50. Expires in 30 days. In dev, any 6+ characters works.
           </p>
+          <p className="text-center mt-3 text-xs">
+            <span className="text-white/25">Don't have a code?</span> <Link to="/checkout" className="text-[#FFD700] font-bold hover:underline">Buy one for $50 →</Link>
+          </p>
 
           <form onSubmit={handleSubmit} className="mt-6">
             <input

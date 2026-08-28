@@ -3,7 +3,8 @@ import { cors } from 'hono/cors'
 import { sbSelect, sbInsert, sbUpdate, sbDelete, sbGetOne, getSupabase } from './lib/supabase.js'
 import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
 import { verifyAccessCode, getUserFromRequest, requireAuth, requireAdmin } from './lib/auth.js'
-import { generateAccessCode, verifyAccessCodeWithUser, getAccessCodes } from './lib/accessCodes.js'
+import { generateAccessCode, generatePaidAccessCode, verifyAccessCodeWithUser, getAccessCodes } from './lib/accessCodes.js'
+import { initializePayment, verifyPayment } from './lib/payment.js'
 import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
 import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/replyTracker.js'
@@ -368,6 +369,33 @@ app.post('/api/admin/generate-code', async (c) => {
     return c.json({ success: true, code: saved })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
+// ── Payment — Paystack ($50 access codes)
+app.post('/api/payment/initialize', async (c) => {
+  try {
+    const { email } = await c.req.json().catch(()=>({}));
+    if (!email) return c.json({ error: 'Email is required' }, 400);
+    const checkoutUrl = await initializePayment(c.env, email, 5000);
+    return c.json({ success: true, checkoutUrl });
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/payment/verify', async (c) => {
+  try {
+    const { reference, email } = await c.req.json().catch(()=>({}));
+    if (!reference || !email) return c.json({ error: 'Reference and email are required' }, 400);
+    const payment = await verifyPayment(c.env, reference);
+    if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
+    // Generate paid code
+    let codeRow;
+    if (hasSupabase(c.env)) {
+      try { codeRow = await generatePaidAccessCode(c.env, email); } catch (e) { codeRow = await generatePaidAccessCode(c.env, email); }
+    } else {
+      const row = await generatePaidAccessCode(c.env, email);
+      codeRow = await create(c.env, 'access_codes', row);
+    }
+    return c.json({ success: true, code: codeRow.code || codeRow.code, row: codeRow });
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
 app.get('/api/admin/codes', async (c) => {
   try {
     const admin = await requireAdmin(c, c.env)

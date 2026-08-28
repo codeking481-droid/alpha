@@ -10,17 +10,29 @@ function genCode() {
 
 export async function generateAccessCode(env, createdBy) {
   const code = genCode();
-  const row = { code, created_by: createdBy || null, user_id: null, used: false, created_at: new Date().toISOString() };
+  const row = { code, created_by: createdBy || null, user_id: null, used: false, price: 0, email: null, created_at: new Date().toISOString() };
   if (getSupabase(env)) {
     try {
       const data = await sbInsert(env, 'access_codes', row);
       return data;
     } catch (e) {
-      // if table missing, fallback to in-memory via caller
       throw e;
     }
   }
-  // No Supabase — caller will persist via mem
+  return { id: `mem_${Date.now()}`, ...row };
+}
+
+export async function generatePaidAccessCode(env, email) {
+  const code = genCode();
+  const row = { code, created_by: null, user_id: null, used: false, price: 50, email: email || null, created_at: new Date().toISOString() };
+  if (getSupabase(env)) {
+    try {
+      const data = await sbInsert(env, 'access_codes', row);
+      return data;
+    } catch (e) {
+      throw e;
+    }
+  }
   return { id: `mem_${Date.now()}`, ...row };
 }
 

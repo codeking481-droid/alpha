@@ -10,6 +10,8 @@ import ClientDashboard from "./pages/ClientDashboard.jsx"
 import Landing from "./pages/Landing.jsx"
 import Auth from "./pages/Auth.jsx"
 import AccessCode from "./pages/AccessCode.jsx"
+import Checkout from "./pages/Checkout.jsx"
+import AdminCodes from "./pages/AdminCodes.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
 
@@ -111,6 +113,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/access-code" element={<AccessCode />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/admin" element={<AdminCodes />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/content" element={<ContentStudio />} />
           <Route path="/outreach" element={<OutreachEngine />} />
