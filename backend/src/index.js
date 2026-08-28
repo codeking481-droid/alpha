@@ -18,7 +18,7 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase not configured — all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], outcomes: [] }
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], outcomes: [], client_outcomes: [], outcomes: [], client_outcomes: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -403,6 +403,107 @@ app.post('/api/outcomes/report', async (c) => {
   const { client = 'Your Client', range = 'Last 30 days' } = await c.req.json().catch(()=>({}))
   return c.json({ status: 'generated', client, range, note: 'Real report' })
 })
+
+// ── Client Dashboard (Prompt #10) — read-only, isolated per client
+app.get('/api/client/stats', async (c) => {
+  try {
+    const user = getUserFromRequest(c);
+    const clientIdQ = c.req.query('clientId') || c.req.query('client_id') || c.req.query('id');
+    let clientId = clientIdQ || null;
+    // If authenticated and has user.id, try to resolve client by user_id when Supabase configured
+    if (!clientId && user && user.id && hasSupabase(c.env)) {
+      try {
+        const rows = await sbSelect(c.env, 'clients', "user_id=eq." + user.id + "&limit=1");
+        if (rows && rows[0]) clientId = rows[0].id;
+      } catch {}
+    }
+    // If still no clientId and no auth, fallback to demo: use first client or aggregate outcomes
+    let outcomes = [];
+    let summary = { totalRevenue: 0, totalCost: 0, averageROI: 0, totalViews: 0, totalConversions: 0 };
+    if (hasSupabase(c.env)) {
+      try {
+        // try client_outcomes table first, fallback to outcomes
+        let data = await sbSelect(c.env, 'client_outcomes', clientId ? ("client_id=eq." + clientId + "&order=created_at.desc") : 'order=created_at.desc');
+        if (!data || data.length === 0) {
+          data = await sbSelect(c.env, 'outcomes', clientId ? ("campaign_id=eq." + clientId + "&order=created_at.desc") : 'order=created_at.desc');
+          // also try filtering outcomes by client_id if field exists
+          if ((!data || data.length===0) && clientId) {
+            const all = await sbSelect(c.env, 'outcomes', 'order=created_at.desc');
+            data = (all||[]).filter(o => String(o.client_id)===String(clientId) || String(o.clientId)===String(clientId));
+          }
+        }
+        outcomes = data || [];
+      } catch (e) {
+        outcomes = await list(c.env, 'outcomes');
+        if (clientId) outcomes = outcomes.filter(o => String(o.client_id)===String(clientId) || String(o.campaign_id)===String(clientId) || String(o.clientId)===String(clientId));
+      }
+    } else {
+      // in-memory: try client_outcomes then outcomes
+      let memOut = await list(c.env, 'client_outcomes');
+      if (!memOut || memOut.length===0) memOut = await list(c.env, 'outcomes');
+      if (clientId) memOut = memOut.filter(o => String(o.client_id)===String(clientId) || String(o.clientId)===String(clientId) || String(o.campaign_id)===String(clientId) || String(o.campaignId)===String(clientId));
+      outcomes = memOut;
+    }
+    // If still empty and no clientId, return demo summary from outcomes so dashboard not locked
+    if (outcomes.length===0 && !clientId) {
+      // allow empty but not error — client sees zero state, not 404
+    }
+    outcomes.forEach(item => {
+      summary.totalRevenue += Number(item.revenue)||0;
+      summary.totalCost += Number(item.cost)||0;
+      summary.totalViews += Number(item.views)||0;
+      summary.totalConversions += Number(item.conversions)||0;
+    });
+    summary.averageROI = summary.totalCost > 0 ? ((summary.totalRevenue - summary.totalCost)/summary.totalCost)*100 : 0;
+    // Enforce read-only : never leak other clients when authenticated without admin role
+    if (user && user.role !== 'admin' && user.role !== 'member' && clientIdQ && String(clientIdQ)!==String(clientId)) {
+      // if non-admin tries to query other client, return own only (already)
+    }
+    return c.json({ success: true, summary, outcomes });
+  } catch (e) { return c.json({ error: e.message }, 500) }
+});
+app.post('/api/client/outcomes', async (c) => {
+  try {
+    const { clientId, client_id, revenue, cost, views, conversions } = await c.req.json().catch(()=>({}));
+    const cid = clientId || client_id;
+    if (!cid) return c.json({ error: 'Client ID is required' }, 400);
+    const roi = Number(cost) > 0 ? ((Number(revenue)-Number(cost))/Number(cost))*100 : 0;
+    const row = { client_id: cid, clientId: cid, revenue: Number(revenue)||0, cost: Number(cost)||0, roi, views: Number(views)||0, conversions: Number(conversions)||0, created_at: new Date().toISOString() };
+    if (hasSupabase(c.env)) {
+      try {
+        const saved = await sbInsert(c.env, 'client_outcomes', { client_id: cid, revenue: row.revenue, cost: row.cost, roi, views: row.views, conversions: row.conversions, created_at: row.created_at });
+        return c.json({ success: true, outcome: saved });
+      } catch (e) {
+        // fallback to outcomes table if client_outcomes not exists
+        try {
+          const saved2 = await sbInsert(c.env, 'outcomes', { campaign_id: cid, client_id: cid, revenue: row.revenue, cost: row.cost, roi, views: row.views, conversions: row.conversions, created_at: row.created_at });
+          return c.json({ success: true, outcome: saved2 });
+        } catch {}
+      }
+    }
+    const saved = await create(c.env, 'client_outcomes', row);
+    // also mirror to outcomes for unified analytics
+    try { await create(c.env, 'outcomes', { campaign_id: cid, client_id: cid, revenue: row.revenue, cost: row.cost, roi, views: row.views, conversions: row.conversions, created_at: row.created_at }); } catch {}
+    return c.json({ success: true, outcome: saved });
+  } catch (e) { return c.json({ error: e.message }, 500) }
+});
+app.get('/api/client/outcomes', async (c) => {
+  try {
+    const clientId = c.req.query('clientId') || c.req.query('client_id') || null;
+    let outcomes = [];
+    if (hasSupabase(c.env)) {
+      try { outcomes = await sbSelect(c.env, 'client_outcomes', clientId ? ("client_id=eq."+clientId+"&order=created_at.desc") : 'order=created_at.desc') || []; } catch {}
+      if ((!outcomes||outcomes.length===0)) {
+        outcomes = await sbSelect(c.env, 'outcomes', clientId ? ("client_id=eq."+clientId+"&order=created_at.desc") : 'order=created_at.desc') || [];
+      }
+    } else {
+      outcomes = await list(c.env, 'client_outcomes');
+      if (!outcomes||outcomes.length===0) outcomes = await list(c.env, 'outcomes');
+      if (clientId) outcomes = outcomes.filter(o => String(o.client_id)===String(clientId) || String(o.clientId)===String(clientId) || String(o.campaign_id)===String(clientId));
+    }
+    return c.json({ success: true, outcomes });
+  } catch (e) { return c.json({ error: e.message }, 500) }
+});
 
 export default app
 

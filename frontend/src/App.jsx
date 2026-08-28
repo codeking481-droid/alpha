@@ -6,6 +6,7 @@ import OutreachEngine from "./pages/OutreachEngine.jsx"
 import Analytics from "./pages/Analytics.jsx"
 import DealDesk from "./pages/DealDesk.jsx"
 import Outcomes from "./pages/Outcomes.jsx"
+import ClientDashboard from "./pages/ClientDashboard.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
 
@@ -19,6 +20,7 @@ function TopNav() {
     { to: "/analytics", label: "📊 Analytics" },
     { to: "/deals", label: "💰 Deal Desk" },
     { to: "/outcomes", label: "📊 Outcomes" },
+    { to: "/client", label: "👁️ Client" },
   ]
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/90 border-b border-white/10">
@@ -109,6 +111,7 @@ export default function App() {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/deals" element={<DealDesk />} />
           <Route path="/outcomes" element={<Outcomes />} />
+          <Route path="/client" element={<ClientDashboard />} />
         </Routes>
       </div>
     </BrowserRouter>
