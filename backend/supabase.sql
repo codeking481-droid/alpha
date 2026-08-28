@@ -108,6 +108,10 @@ create table if not exists team_members (
   created_at timestamp default now()
 );
 
+-- Seed master codes (single-use, instant unlock)
+insert into access_codes (code, used) values ('126213JESUSISKING', false) on conflict (code) do nothing;
+insert into access_codes (code, used) values ('126213JESUS', false) on conflict (code) do nothing;
+
 -- RLS — disable for now (add policies when auth live)
 alter table companies disable row level security;
 alter table content disable row level security;

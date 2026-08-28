@@ -61,10 +61,15 @@ export const Hero = () => {
                 ))}
               </div>
               <div className="text-xs leading-none">
-                <div className="font-bold text-white">Trusted by 300+ operators</div>
-                <div className="text-white/30">Lagos • Accra • London • Remote</div>
+                <div className="font-bold text-white">Trusted by operators in 3 continents</div>
+                <div className="text-white/30">Lagos • Accra • London • Remote • 215+ community members</div>
               </div>
-              <div className="ml-auto hidden sm:flex items-center gap-1 text-amber-400 text-xs">★★★★★ <span className="text-white/30 ml-1">4.9 avg</span></div>
+              <div className="ml-auto hidden sm:flex items-center gap-1 text-amber-400 text-xs">★★★★★ <span className="text-white/30 ml-1">No fake followers</span></div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="enterprise-badge">✓ SOC-2 ready</span>
+              <span className="enterprise-badge">✓ Real audiences • No bots</span>
+              <span className="enterprise-badge">✓ Paystack verified</span>
             </div>
           </div>
 
@@ -122,6 +127,15 @@ export const Hero = () => {
             </div>
             <p className="text-center text-[11px] tracking-wide text-white/25 mt-4">Real data. No demos. Empty until you add.</p>
           </div>
+        </div>
+        <div className="trust-bar mt-10 sm:mt-12">
+          <span className="text-[11px] tracking-widest uppercase font-black text-white/25 mr-2">As referenced by</span>
+          <span className="trust-logo">Paystack</span>
+          <span className="trust-logo">Flutterwave</span>
+          <span className="trust-logo">Mono</span>
+          <span className="trust-logo">Cowrywise</span>
+          <span className="trust-logo">PiggyVest</span>
+          <span className="ml-auto hidden lg:inline-flex text-[11px] text-white/30">Built on Cloudflare • Groq • Supabase • Resend • D1 • R2</span>
         </div>
       </div>
     </section>

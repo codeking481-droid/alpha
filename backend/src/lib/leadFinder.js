@@ -104,7 +104,9 @@ export async function findLeadsTavily(env, { city, niche, limit = 25 }) {
 
 // Overpass — free, no key, physical businesses
 export async function findLeadsOverpass(city, niche, limit = 50) {
-  const { lat, lon } = await getCoordinates(city)
+  let coords;
+  try { coords = await getCoordinates(city) } catch (e) { throw new Error(`Overpass: ${e.message}`) }
+  const { lat, lon } = coords
   const latMin = lat - 0.05, latMax = lat + 0.05, lonMin = lon - 0.05, lonMax = lon + 0.05
   const n = String(niche).toLowerCase().trim()
   const query = `

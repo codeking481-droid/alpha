@@ -26,7 +26,10 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase not configured — all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [{ id: 'seed-jesus', code: '126213JESUS', used: false, price: 0, email: null, created_by: 'system', created_at: new Date().toISOString(), user_id: null }], outcomes: [], client_outcomes: [], campaigns: [] }
+// Master code: 126213JESUSISKING (single-use, opens platform instantly)
+const MASTER_CODE = '126213JESUSISKING'
+const LEGACY_CODE = '126213JESUS'
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [{ id: 'seed-jesus-king', code: MASTER_CODE, used: false, price: 0, email: null, created_by: 'system', created_at: new Date().toISOString(), user_id: null }, { id: 'seed-jesus-legacy', code: LEGACY_CODE, used: false, price: 0, email: null, created_by: 'system', created_at: new Date().toISOString(), user_id: null }], outcomes: [], client_outcomes: [], campaigns: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -468,6 +471,41 @@ app.post('/api/auth/verify-code', async (c) => {
     const { code } = await c.req.json().catch(()=>({}))
     if (!code) return c.json({ error: 'Code is required' }, 400)
     const upper = String(code).trim().toUpperCase()
+    // Master codes — single-use, opens platform instantly (works with or without auth)
+    const MASTER_CODES = ['126213JESUSISKING', '126213JESUS']
+    if (MASTER_CODES.includes(upper)) {
+      // Check in-memory first (works even without Supabase)
+      try {
+        const all = await list(c.env, 'access_codes')
+        const existing = all.find(a => String(a.code).toUpperCase() === upper)
+        if (existing) {
+          if (existing.used) return c.json({ error: 'Invalid or already used code — this code is single-use' }, 400)
+          const authH = c.req.header('Authorization') || ''
+          let uid = null
+          if (authH) { try { const u = await requireAuth(c, c.env); uid = u?.id || null } catch {} }
+          try { await updateOne(c.env, 'access_codes', existing.id, { used: true, user_id: uid, used_at: new Date().toISOString() }) } catch {}
+          // Also mark legacy counterpart as used if master king used? No — keep separate single-use each
+          return c.json({ success: true, ok: true, message: 'Access granted — welcome to Alpha Agency' })
+        }
+      } catch {}
+      // If Supabase configured, try there too
+      if (hasSupabase(c.env)) {
+        try {
+          const rows = await sbSelect(c.env, 'access_codes', `code=eq.${upper}&limit=1`)
+          if (rows && rows[0]) {
+            if (rows[0].used) return c.json({ error: 'Invalid or already used code — this code is single-use' }, 400)
+            await sbUpdate(c.env, 'access_codes', rows[0].id, { used: true, used_at: new Date().toISOString() })
+            return c.json({ success: true, ok: true, message: 'Access granted' })
+          }
+          // Seed missing master code in Supabase for persistence
+          try { await sbInsert(c.env, 'access_codes', { code: upper, used: true, created_at: new Date().toISOString() }) } catch {}
+          return c.json({ success: true, ok: true, message: 'Access granted' })
+        } catch {}
+      }
+      // No DB entry found but master code — allow once in this worker instance
+      try { await create(c.env, 'access_codes', { code: upper, used: true, created_at: new Date().toISOString() }) } catch {}
+      return c.json({ success: true, ok: true, message: 'Access granted' })
+    }
     // If Authorization present, verify with user binding (prompt #12 behavior)
     const auth = c.req.header('Authorization') || ''
     if (auth) {

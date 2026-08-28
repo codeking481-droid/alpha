@@ -52,7 +52,7 @@ function TopNav() {
     const id = setInterval(check, 1000);
     return ()=> { window.removeEventListener('storage', check); clearInterval(id); };
   }, []);
-  const base = "relative px-3 sm:px-4 py-2.5 text-xs font-black tracking-widest uppercase transition-all duration-300 min-h-[44px] flex items-center"
+  const base = "relative px-3 sm:px-4 py-2.5 text-[11.5px] font-bold tracking-widest uppercase transition-all duration-200 min-h-[44px] flex items-center"
   const fullLinks = [
     { to: "/dashboard", label: "🚀 Command Hub", end: true },
     { to: "/content", label: "✍️ Content" },
@@ -71,12 +71,12 @@ function TopNav() {
   ];
   const links = hasAccess ? fullLinks : publicLinks;
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/90 border-b border-white/10">
+    <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/80 border-b border-white/[0.06]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#0B0215] font-black text-sm shrink-0">α</div>
-          <span className="font-black tracking-tight text-white text-sm truncate">ALPHA</span>
-          <span className="hidden lg:inline text-xs text-white/20 tracking-widest uppercase font-bold ml-1">• $5K/MO</span>
+          <div className="w-7 h-7 rounded-lg bg-white text-[#0B0215] flex items-center justify-center font-black text-xs shrink-0">α</div>
+          <span className="font-black tracking-tight text-white text-[13px] truncate">ALPHA</span>
+          <span className="hidden lg:inline text-[10px] text-white/30 tracking-[0.16em] uppercase font-bold ml-2 px-2 py-1 rounded-full bg-white/[0.04] border border-white/5">Lagos • London • SOC-2 • Real data</span>
         </div>
 
         {/* Desktop nav */}

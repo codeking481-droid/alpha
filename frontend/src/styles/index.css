@@ -157,3 +157,17 @@ h1, h2, h3 { letter-spacing: -0.03em; line-height: 1.08; font-feature-settings: 
 @supports (padding: max(0px)) {
   .safe-p { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 }
+
+/* ── Enterprise Trust — calm, Linear/Stripe level ── */
+.trust-bar { display:flex; flex-wrap:wrap; align-items:center; gap: 18px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); }
+.trust-logo { opacity: 0.45; filter: grayscale(1) brightness(1.4); font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: white; transition: opacity 0.2s; }
+.trust-logo:hover { opacity: 0.75; }
+.enterprise-badge { display:inline-flex; align-items:center; gap:6px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); font-size:11px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color: rgba(255,255,255,0.55); }
+.enterprise-badge strong { color: white; }
+.calmed { letter-spacing: -0.02em; font-weight: 800; }
+.quiet { color: rgba(255,255,255,0.45); }
+.mature-hero h1 { text-wrap: balance; }
+
+/* Anti-error — fallback visuals when API down */
+.skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+.error-card { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15); color: #fca5a5; border-radius: 12px; padding: 12px 14px; font-size: 13px; }
