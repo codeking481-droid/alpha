@@ -1,4 +1,4 @@
-import { COMMUNITY, PRICING } from './community.js'
+import { COMMUNITY, PRICING, TRUTH_CLAUSE } from './community.js'
 
 export const CAMPAIGN_TEMPLATE = [
   { day: 1, label: 'Launch', linkedin: 'Announcement', whatsapp: 'Teaser', telegram: 'Intro', youtube: '—', goal: 'Awareness' },
@@ -42,6 +42,7 @@ export function generateCampaignPlan({ company, niche, offer, startDate, industr
       linkedin: 10, whatsapp: 10, telegram: 10, youtube: 2, total: 32,
       note: '10 LinkedIn + 10 WhatsApp + 10 Telegram + 2 YouTube in 7 days',
     },
+    truthClause: TRUTH_CLAUSE,
   }
 }
 

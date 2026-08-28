@@ -11,7 +11,7 @@ import { saveSentMessage, saveReply, getReplies, getSentMessages } from './lib/r
 import { saveOutcome, getOutcomes, getOutcomeSummary } from './lib/outcomeTracker.js'
 import { listCampaigns, createCampaign, getCampaign, updateCampaign, deleteCampaign, setCampaignStatus } from './lib/campaigns.js'
 import { scheduleCampaign, getAutomationStatus, pauseAutomation, resumeAutomation, tickAutomation } from './lib/automation.js'
-import { COMMUNITY, PRICING, getTotalReach, getCampaignDeliverables } from './lib/community.js'
+import { COMMUNITY, PRICING, TRUTH_CLAUSE, getTotalReach, getCampaignDeliverables } from './lib/community.js'
 import { generateCampaignPlan } from './lib/campaignPlanner.js'
 import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
@@ -738,7 +738,7 @@ app.get('/api/client/outcomes', async (c) => {
 });
 
 // ── Alpha Ad Engine — One-Week Campaigns ──
-app.get('/api/community', (c) => c.json({ community: COMMUNITY, pricing: PRICING, reach: getTotalReach(), deliverables: getCampaignDeliverables() }))
+app.get('/api/community', (c) => c.json({ community: COMMUNITY, pricing: PRICING, reach: getTotalReach(), deliverables: getCampaignDeliverables(), truthClause: TRUTH_CLAUSE }))
 
 // Ad Engine: find 100+ leads via Apollo/Serply/Tavily/Overpass
 app.post('/api/ad-engine/find-leads', async (c) => {

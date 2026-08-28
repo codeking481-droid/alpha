@@ -1,5 +1,5 @@
 import { groqGenerate } from './groq.js'
-import { COMMUNITY } from './community.js'
+import { COMMUNITY, TRUTH_CLAUSE } from './community.js'
 import { CAMPAIGN_TEMPLATE } from './campaignPlanner.js'
 
 const PLATFORM_BRIEF = {
@@ -11,7 +11,7 @@ const PLATFORM_BRIEF = {
 
 async function genOne(env, { platform, type, day, company, niche }) {
   const brief = PLATFORM_BRIEF[platform] || type
-  const prompt = `Create a ${brief} for Day ${day} — theme "${type}" for company "${company}" in "${niche}". Alpha community sizes: LinkedIn ${COMMUNITY.linkedin.followers} followers, WhatsApp ${COMMUNITY.whatsapp.groups.reduce((s,g)=>s+g.members,0)} members, Telegram ${COMMUNITY.telegram.members}, YouTube ${COMMUNITY.youtube.subscribers} subs. Keep it useful, no fake testimonials, include CTA relevant to campaign. Return only the post content.`
+  const prompt = `Create a ${brief} for Day ${day} — theme "${type}" for company "${company}" in "${niche}". Alpha community sizes: LinkedIn ${COMMUNITY.linkedin.followers} followers, ${COMMUNITY.linkedin.connections}+ connections, WhatsApp ${COMMUNITY.whatsapp.groups.reduce((s,g)=>s+g.members,0)}+ members (2 groups), Telegram ${COMMUNITY.telegram.members}, YouTube ${COMMUNITY.youtube.subscribers}+ subs. Keep it useful, no fake testimonials, no view/like guarantees. If relevant, include truth: "${TRUTH_CLAUSE}". Include CTA relevant to campaign. Return only the post content.`
   try {
     const { text, mocked } = await groqGenerate(env, { prompt, model: 'llama3-8b-8192' })
     return { platform, type, day, content: text, mocked: !!mocked }
@@ -84,5 +84,6 @@ export function prepareDelivery(contentPack) {
     deliverables: contentPack.breakdown,
     sections,
     checklist: contentPack.items.map(it=> ({ day: it.day, platform: it.platform, type: it.type, done: false })),
+    truthClause: TRUTH_CLAUSE,
   }
 }

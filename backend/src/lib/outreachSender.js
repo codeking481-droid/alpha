@@ -1,6 +1,6 @@
 import { sendEmailResend } from './email.js'
 import { groqGenerate } from './groq.js'
-import { COMMUNITY, PRICING } from './community.js'
+import { COMMUNITY, PRICING, TRUTH_CLAUSE } from './community.js'
 
 export const OFFER_TEMPLATE = {
   subject: 'Quick win for {{company}} — 1-week campaign to your real audience?',
@@ -18,6 +18,8 @@ We run a 1-week Ad Campaign that puts you in front of a real, engaged audience (
 That's 32 pieces in 7 days — announcement → problem/solution → social proof → educational → insight → CTA → recap/final push.
 
 Flat {{price}} for the full week. We create everything, you approve, we deliver. You pay only when you say Yes.
+
+🔒 ${TRUTH_CLAUSE}
 
 Want the 1-week plan for {{company}}? Reply YES and I'll send calendar + samples in 10 mins.
 
@@ -41,32 +43,36 @@ export function personalizeOffer(lead, opts = {}) {
     company: lead.company || lead.name || 'your company',
     industry: lead.industry || lead.niche || 'your industry',
     city: lead.location || lead.city || 'your city',
-    linkedinReach: `${COMMUNITY.linkedin.followers}+ followers, ${COMMUNITY.linkedin.connections}+ connections`,
+    linkedinReach: `${COMMUNITY.linkedin.followers} followers, ${COMMUNITY.linkedin.connections}+ connections`,
     whatsappReach: String(totalWhatsapp),
     telegramReach: String(COMMUNITY.telegram.members),
     youtubeReach: String(COMMUNITY.youtube.subscribers),
     price: `$${PRICING.oneWeekCampaign.price}`,
     ...opts.vars,
   }
+  const includeTruth = opts.includeTruth !== false
+  const bodySrc = opts.body || OFFER_TEMPLATE.body
+  const finalBody = includeTruth && !bodySrc.includes(TRUTH_CLAUSE) ? bodySrc : bodySrc
   return {
     subject: renderTemplate(opts.subject || OFFER_TEMPLATE.subject, vars),
-    text: renderTemplate(opts.body || OFFER_TEMPLATE.body, vars),
-    html: `<pre style="font-family:system-ui;white-space:pre-wrap">${renderTemplate(opts.body || OFFER_TEMPLATE.body, vars)}</pre>`,
+    text: renderTemplate(finalBody, vars),
+    html: `<pre style="font-family:system-ui;white-space:pre-wrap">${renderTemplate(finalBody, vars)}</pre>`,
     vars,
+    truthClause: TRUTH_CLAUSE,
   }
 }
 
 export async function personalizeWithGroq(env, lead, opts = {}) {
-  const base = personalizeOffer(lead, opts)
-  if (!env.GROQ_API_KEY) return base
+  const base = personalizeOffer(lead, { ...opts, includeTruth: false })
+  if (!env.GROQ_API_KEY) return personalizeOffer(lead, opts)
   try {
-    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: 1-week campaign 32 posts $500 across LinkedIn/WhatsApp/Telegram/YouTube with real audiences. Tone friendly expert. Keep subject + body. No fake numbers beyond given. Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
+    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: 1-week campaign 32 posts $500 across LinkedIn/WhatsApp/Telegram/YouTube with real audiences. Tone friendly expert. Keep subject + body. No fake numbers beyond given. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
     const { text } = await groqGenerate(env, { prompt })
-    // simple split: first line subject
     const lines = text.split('\n').filter(Boolean)
     const subj = lines.find(l=>l.toLowerCase().includes('subject'))?.replace(/.*subject\s*:\s*/i,'') || base.subject
-    return { subject: subj.slice(0,120), text, html: `<pre style="font-family:system-ui;white-space:pre-wrap">${text}</pre>`, vars: base.vars, ai: true }
-  } catch { return base }
+    const withTruth = text.includes(TRUTH_CLAUSE) ? text : `${text}\n\n🔒 ${TRUTH_CLAUSE}`
+    return { subject: subj.slice(0,120), text: withTruth, html: `<pre style="font-family:system-ui;white-space:pre-wrap">${withTruth}</pre>`, vars: base.vars, ai: true, truthClause: TRUTH_CLAUSE }
+  } catch { return personalizeOffer(lead, opts) }
 }
 
 export async function sendOffer(env, lead, opts = {}) {
@@ -102,3 +108,5 @@ export async function sendBulkOffers(env, leads, opts = {}) {
 export function previewOffers(leads, n = 3) {
   return leads.slice(0, n).map(l => ({ lead: l.company || l.name, ...personalizeOffer(l) }))
 }
+
+export { TRUTH_CLAUSE }

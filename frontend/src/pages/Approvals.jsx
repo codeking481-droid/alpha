@@ -158,11 +158,16 @@ export default function Approvals() {
         </div>
       )}
 
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <h3 className="text-xs font-black tracking-widest uppercase text-amber-400">🔒 Truth Clause — included in every proposal</h3>
+        <p className="text-xs text-white/60 mt-2 leading-relaxed">We have real communities, not bots. LinkedIn (700 followers, 500+ connections): 10 posts. WhatsApp (215+ members across 2 groups): 10 posts. Telegram (54 members): 10 posts. YouTube (3,000+ subscribers): 2 videos. We do not guarantee views, likes, or conversions. We guarantee we will deliver the content to real people who have chosen to follow us. The rest is organic.</p>
+      </div>
+
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
         <h3 className="text-xs font-black tracking-widest uppercase text-white/50">How approvals work</h3>
         <ol className="list-decimal list-inside text-xs text-white/40 mt-2 space-y-1">
           <li>Lead Finder → 100 companies via Apollo/Serply/Tavily</li>
-          <li>Outreach Sender → sends personalized $500 offer</li>
+          <li>Outreach Sender → sends personalized $500 offer (with Truth Clause)</li>
           <li>Reply Tracker → collects replies</li>
           <li><b className="text-white/60">Approvals</b> → you review YES → click Approve</li>
           <li>Campaign Planner → 7-day plan (10+10+10+2 posts)</li>
