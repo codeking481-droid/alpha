@@ -88,7 +88,7 @@ function TopNav() {
 
         {/* Right */}
         <div className="ml-auto flex items-center gap-2">
-          <button onClick={()=> { const el=document.getElementById('download-app'); if(el) el.scrollIntoView({behavior:'smooth'}); else window.location.href='/#download-app'; }} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 font-bold text-xs tracking-widest uppercase hover:bg-white/10 hover:text-white">
+          <button onClick={()=> { const dp=window.__alphaDeferredPrompt; if(dp){ dp.prompt(); dp.userChoice?.then(r=>{ if(r.outcome==='accepted') window.__alphaDeferredPrompt=null; }); return; } const el=document.getElementById('download-app'); if(el) el.scrollIntoView({behavior:'smooth'}); else window.location.href='/#download-app'; setTimeout(()=>{ if(!window.__alphaDeferredPrompt) alert('To install: Chrome → ⋮ → Install app. iPhone: Share → Add to Home Screen.'); }, 400); }} className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 font-bold text-xs tracking-widest uppercase hover:bg-white/10 hover:text-white">
             <span>⬇</span> Download App
           </button>
           {hasAccess ? <CommandPalette /> : <a href="/auth" className="hidden sm:inline-flex px-4 py-2 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase">Sign up →</a>}
