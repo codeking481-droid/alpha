@@ -32,32 +32,33 @@ button, a, [role="button"] { min-height: 44px; min-width: 44px; }
 .animate-slideUp { animation: slideUp 0.4s ease; }
 .animate-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,215,0,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.6s infinite; }
 
-/* Gold utilities */
-.bg-gold { background: #FFD700; }
-.text-gold { color: #FFD700; }
-.border-gold { border-color: #FFD700; }
-.hover-gold:hover { color: #FFD700; }
-.shadow-gold { box-shadow: 0 8px 24px rgba(255,215,0,0.15); }
-.shadow-gold\/20 { box-shadow: 0 12px 30px rgba(255,215,0,0.2); }
+/* Mature palette — restrained gold */
+.bg-gold { background: #E6C87A; }
+.text-gold { color: #E6C87A; }
+.border-gold { border-color: rgba(230,200,122,0.3); }
+.hover-gold:hover { color: #E6C87A; }
+.shadow-gold { box-shadow: 0 8px 24px rgba(230,200,122,0.08); }
+.shadow-gold\/20 { box-shadow: 0 12px 30px rgba(230,200,122,0.08); }
 
-/* Buttons */
+/* Buttons — mature, no gradient, hairline */
 .btn-primary {
-  background: linear-gradient(135deg, #FFD700, #F59E0B);
+  background: #FFFFFF;
   color: #0B0215;
-  font-weight: 900;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: none;
+  padding: 0.8rem 1.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(11,2,21,0.06);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   min-height: 44px;
 }
 .btn-primary:hover:not(:disabled) {
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(255,215,0,0.3);
+  background: #F5F5F0;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 .btn-primary:disabled {
   opacity: 0.5;
@@ -85,9 +86,9 @@ button, a, [role="button"] { min-height: 44px; min-width: 44px; }
   border-color: rgba(255,215,0,0.2);
 }
 
-/* Glassmorphism — performance aware (lighter blur on mobile) */
-.glass { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); }
-.glass-hover:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255,215,0,0.18); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,215,0,0.08); }
+/* Glass — mature, almost invisible */
+.glass { background: rgba(255, 255, 255, 0.025); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); }
+.glass-hover:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255,255,255,0.08); transform: translateY(-1px); box-shadow: 0 12px 32px rgba(0,0,0,0.18); }
 @media (max-width: 640px) {
   .glass { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 }
@@ -99,12 +100,12 @@ button, a, [role="button"] { min-height: 44px; min-width: 44px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.5); }
 * { scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
 
-/* Mature editorial */
-.mature-grid { background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 32px 32px; }
-.hairline { border: 1px solid rgba(255,255,255,0.06); }
-.hairline-gold { border: 1px solid rgba(255,215,0,0.14); }
-.mature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(16px); }
-.mature-card:hover { border-color: rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); }
+/* Mature editorial — quiet */
+.mature-grid { background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 40px 40px; }
+.hairline { border: 1px solid rgba(255,255,255,0.07); }
+.hairline-gold { border: 1px solid rgba(230,200,122,0.18); }
+.mature-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(18px); border-radius: 16px; }
+.mature-card:hover { border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
 
 /* Typography */
 h1, h2, h3 { letter-spacing: -0.03em; line-height: 1.08; font-feature-settings: "ss01" 1; }

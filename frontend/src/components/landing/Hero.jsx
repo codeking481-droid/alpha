@@ -29,9 +29,9 @@ export const Hero = () => {
 
             <h1 className="text-[42px] sm:text-[58px] font-black tracking-[-0.04em] leading-[0.92] text-white mt-6">
               The operating system
-              <span className="mature-serif font-normal italic text-white/70"> agencies </span>
+              <span className="mature-serif font-normal italic text-white/60"> agencies </span>
               <br />
-              actually run on.
+              <span className="bg-gradient-to-r from-[#E6C87A] via-[#D4AF37] to-[#E6C87A] bg-clip-text text-transparent">actually run on.</span>
             </h1>
 
             <p className="text-[15px] sm:text-[16px] leading-7 text-white/55 mt-5 max-w-[560px] font-medium">

@@ -67,7 +67,7 @@ function TopNav() {
     <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/90 border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FFD700] to-amber-500 flex items-center justify-center text-[#0B0215] font-black text-sm shadow-gold shrink-0">α</div>
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-[#0B0215] font-black text-sm shrink-0">α</div>
           <span className="font-black tracking-tight text-white text-sm truncate">ALPHA</span>
           <span className="hidden lg:inline text-xs text-white/20 tracking-widest uppercase font-bold ml-1">• $5K/MO</span>
         </div>
