@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom"
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom"
 import Dashboard from "./pages/Dashboard.jsx"
 import ContentStudio from "./pages/ContentStudio.jsx"
 import OutreachEngine from "./pages/OutreachEngine.jsx"
@@ -16,10 +16,38 @@ import Campaigns from "./pages/Campaigns.jsx"
 import CommandPalette from "./components/ui/CommandPalette.jsx"
 import Onboarding from "./components/ui/Onboarding.jsx"
 
+function ProtectedRoute({ children }) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('alpha.token') : null;
+  const granted = typeof window !== 'undefined' ? localStorage.getItem('alpha.access_granted') === '1' : false;
+  if (!token) return <Navigate to="/auth" replace />;
+  if (!granted) return <Navigate to="/access-code" replace />;
+  return children;
+}
+function AdminRoute({ children }) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('alpha.token') : null;
+  const granted = typeof window !== 'undefined' ? localStorage.getItem('alpha.access_granted') === '1' : false;
+  if (!token) return <Navigate to="/auth" replace />;
+  if (!granted) return <Navigate to="/access-code" replace />;
+  // allow only admin email additionally? keep simple: any granted can see admin, but backend enforces
+  return children;
+}
+
 function TopNav() {
   const [open, setOpen] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false);
+  useEffect(()=>{
+    const check = () => {
+      const t = localStorage.getItem('alpha.token');
+      const g = localStorage.getItem('alpha.access_granted') === '1';
+      setHasAccess(!!t && !!g);
+    };
+    check();
+    window.addEventListener('storage', check);
+    const id = setInterval(check, 1000);
+    return ()=> { window.removeEventListener('storage', check); clearInterval(id); };
+  }, []);
   const base = "relative px-3 sm:px-4 py-2.5 text-xs font-black tracking-widest uppercase transition-all duration-300 min-h-[44px] flex items-center"
-  const links = [
+  const fullLinks = [
     { to: "/dashboard", label: "🚀 Command Hub", end: true },
     { to: "/content", label: "✍️ Content" },
     { to: "/outreach", label: "📧 Outreach" },
@@ -28,7 +56,13 @@ function TopNav() {
     { to: "/outcomes", label: "📊 Outcomes" },
     { to: "/client", label: "👁️ Client" },
     { to: "/campaigns", label: "⬢ Campaigns" },
-  ]
+  ];
+  const publicLinks = [
+    { to: "/", label: "Home", end: true },
+    { to: "/auth", label: "Sign up" },
+    { to: "/access-code", label: "Access" },
+  ];
+  const links = hasAccess ? fullLinks : publicLinks;
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0215]/90 border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
@@ -54,9 +88,10 @@ function TopNav() {
 
         {/* Right */}
         <div className="ml-auto flex items-center gap-2">
-          <CommandPalette />
-          <span className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 font-semibold"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/> Online</span>
+          {hasAccess ? <CommandPalette /> : <a href="/auth" className="hidden sm:inline-flex px-4 py-2 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase">Sign up →</a>}
+          <span className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 font-semibold"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/> {hasAccess ? 'Private' : 'Public'}</span>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFD700] to-amber-600 flex items-center justify-center text-sm border border-white/10 shrink-0">👑</div>
+          {!hasAccess && <a href="/checkout?price=50" className="hidden sm:inline-flex px-4 py-2 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase">Buy $50</a>}
           {/* Hamburger */}
           <button onClick={() => setOpen(!open)} className="lg:hidden w-11 h-11 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition shrink-0" aria-label="Menu">
             <span className="text-lg">{open ? "✕" : "☰"}</span>
@@ -112,19 +147,21 @@ export default function App() {
         <TopNav />
         <Onboarding />
         <Routes>
+          {/* Public — no auth needed */}
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/access-code" element={<AccessCode />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/admin" element={<AdminCodes />} />
-          <Route path="/campaigns" element={<Campaigns />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/content" element={<ContentStudio />} />
-          <Route path="/outreach" element={<OutreachEngine />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/deals" element={<DealDesk />} />
-          <Route path="/outcomes" element={<Outcomes />} />
-          <Route path="/client" element={<ClientDashboard />} />
+          {/* Protected — requires login + access token */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/content" element={<ProtectedRoute><ContentStudio /></ProtectedRoute>} />
+          <Route path="/outreach" element={<ProtectedRoute><OutreachEngine /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="/deals" element={<ProtectedRoute><DealDesk /></ProtectedRoute>} />
+          <Route path="/outcomes" element={<ProtectedRoute><Outcomes /></ProtectedRoute>} />
+          <Route path="/client" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+          <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminCodes /></AdminRoute>} />
         </Routes>
       </div>
     </BrowserRouter>

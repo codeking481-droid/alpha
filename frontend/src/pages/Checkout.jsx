@@ -116,7 +116,7 @@ export const Checkout = () => {
             </div>
           )}
 
-          <p className="mt-6 text-[11px] text-white/20 text-center">Admin alphatekxcompany@gmail.com uses <span className="font-mono text-white/40">126213JESUS</span> once → then generates for team at /admin (free, price 0).</p>
+          <p className="mt-6 text-[11px] text-white/20 text-center">After payment you’ll get a single-use code • Admin manages codes at /admin</p>
           <div className="mt-2 text-center text-[11px] text-white/20">
             <Link to="/dashboard" className="hover:text-white underline">Dev mock: no Paystack key → instant code</Link>
           </div>

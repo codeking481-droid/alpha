@@ -72,12 +72,12 @@ export const AccessCode = () => {
             <Link to="/checkout?price=50" className="px-4 py-2 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-white/90">$50 access</Link>
             <Link to="/checkout?price=99" className="px-4 py-2 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-[#ffdf33]">$99 premium</Link>
           </div>
-          <p className="text-white/25 text-[11px] mt-2">First token: <span className="text-white font-mono">126213JESUS</span> • Admin uses it once, then generates for team at /admin</p>
+          <p className="text-white/25 text-[11px] mt-2">Tokens are single-use • Admin generates for team at /admin</p>
 
           <form onSubmit={handleSubmit} className="mt-6">
             <input
               type="text"
-              placeholder="126213JESUS"
+              placeholder="A1B2C3"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className="w-full p-3 bg-[#0B0215] text-white rounded-xl border border-white/10 focus:border-white/20 focus:outline-none text-center text-xl tracking-[0.3em] font-black uppercase placeholder:tracking-normal placeholder:text-sm"
@@ -99,7 +99,7 @@ export const AccessCode = () => {
             <ol className="text-xs text-white/40 mt-2 space-y-1 list-decimal list-inside">
               <li>Landing → <span className="text-white/60">Sign up</span> (Google) → /auth</li>
               <li>After signup you see this box — enter token or purchase</li>
-              <li>Admin (alphatekxcompany@gmail.com) uses <span className="font-mono text-white">126213JESUS</span> once → marked used → then generates for team at <Link to="/admin" className="text-[#FFD700] underline">/admin</Link></li>
+              <li>Tokens are single-use and expire in 30 days • Admin manages codes at <Link to="/admin" className="text-[#FFD700] underline">/admin</Link></li>
             </ol>
           </div>
 

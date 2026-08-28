@@ -32,13 +32,13 @@ export const Auth = () => {
           setMessage('✅ Check your email for confirmation! Now log in.');
         } else if (data.session?.access_token) {
           localStorage.setItem('alpha.token', data.session.access_token);
-          // Everyone (including admin) goes to access-code first time — seed is 126213JESUS
+          // Everyone (including admin) goes to access-code first time
           const isAdmin = String(email).toLowerCase() === 'alphatekxcompany@gmail.com';
           if (isAdmin && localStorage.getItem('alpha.access_granted') === '1') {
-            setMessage('✅ Admin — welcome back to dashboard...');
+            setMessage('✅ Welcome back — opening dashboard...');
             setTimeout(() => navigate('/dashboard'), 800);
           } else {
-            setMessage(isAdmin ? '✅ Admin — enter code 126213JESUS (one-time)…' : '✅ Welcome — enter your access code...');
+            setMessage('✅ Welcome — enter your access code...');
             setTimeout(() => navigate('/access-code'), 800);
           }
         } else if (data.user && isLogin) {
@@ -57,10 +57,10 @@ export const Auth = () => {
         if (data.user) localStorage.setItem('alpha.user', JSON.stringify(data.user));
         const isAdminDev = String(email).toLowerCase() === 'alphatekxcompany@gmail.com';
         if (isAdminDev && localStorage.getItem('alpha.access_granted') === '1') {
-          setMessage('✅ Admin (dev) — welcome back...');
+          setMessage('✅ Welcome back...');
           setTimeout(() => navigate('/dashboard'), 600);
         } else {
-          setMessage(isAdminDev ? '✅ Admin (dev) — enter code 126213JESUS at next step' : '✅ Signed in (dev) — enter your access code');
+          setMessage('✅ Signed in — enter your access code');
           setTimeout(() => navigate('/access-code'), 600);
         }
       }
