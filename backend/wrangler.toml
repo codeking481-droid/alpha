@@ -16,10 +16,9 @@ ENV = "production"
 # npx wrangler secret put GROQ_API_KEY
 # npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
 
-# Paystack — https://dashboard.paystack.com/#/settings/developer
+# Paystack — USD $50 / $99 — https://dashboard.paystack.com/#/settings/developer
 # npx wrangler secret put PAYSTACK_SECRET_KEY   # sk_test_... or sk_live_...
-# Optional: npx wrangler secret put PAYSTACK_CURRENCY  # NGN (default) or USD
-# Optional: npx wrangler secret put PAYSTACK_NGN_RATE   # e.g. 1500 (USD->NGN rate for $50/$99)
+# npx wrangler secret put PAYSTACK_CURRENCY     # USD (default for $50/$99) — set to NGN only if you want Naira
 # Optional: npx wrangler secret put FRONTEND_URL        # e.g. https://alphatekx.name.ng
 
 # D1 (alternative to Supabase) — npx wrangler d1 create alphatekx-db

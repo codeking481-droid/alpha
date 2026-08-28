@@ -4,10 +4,9 @@ SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
 SUPABASE_ANON_KEY="YOUR_ANON_KEY_HERE"
 SUPABASE_SERVICE_KEY="YOUR_SERVICE_ROLE_KEY_HERE"
 GROQ_API_KEY="gsk_YOUR_GROQ_KEY_HERE"
-# Paystack — https://dashboard.paystack.com/#/settings/developer
+# Paystack — https://dashboard.paystack.com/#/settings/developer  (USD $50 / $99)
 # Test: sk_test_...  Live: sk_live_...
 PAYSTACK_SECRET_KEY="sk_test_YOUR_KEY_HERE"
-# Optional: currency and rate
-PAYSTACK_CURRENCY="NGN"
-PAYSTACK_NGN_RATE="1500"
+# Currency must be USD for $50/$99 — NGN only if you explicitly want Naira
+PAYSTACK_CURRENCY="USD"
 FRONTEND_URL="http://localhost:5173"

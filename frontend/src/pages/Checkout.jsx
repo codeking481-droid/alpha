@@ -123,7 +123,7 @@ export const Checkout = () => {
         <div className="mature-card rounded-[20px] p-7 sm:p-8 text-center border border-white/[0.06]">
           <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mx-auto text-xl">💳</div>
           <h1 className="text-xl font-black tracking-tight text-white mt-4">Purchase access token</h1>
-          <p className="text-white/40 text-xs mt-2 leading-5">Real Paystack payment — token issued only after verified success. Single-use, 30-day expiry. {isMock && <span className="text-amber-400 font-bold">(Test mode)</span>}</p>
+          <p className="text-white/40 text-xs mt-2 leading-5">Real Paystack payment in USD — token issued only after verified success. Single-use, 30-day expiry. {isMock && <span className="text-amber-400 font-bold">(Test mode)</span>}</p>
 
           {refParam && (
             <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 text-left">
@@ -134,12 +134,12 @@ export const Checkout = () => {
 
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button onClick={()=> setPrice(50)} className={`p-3 rounded-xl border text-center ${price===50?'bg-white text-[#0B0215] border-white':'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}>
-              <div className="font-black text-sm">$50 <span className="font-normal text-[11px] opacity-60">NGN ~75k</span></div>
-              <div className="text-[11px]">Standard</div>
+              <div className="font-black text-sm">$50 <span className="font-normal text-[11px] opacity-60">USD</span></div>
+              <div className="text-[11px]">Standard • $50 USD</div>
             </button>
             <button onClick={()=> setPrice(99)} className={`p-3 rounded-xl border text-center ${price===99?'bg-[#FFD700] text-[#0B0215] border-[#FFD700]':'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}>
-              <div className="font-black text-sm">$99 <span className="font-normal text-[11px] opacity-60">NGN ~148k</span></div>
-              <div className="text-[11px]">Premium</div>
+              <div className="font-black text-sm">$99 <span className="font-normal text-[11px] opacity-60">USD</span></div>
+              <div className="text-[11px]">Premium • $99 USD</div>
             </button>
           </div>
 
@@ -158,9 +158,9 @@ export const Checkout = () => {
                 disabled={loading || verifying}
                 className="w-full bg-white text-[#0B0215] py-3 rounded-full font-black text-xs tracking-widest uppercase hover:bg-white/90 disabled:opacity-50"
               >
-                {loading ? 'Redirecting…' : verifying ? 'Verifying…' : `Pay $${price} via Paystack →`}
+                {loading ? 'Redirecting…' : verifying ? 'Verifying…' : `Pay $${price} USD via Paystack →`}
               </button>
-              <p className="text-[11px] text-white/20 text-center">You’ll be redirected to Paystack. Test mode works without key. After success you return here automatically.</p>
+              <p className="text-[11px] text-white/20 text-center">You’ll be charged in USD ($50 or $99). Test mode works without key. After success you return here automatically.</p>
             </div>
           )}
 

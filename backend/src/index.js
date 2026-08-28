@@ -587,16 +587,17 @@ app.get('/api/payment/verify', async (c) => {
     const payment = await verifyPayment(c.env, reference);
     if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
     const mock = !!payment.mock;
-    // Infer price from Paystack amount (kobo) — handle both NGN (7500000) and USD (9900/5000)
+    // USD $50/$99 — infer price from amount/currency or mock ref
     let price = 50;
-    if (mock) price = String(reference).includes('99') ? 99 : 50; // fallback
+    if (mock) price = String(reference).startsWith('mock_99_') || String(reference).includes('_99_') ? 99 : 50;
     else {
-      const amt = Number(payment.amount) || 0;
-      const cur = String(payment.currency || 'NGN').toUpperCase();
-      if (cur === 'USD' || cur === 'GHS') price = amt === 9900 ? 99 : 50;
-      else price = amt >= 1000000 ? (amt === 990000 ? 99 : amt >= 14000000 ? 99 : 50) : (amt === 9900 ? 99 : 50);
-      // Prefer metadata if present
       if (payment.metadata && payment.metadata.price) price = Number(payment.metadata.price) === 99 ? 99 : 50;
+      else {
+        const amt = Number(payment.amount) || 0;
+        const cur = String(payment.currency || 'USD').toUpperCase();
+        if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') price = amt === 9900 ? 99 : 50;
+        else price = amt >= 1000000 ? (amt >= 14000000 ? 99 : 50) : (amt === 9900 ? 99 : 50);
+      }
     }
     let codeRow;
     if (hasSupabase(c.env)) {
@@ -617,14 +618,14 @@ app.post('/api/payment/verify', async (c) => {
     const mock = !!payment.mock;
     let price = 50;
     if (mock) {
-      price = String(reference).includes('99') ? 99 : 50;
+      price = String(reference).startsWith('mock_99_') || String(reference).includes('_99_') ? 99 : 50;
     } else {
       if (payment.metadata && payment.metadata.price) price = Number(payment.metadata.price) === 99 ? 99 : 50;
       else {
         const amt = Number(payment.amount) || 0;
-        const cur = String(payment.currency || 'NGN').toUpperCase();
-        if (cur === 'USD' || cur === 'GHS') price = amt === 9900 ? 99 : 50;
-        else price = amt >= 12000000 ? 99 : amt >= 1000000 ? (amt === 990000 ? 99 : amt >= 10000000 ? 99 : 50) : (amt === 9900 ? 99 : 50);
+        const cur = String(payment.currency || 'USD').toUpperCase();
+        if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') price = amt === 9900 ? 99 : 50;
+        else price = amt >= 12000000 ? 99 : amt >= 1000000 ? 99 : (amt === 9900 ? 99 : 50);
       }
     }
     let codeRow;
