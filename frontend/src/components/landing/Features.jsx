@@ -14,15 +14,15 @@ export const Features = () => {
         <h2 style={{color:'#0A0A0A', fontSize:'28px', fontWeight:600, letterSpacing:'-0.02em'}}>Built for operators, <span style={{color:'#6B7280', fontStyle:'italic', fontWeight:400}}>not tourists.</span></h2>
         <p className="mt-3" style={{color:'#6B7280', fontSize:'15px'}}>Each module is quiet, fast and empty until you add. No sample data.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-10" style={{gap:'12px'}}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12" style={{gap:'16px'}}>
         {items.map(it=>(
-          <div key={it.n} className="card" style={{background:'#FFFFFF', border:'1px solid #EDEDED', borderRadius:'12px', padding:'24px', transition:'border-color 0.15s'}}>
-            <div style={{color:'#0A0A0A', opacity:0.4, fontSize:'11px', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase'}}>{it.n} {it.k}</div>
-            <h3 className="mt-3" style={{color:'#0A0A0A', fontSize:'15px', fontWeight:600}}>{it.t}</h3>
-            <p className="mt-2" style={{color:'#6B7280', fontSize:'14px', lineHeight:'1.5'}}>{it.d}</p>
-            <ul className="mt-4 space-y-1">
+          <div key={it.n} className="card" style={{background:'#FFFFFF', border:'1px solid #EDEDED', borderRadius:'16px', padding:'32px', transition:'border-color 0.15s'}}>
+            <div style={{color:'#0A0A0A', opacity:0.4, fontSize:'11px', fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase'}}>{it.n} {it.k}</div>
+            <h3 className="mt-4" style={{color:'#0A0A0A', fontSize:'17px', fontWeight:700, letterSpacing:'-0.01em'}}>{it.t}</h3>
+            <p className="mt-3" style={{color:'#6B7280', fontSize:'15px', lineHeight:'1.6'}}>{it.d}</p>
+            <ul className="mt-5 space-y-2">
               {it.points.map(p=>(
-                <li key={p} className="flex items-center gap-2" style={{color:'#6B7280', fontSize:'13px'}}><span style={{color:'#EDEDED'}}>—</span>{p}</li>
+                <li key={p} className="flex items-center gap-2" style={{color:'#6B7280', fontSize:'13.5px'}}><span style={{color:'#EDEDED', fontWeight:300}}>—</span>{p}</li>
               ))}
             </ul>
           </div>

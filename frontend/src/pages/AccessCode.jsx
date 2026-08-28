@@ -82,7 +82,7 @@ export const AccessCode = () => {
             type="submit"
             disabled={loading}
             className="btn-primary w-full py-4 text-lg justify-center"
-            style={{background:'#0A0A0A'}}
+            style={{background:'#5E17EB'}}
           >
             {loading ? 'Verifying...' : '🔓 Unlock Platform'}
           </button>
@@ -105,8 +105,8 @@ export const AccessCode = () => {
             One-time payment. Lifetime access. Paystack USD.
           </p>
           <div className="mt-4 flex gap-2 justify-center">
-            <Link to="/checkout?price=50" className="px-4 py-2 rounded-lg text-xs font-semibold" style={{background:'#0A0A0A', color:'#FFFCF8', borderRadius:'8px'}}>Buy $50 →</Link>
-            <Link to="/checkout?price=99" className="px-4 py-2 rounded-lg text-xs font-semibold" style={{background:'#FFFFFF', color:'#0A0A0A', border:'1px solid #EDEDED', borderRadius:'8px'}}>Buy $99 →</Link>
+            <Link to="/checkout?price=50" className="px-4 py-2 rounded-lg text-xs font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px'}}>Buy $50 →</Link>
+            <Link to="/checkout?price=99" className="px-4 py-2 rounded-lg text-xs font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px'}}>Buy $99 →</Link>
           </div>
         </div>
 

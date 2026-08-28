@@ -69,11 +69,11 @@ function TopNav() {
   return (
     <nav className="sticky top-0 z-50 border-b flex items-center" style={{height:'64px', background:'rgba(255,252,248,0.8)', borderColor:'#EDEDED', backdropFilter:'blur(8px)'}}>
       <div className="max-w-[1040px] mx-auto w-full px-6 flex items-center">
-        <a href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold" style={{background:'#5E17EB', width:'32px', height:'32px'}}>α</div>
+        <Link to="/" className="flex items-center gap-2" style={{textDecoration:'none'}}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold" style={{background:'#5E17EB', width:'32px', height:'32px', flexShrink:0}}>α</div>
           <span className="font-semibold" style={{color:'#0A0A0A', fontSize:'15px'}}>Alpha</span>
           <span className="hidden sm:inline-flex items-center gap-1.5" style={{color:'#6B7280', fontSize:'12px'}}><span style={{width:'4px', height:'4px', borderRadius:'999px', background:'#5E17EB', display:'inline-block'}} /> OS v1.0</span>
-        </a>
+        </Link>
 
         <div className="hidden md:flex items-center gap-6 mx-auto">
           {links.map((l) => (
@@ -84,10 +84,10 @@ function TopNav() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          {hasAccess ? <CommandPalette /> : <a href="/access" className="hidden sm:inline-flex items-center justify-center" style={{color:'#6B7280', fontSize:'13px', fontWeight:500, padding:'0 12px', height:'36px'}}>Sign in</a>}
-          <a href={hasAccess ? "/dashboard" : "/signup"} className="inline-flex items-center justify-center font-semibold" style={{background:'#0A0A0A', color:'#FFFFFB', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px'}}>
+          {hasAccess ? <CommandPalette /> : <button onClick={async()=>{ const { supabase } = await import('./lib/supabase.js'); if(import.meta.env.VITE_SUPABASE_URL){ const {error}=await supabase.auth.signInWithOAuth({provider:'google', options:{redirectTo: window.location.origin + '/access'}}); if(error) window.location.href='/auth'; } else window.location.href='/auth'; }} className="hidden sm:inline-flex items-center justify-center" style={{color:'#6B7280', fontSize:'13px', fontWeight:500, padding:'0 12px', height:'36px', background:'transparent', border:'none', cursor:'pointer'}}>Sign in</button>}
+          <button onClick={async()=>{ if(hasAccess) window.location.href='/dashboard'; else { const { supabase } = await import('./lib/supabase.js'); if(import.meta.env.VITE_SUPABASE_URL){ const {error}=await supabase.auth.signInWithOAuth({provider:'google', options:{redirectTo: window.location.origin + '/access'}}); if(error) window.location.href='/signup'; } else window.location.href='/signup'; } }} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFCF8', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', border:'none', cursor:'pointer'}}>
             Get Access
-          </a>
+          </button>
           <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center" style={{border:'1px solid #EDEDED', color:'#0A0A0A'}} aria-label="Menu">
             <span className="text-base">{open ? "✕" : "☰"}</span>
           </button>
