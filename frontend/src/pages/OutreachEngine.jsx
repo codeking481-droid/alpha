@@ -1,6 +1,8 @@
 ﻿import { useState } from "react"
 import LeadFinder from "../components/outreach/LeadFinder"
+import { LeadSearch } from "../components/outreach/LeadSearch"
 import MessageDraft from "../components/outreach/MessageDraft"
+import { MessageSender } from "../components/outreach/MessageSender"
 import CampaignManager from "../components/outreach/CampaignManager"
 import ReplyTracker from "../components/outreach/ReplyTracker"
 import { useLocalStorage } from "../hooks/useLocalStorage.js"
@@ -9,6 +11,7 @@ import AISuggestion from "../components/ui/AISuggestion.jsx"
 
 export default function OutreachEngine() {
   const [addedLeads, setAddedLeads] = useState([])
+  const [selectedLead, setSelectedLead] = useState(null)
   const [realLeads] = useLocalStorage("alpha.leads", [])
   const [campaigns] = useLocalStorage("alpha.campaigns", [])
   const [replies] = useLocalStorage("alpha.replies", [])
@@ -74,6 +77,8 @@ export default function OutreachEngine() {
           </div>
         </div>
 
+        <LeadSearch />
+
         {stats.leads === 0 && stats.campaigns === 0 && (
           <>
             <EmptyState
@@ -129,8 +134,12 @@ export default function OutreachEngine() {
           </div>
         </div>
 
-        <LeadFinder onAddToCampaign={handleAddToCampaign} />
+        <LeadFinder onAddToCampaign={handleAddToCampaign} onSelect={setSelectedLead} />
         <MessageDraft onSave={handleSaveDraft} />
+        <MessageSender lead={selectedLead} onSent={(lead, subject, message) => {
+          setSelectedLead(lead);
+          console.log(`Sent to ${lead.email}: ${subject}`);
+        }} />
         <ReplyTracker />
       </main>
 

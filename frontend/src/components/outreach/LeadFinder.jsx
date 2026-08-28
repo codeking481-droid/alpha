@@ -8,7 +8,7 @@ const statusStyle = {
   replied: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
 }
 
-export default function LeadFinder({ onAddToCampaign }) {
+export default function LeadFinder({ onAddToCampaign, onSelect }) {
   const [realLeads, setRealLeads] = useLocalStorage("alpha.leads", [])
   const [q, setQ] = useState("")
   const [industry, setIndustry] = useState("all")
@@ -166,6 +166,7 @@ export default function LeadFinder({ onAddToCampaign }) {
                   {added.has(l.id) ? "✓ Added" : "+ Add to Campaign"}
                 </button>
                 {l.email !== "—" && <a href={`mailto:${l.email}`} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold">Email</a>}
+                <button onClick={() => onSelect?.(l)} className="px-4 py-2 rounded-xl bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold hover:bg-sky-500/30">Select</button>
               </div>
             </div>
           ))}
