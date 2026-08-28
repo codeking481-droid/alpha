@@ -1,14 +1,6 @@
-import { supabase } from '../../lib/supabase.js';
+import { Link } from 'react-router-dom';
 
 export const Hero = () => {
-  const handleGoogle = async () => {
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/access' } });
-      if (error) window.location.href = '/auth';
-    } else {
-      window.location.href = '/auth';
-    }
-  };
   return (
     <section className="max-w-[1040px] mx-auto px-6 text-center" style={{background:'#FFFCF8', paddingTop:'120px', paddingBottom:'120px'}}>
       <div style={{color:'#6B7280', fontSize:'12px', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase'}} className="mb-6">
@@ -22,13 +14,13 @@ export const Hero = () => {
         Find leads. Create content. Send outreach. Prove ROI. All from one platform. No noise. Just results.
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-        <button onClick={handleGoogle} className="inline-flex items-center justify-center" style={{background:'#5E17EB', color:'#FFFCF8', fontSize:'15px', fontWeight:600, letterSpacing:'0.01em', padding:'14px 28px', height:'48px', borderRadius:'8px', minWidth:'220px'}}>
+        <Link to="/auth" className="inline-flex items-center justify-center" style={{background:'#5E17EB', color:'#FFFFFF', fontSize:'15px', fontWeight:600, letterSpacing:'0.01em', padding:'14px 28px', height:'48px', borderRadius:'8px', minWidth:'220px', textDecoration:'none'}}>
           Sign up with Google →
-        </button>
+        </Link>
         <button
           onClick={() => {
-            const dp = window.deferredPrompt || window.__alphaDeferredPrompt;
-            if (dp) dp.prompt();
+            const dp = window.__alphaDeferredPrompt;
+            if (dp && dp.prompt) dp.prompt();
             else alert('Tap the share button and select "Add to Home Screen"');
           }}
           className="inline-flex items-center justify-center"

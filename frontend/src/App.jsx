@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, NavLink, Link, Navigate } from "react-router-dom"
 import Dashboard from "./pages/Dashboard.jsx"
 import ContentStudio from "./pages/ContentStudio.jsx"
 import OutreachEngine from "./pages/OutreachEngine.jsx"
@@ -84,10 +84,10 @@ function TopNav() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          {hasAccess ? <CommandPalette /> : <button onClick={async()=>{ const { supabase } = await import('./lib/supabase.js'); if(import.meta.env.VITE_SUPABASE_URL){ const {error}=await supabase.auth.signInWithOAuth({provider:'google', options:{redirectTo: window.location.origin + '/access'}}); if(error) window.location.href='/auth'; } else window.location.href='/auth'; }} className="hidden sm:inline-flex items-center justify-center" style={{color:'#6B7280', fontSize:'13px', fontWeight:500, padding:'0 12px', height:'36px', background:'transparent', border:'none', cursor:'pointer'}}>Sign in</button>}
-          <button onClick={async()=>{ if(hasAccess) window.location.href='/dashboard'; else { const { supabase } = await import('./lib/supabase.js'); if(import.meta.env.VITE_SUPABASE_URL){ const {error}=await supabase.auth.signInWithOAuth({provider:'google', options:{redirectTo: window.location.origin + '/access'}}); if(error) window.location.href='/signup'; } else window.location.href='/signup'; } }} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFCF8', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', border:'none', cursor:'pointer'}}>
+          {hasAccess ? <CommandPalette /> : <Link to="/access" className="hidden sm:inline-flex items-center justify-center" style={{color:'#6B7280', fontSize:'13px', fontWeight:500, padding:'0 12px', height:'36px', textDecoration:'none'}}>Sign in</Link>}
+          <Link to={hasAccess ? "/dashboard" : "/signup"} className="inline-flex items-center justify-center font-semibold" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'8px', height:'36px', padding:'0 16px', fontSize:'13px', textDecoration:'none'}}>
             Get Access
-          </button>
+          </Link>
           <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center" style={{border:'1px solid #EDEDED', color:'#0A0A0A'}} aria-label="Menu">
             <span className="text-base">{open ? "✕" : "☰"}</span>
           </button>
