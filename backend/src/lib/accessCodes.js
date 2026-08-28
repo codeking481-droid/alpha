@@ -22,9 +22,10 @@ export async function generateAccessCode(env, createdBy) {
   return { id: `mem_${Date.now()}`, ...row };
 }
 
-export async function generatePaidAccessCode(env, email) {
+export async function generatePaidAccessCode(env, email, price = 50) {
   const code = genCode();
-  const row = { code, created_by: null, user_id: null, used: false, price: 50, email: email || null, created_at: new Date().toISOString() };
+  const p = Number(price) === 99 ? 99 : 50;
+  const row = { code, created_by: null, user_id: null, used: false, price: p, email: email || null, created_at: new Date().toISOString() };
   if (getSupabase(env)) {
     try {
       const data = await sbInsert(env, 'access_codes', row);

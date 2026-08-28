@@ -23,7 +23,7 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase not configured — all real, empty until you add
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], outcomes: [], client_outcomes: [], team: [], campaigns: [], outcomes: [], client_outcomes: [] }
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [{ id: 'seed-jesus', code: '126213JESUS', used: false, price: 0, email: null, created_by: 'system', created_at: new Date().toISOString(), user_id: null }], outcomes: [], client_outcomes: [], team: [], campaigns: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -520,18 +520,44 @@ app.post('/api/auth/verify-code', async (c) => {
   try {
     const { code } = await c.req.json().catch(()=>({}))
     if (!code) return c.json({ error: 'Code is required' }, 400)
+    const upper = String(code).trim().toUpperCase()
     // If Authorization present, verify with user binding (prompt #12 behavior)
     const auth = c.req.header('Authorization') || ''
     if (auth) {
       const user = await requireAuth(c, c.env)
       if (!user) return c.json({ error: 'Unauthorized: No token provided' }, 401)
+      // In-memory: check seeded / existing codes for exact match and used flag before fallback
+      if (!hasSupabase(c.env)) {
+        const all = await list(c.env, 'access_codes')
+        const existing = all.find(a => String(a.code).toUpperCase() === upper)
+        if (existing) {
+          if (existing.used) return c.json({ error: 'Invalid or already used code' }, 400)
+          // mark seeded code as used
+          try { await updateOne(c.env, 'access_codes', existing.id, { used: true, user_id: user.id }) } catch {}
+          return c.json({ success: true, message: 'Access granted', ok: true })
+        }
+        // fall through to verifyAccessCodeWithUser for env codes / dev 6+ rule
+      }
       const result = await verifyAccessCodeWithUser(c.env, code, user.id)
       if (!result.valid) return c.json({ error: result.error }, 400)
-      // Also create a mem record for consistency
-      try { await create(c.env, 'access_codes', { code: String(code).trim().toUpperCase(), used: true, user_id: user.id }) } catch {}
+      // Create a mem record for consistency (only if not already existed)
+      try {
+        const all2 = await list(c.env, 'access_codes')
+        const dup = all2.find(a => String(a.code).toUpperCase() === upper)
+        if (!dup) await create(c.env, 'access_codes', { code: upper, used: true, user_id: user.id })
+      } catch {}
       return c.json({ success: true, message: 'Access granted', ok: true })
     }
     // Fallback: legacy simple verification (no auth)
+    if (!hasSupabase(c.env)) {
+      const all = await list(c.env, 'access_codes')
+      const existing = all.find(a => String(a.code).toUpperCase() === upper)
+      if (existing) {
+        if (existing.used) return c.json({ ok:false, error:'code already used' },400)
+        try { await updateOne(c.env, 'access_codes', existing.id, { used:true }) } catch {}
+        return c.json({ ok:true, success:true })
+      }
+    }
     const res = await verifyAccessCode(c.env, code)
     return res.ok ? c.json({ ok: true, success: true }) : c.json(res, 400)
   } catch (e) { return c.json({ error: e.message }, 500) }
@@ -554,9 +580,10 @@ app.post('/api/admin/generate-code', async (c) => {
 // ── Payment — Paystack ($50 access codes)
 app.post('/api/payment/initialize', async (c) => {
   try {
-    const { email } = await c.req.json().catch(()=>({}));
+    const { email, amount, price } = await c.req.json().catch(()=>({}));
     if (!email) return c.json({ error: 'Email is required' }, 400);
-    const checkoutUrl = await initializePayment(c.env, email, 5000);
+    const amt = Number(price)===99 ? 9900 : Number(amount) ? Number(amount) : 5000;
+    const checkoutUrl = await initializePayment(c.env, email, amt);
     return c.json({ success: true, checkoutUrl });
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
@@ -567,11 +594,13 @@ app.post('/api/payment/verify', async (c) => {
     const payment = await verifyPayment(c.env, reference);
     if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
     // Generate paid code
+    const price = payment.amount === 9900 || payment.amount === 99 ? 99 : 50;
     let codeRow;
     if (hasSupabase(c.env)) {
-      try { codeRow = await generatePaidAccessCode(c.env, email); } catch (e) { codeRow = await generatePaidAccessCode(c.env, email); }
+      try { codeRow = await generatePaidAccessCode(c.env, email, price); } catch (e) { codeRow = await generatePaidAccessCode(c.env, email, price); }
     } else {
-      const row = await generatePaidAccessCode(c.env, email);
+      const price2 = payment.amount === 9900 ? 99 : 50;
+      const row = await generatePaidAccessCode(c.env, email, price2);
       codeRow = await create(c.env, 'access_codes', row);
     }
     return c.json({ success: true, code: codeRow.code || codeRow.code, row: codeRow });

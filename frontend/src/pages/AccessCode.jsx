@@ -17,7 +17,6 @@ export const AccessCode = () => {
     const upper = code.trim().toUpperCase();
     if (!upper) { setMessage('❌ Enter a code'); setLoading(false); return; }
 
-    // Resolve token: Supabase session or fallback mock token
     let token = localStorage.getItem('alpha.token') || '';
     try {
       if (import.meta.env.VITE_SUPABASE_URL) {
@@ -45,7 +44,7 @@ export const AccessCode = () => {
       if (response.ok && (data.success || data.ok)) {
         localStorage.setItem('alpha.access_granted', '1');
         localStorage.setItem('alpha.access_code', upper);
-        setMessage('✅ Access granted — opening Command Hub…');
+        setMessage(`✅ Access granted with ${upper} — opening Command Hub…`);
         setTimeout(() => navigate('/dashboard'), 900);
       } else {
         setMessage('❌ ' + (data.error || 'Invalid or already used code'));
@@ -65,18 +64,20 @@ export const AccessCode = () => {
         </div>
         <div className="mature-card rounded-[20px] p-8 text-center">
           <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mx-auto text-xl">🔑</div>
-          <h1 className="text-xl font-black tracking-tight text-white mt-4">Enter access code</h1>
-          <p className="text-white/40 text-xs mt-2 leading-5">
-            Codes are single-use. Ask your admin or buy at $50. Expires in 30 days. In dev, any 6+ characters works.
+          <h1 className="text-xl font-black tracking-tight text-white mt-4">Enter access token</h1>
+          <p className="text-white/60 text-xs mt-2 leading-5">
+            Put access token for this site <span className="text-white font-bold">or</span> purchase one.
           </p>
-          <p className="text-center mt-3 text-xs">
-            <span className="text-white/25">Don't have a code?</span> <Link to="/checkout" className="text-[#FFD700] font-bold hover:underline">Buy one for $50 →</Link>
-          </p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <Link to="/checkout?price=50" className="px-4 py-2 rounded-full bg-white text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-white/90">$50 access</Link>
+            <Link to="/checkout?price=99" className="px-4 py-2 rounded-full bg-[#FFD700] text-[#0B0215] font-black text-xs tracking-widest uppercase hover:bg-[#ffdf33]">$99 premium</Link>
+          </div>
+          <p className="text-white/25 text-[11px] mt-2">First token: <span className="text-white font-mono">126213JESUS</span> • Admin uses it once, then generates for team at /admin</p>
 
           <form onSubmit={handleSubmit} className="mt-6">
             <input
               type="text"
-              placeholder="A1B2C3"
+              placeholder="126213JESUS"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className="w-full p-3 bg-[#0B0215] text-white rounded-xl border border-white/10 focus:border-white/20 focus:outline-none text-center text-xl tracking-[0.3em] font-black uppercase placeholder:tracking-normal placeholder:text-sm"
@@ -93,11 +94,21 @@ export const AccessCode = () => {
 
           {message && <p className="mt-4 text-xs leading-5 whitespace-pre-wrap break-words text-white/70">{message}</p>}
 
-          <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-white/25">
-            <span>Need a code?</span>
-            <a href="mailto:hello@alphatekx.name.ng" className="text-white/50 hover:text-white underline">Contact admin</a>
+          <div className="mt-6 p-3 rounded-xl bg-white/5 border border-white/5 text-left">
+            <div className="eyebrow text-white/30">How it works</div>
+            <ol className="text-xs text-white/40 mt-2 space-y-1 list-decimal list-inside">
+              <li>Landing → <span className="text-white/60">Sign up</span> (Google) → /auth</li>
+              <li>After signup you see this box — enter token or purchase</li>
+              <li>Admin (alphatekxcompany@gmail.com) uses <span className="font-mono text-white">126213JESUS</span> once → marked used → then generates for team at <Link to="/admin" className="text-[#FFD700] underline">/admin</Link></li>
+            </ol>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-3 text-[11px] text-white/25">
+            <Link to="/checkout?price=50" className="hover:text-white underline">Buy $50</Link>
             <span>•</span>
-            <Link to="/dashboard" className="text-white/50 hover:text-white underline">Try dev (6+ chars)</Link>
+            <Link to="/checkout?price=99" className="hover:text-white underline">Buy $99 premium</Link>
+            <span>•</span>
+            <a href="mailto:hello@alphatekx.name.ng" className="hover:text-white underline">Contact admin</a>
           </div>
         </div>
       </div>

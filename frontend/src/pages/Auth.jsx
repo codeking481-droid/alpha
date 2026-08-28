@@ -29,23 +29,20 @@ export const Auth = () => {
         if (error) {
           setMessage('❌ ' + error.message);
         } else if (data.user && !isLogin) {
-          setMessage('✅ Check your email for confirmation!');
+          setMessage('✅ Check your email for confirmation! Now log in.');
         } else if (data.session?.access_token) {
           localStorage.setItem('alpha.token', data.session.access_token);
-          // Admin bypass per Prompt #12
-          if (String(email).toLowerCase() === 'alphatekxcompany@gmail.com') {
-            setMessage('✅ Admin access — opening dashboard...');
+          // Everyone (including admin) goes to access-code first time — seed is 126213JESUS
+          const isAdmin = String(email).toLowerCase() === 'alphatekxcompany@gmail.com';
+          if (isAdmin && localStorage.getItem('alpha.access_granted') === '1') {
+            setMessage('✅ Admin — welcome back to dashboard...');
             setTimeout(() => navigate('/dashboard'), 800);
           } else {
-            setMessage('✅ Welcome — redirecting to access code...');
+            setMessage(isAdmin ? '✅ Admin — enter code 126213JESUS (one-time)…' : '✅ Welcome — enter your access code...');
             setTimeout(() => navigate('/access-code'), 800);
           }
         } else if (data.user && isLogin) {
-          if (String(email).toLowerCase() === 'alphatekxcompany@gmail.com') {
-            navigate('/dashboard');
-          } else {
-            navigate('/access-code');
-          }
+          navigate('/access-code');
         }
       } else {
         // Fallback to backend mock login (works without Supabase)
@@ -58,11 +55,12 @@ export const Auth = () => {
         if (!res.ok) throw new Error(data.error || 'Login failed');
         if (data.token) localStorage.setItem('alpha.token', data.token);
         if (data.user) localStorage.setItem('alpha.user', JSON.stringify(data.user));
-        if (String(email).toLowerCase() === 'alphatekxcompany@gmail.com') {
-          setMessage('✅ Admin access (dev) — opening dashboard...');
+        const isAdminDev = String(email).toLowerCase() === 'alphatekxcompany@gmail.com';
+        if (isAdminDev && localStorage.getItem('alpha.access_granted') === '1') {
+          setMessage('✅ Admin (dev) — welcome back...');
           setTimeout(() => navigate('/dashboard'), 600);
         } else {
-          setMessage('✅ Signed in (dev) — continue to access code');
+          setMessage(isAdminDev ? '✅ Admin (dev) — enter code 126213JESUS at next step' : '✅ Signed in (dev) — enter your access code');
           setTimeout(() => navigate('/access-code'), 600);
         }
       }
