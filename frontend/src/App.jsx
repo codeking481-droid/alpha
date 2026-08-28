@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { BrowserRouter, Routes, Route, NavLink, Link, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, NavLink, Link, Navigate, useNavigate } from "react-router-dom"
 import Dashboard from "./pages/Dashboard.jsx"
 import ContentStudio from "./pages/ContentStudio.jsx"
 import OutreachEngine from "./pages/OutreachEngine.jsx"
