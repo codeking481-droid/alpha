@@ -118,7 +118,7 @@ export default function LeadFinder({ onAddToCampaign, onSelect }) {
             {freeLeads.map((fl) => (
               <div key={fl.id} className="bg-[#0B0215] border border-white/10 rounded-xl p-3">
                 <div className="text-sm font-bold text-white truncate">{fl.name}</div>
-                <div className="text-xs text-white/40 truncate">{fl.address || `${fl.lat.toFixed(4)}, ${fl.lon.toFixed(4)}`}</div>
+                <div className="text-xs text-white/40 truncate">{fl.address || (fl.lat != null && fl.lon != null ? `${Number(fl.lat).toFixed(4)}, ${Number(fl.lon).toFixed(4)}` : '—')}</div>
                 <div className="text-xs text-white/30 truncate">{fl.phone || fl.website || "—"}</div>
                 <button onClick={() => importFreeLead(fl)} className="mt-2 w-full py-2 rounded-full bg-white text-[#0B0215] text-xs font-black tracking-widest uppercase hover:bg-white/90">+ Import as Lead</button>
               </div>
