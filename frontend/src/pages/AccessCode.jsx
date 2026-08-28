@@ -113,6 +113,35 @@ export const AccessCode = () => {
             </ol>
           </div>
 
+          {/* Post-signup buy path — crystal clear */}
+          <div className="mt-6 pt-6 border-t border-white/5">
+            <div className="eyebrow text-white/30 text-[11px]">Don't have a token? — Buy one</div>
+            <p className="text-xs text-white/40 mt-1">Pay via Paystack (USD), token issued instantly after success.</p>
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <Link to="/checkout?price=50" className="group rounded-2xl bg-white p-4 text-left hover:bg-white/90 transition border border-white">
+                <div className="text-[11px] tracking-widest uppercase font-black text-[#0B0215]/50">Standard</div>
+                <div className="text-xl font-black text-[#0B0215] mt-1">$50 <span className="text-xs font-bold text-[#0B0215]/40">USD</span></div>
+                <ul className="text-[11px] text-[#0B0215]/60 mt-2 space-y-1 leading-4">
+                  <li>• Single-use token</li>
+                  <li>• 30-day expiry</li>
+                  <li>• Full OS access</li>
+                </ul>
+                <div className="mt-3 text-xs font-black tracking-widest uppercase text-[#0B0215] group-hover:underline">Buy $50 →</div>
+              </Link>
+              <Link to="/checkout?price=99" className="group rounded-2xl bg-[#FFD700] p-4 text-left hover:bg-[#ffdf33] transition border border-[#FFD700]">
+                <div className="text-[11px] tracking-widest uppercase font-black text-[#0B0215]/60">Premium • Most chosen</div>
+                <div className="text-xl font-black text-[#0B0215] mt-1">$99 <span className="text-xs font-bold text-[#0B0215]/50">USD</span></div>
+                <ul className="text-[11px] text-[#0B0215]/70 mt-2 space-y-1 leading-4">
+                  <li>• Premium token</li>
+                  <li>• Priority support</li>
+                  <li>• Client dashboards</li>
+                </ul>
+                <div className="mt-3 text-xs font-black tracking-widest uppercase text-[#0B0215] group-hover:underline">Buy $99 →</div>
+              </Link>
+            </div>
+            <p className="text-[11px] text-white/25 mt-3 text-center">Secure by Paystack • USD charged • Token after verification</p>
+          </div>
+
           <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-white/25 flex-wrap">
             <span className="inline-flex items-center gap-1.5"><span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/> Encrypted</span>
             <span>•</span>
