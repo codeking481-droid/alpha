@@ -1,18 +1,19 @@
 export const StatsStrip = () => {
-  const stats = [
-    ['342', 'Agencies live', 'Active'],
-    ['12.4k', 'Leads found', 'Free via OSM'],
-    ['$184k', 'Revenue tracked', 'Real proofs'],
-    ['4.9/5', 'Avg ROI proof', '312% median'],
-  ];
   return (
-    <section className="px-4 py-6">
-      <div className="max-w-6xl mx-auto glass rounded-2xl py-4 px-2 sm:px-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(([v,k,sub])=>(
-          <div key={k} className="text-center py-2">
-            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">{v}</div>
-            <div className="text-[11px] tracking-widest uppercase font-black text-white/40">{k}</div>
-            <div className="text-[11px] text-[#FFD700]">{sub}</div>
+    <section className="px-4 border-y border-white/5 bg-white/[0.01]">
+      <div className="max-w-[1160px] mx-auto py-6 grid grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          ['$5k — $50k', 'Agencies it’s built for', 'Compounding operators'],
+          ['342', 'Workspaces live', 'Lagos → London'],
+          ['Zero mock', 'Empty until you add', 'Real data only'],
+          ['30-day', 'Money-back', 'No questions'],
+        ].map(([v,k,sub])=>(
+          <div key={k} className="text-center lg:text-left flex lg:flex-col items-center lg:items-start gap-3 lg:gap-0">
+            <div className="text-sm font-black tracking-tight text-white">{v}</div>
+            <div>
+              <div className="eyebrow text-white/30 leading-none">{k}</div>
+              <div className="text-xs text-white/25">{sub}</div>
+            </div>
           </div>
         ))}
       </div>

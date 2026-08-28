@@ -99,8 +99,17 @@ button, a, [role="button"] { min-height: 44px; min-width: 44px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.5); }
 * { scrollbar-width: thin; scrollbar-color: rgba(255,215,0,0.3) transparent; }
 
+/* Mature editorial */
+.mature-grid { background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 32px 32px; }
+.hairline { border: 1px solid rgba(255,255,255,0.06); }
+.hairline-gold { border: 1px solid rgba(255,215,0,0.14); }
+.mature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(16px); }
+.mature-card:hover { border-color: rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); }
+
 /* Typography */
-h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.2; }
+h1, h2, h3 { letter-spacing: -0.03em; line-height: 1.08; font-feature-settings: "ss01" 1; }
+.eyebrow { letter-spacing: 0.18em; text-transform: uppercase; font-size: 11px; font-weight: 800; }
+.mature-serif { font-family: ui-serif, Georgia, serif; letter-spacing: -0.02em; }
 .premium-heading {
   font-size: 2.5rem;
   font-weight: 700;

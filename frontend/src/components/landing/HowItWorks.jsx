@@ -1,20 +1,22 @@
 export const HowItWorks = () => {
-  const steps = [
-    { n:'01', t:'Find', d:'Search any city + niche. 50 real businesses in 30s. No API key. Save to localStorage.', icon:'🔍' },
-    { n:'02', t:'Contact', d:'AI drafts personal email. One click sends via Resend. Tracked as sent.', icon:'✉️' },
-    { n:'03', t:'Prove', d:'Replies → inbox. Revenue → Outcomes. Client sees live proof in read-only dashboard.', icon:'📈' },
-  ];
   return (
-    <section className="py-14 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white text-center">How it works — 3 steps, 10 minutes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          {steps.map(s=>(
-            <div key={s.n} className="relative glass rounded-2xl p-6">
-              <div className="absolute -top-3 left-6 px-2 py-1 rounded-full bg-[#FFD700] text-[#0B0215] text-[11px] font-black tracking-widest">STEP {s.n}</div>
-              <div className="text-3xl mt-2">{s.icon}</div>
-              <h3 className="text-lg font-black text-white mt-3">{s.t}</h3>
-              <p className="text-sm text-white/50 mt-2 leading-relaxed">{s.d}</p>
+    <section className="py-12 px-4">
+      <div className="max-w-[1160px] mx-auto mature-card rounded-[16px] p-6 sm:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <h2 className="text-xl font-black tracking-tight text-white">From find to proof in 10 minutes.</h2>
+          <div className="text-xs text-white/30">No onboarding calls. No implementation.</div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 relative">
+          <div className="hidden md:block absolute top-7 left-[16%] right-[16%] h-[1px] bg-white/5" />
+          {[
+            { n:'1', t:'Find 20 businesses', d:'City + niche. Overpass in 30s. Save to α•leads. No key.' },
+            { n:'2', t:'Send 3 personal emails', d:'AI draft → Resend. Tracked in messages, reply-aware.' },
+            { n:'3', t:'Share the proof link', d:'Outcomes calculate ROI. Client sees live dashboard. Read-only.' },
+          ].map(s=>(
+            <div key={s.n} className="relative">
+              <div className="w-10 h-10 rounded-full bg-white text-[#0B0215] flex items-center justify-center font-black text-sm relative z-10">{s.n}</div>
+              <h3 className="text-sm font-black text-white mt-3">{s.t}</h3>
+              <p className="text-xs leading-5 text-white/40 mt-1 max-w-[28ch]">{s.d}</p>
             </div>
           ))}
         </div>
