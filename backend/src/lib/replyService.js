@@ -1,5 +1,6 @@
 // Reply tracking service for email replies
 // Uses Gmail API polling to sync replies
+import { sendWhatsAppAlert } from '../services/whatsappAlert.js'
 
 export async function syncGmailReplies(env) {
   if (!env.GMAIL_REFRESH_TOKEN || !env.GMAIL_CLIENT_ID || !env.GMAIL_CLIENT_SECRET) {
@@ -75,19 +76,21 @@ export async function saveReply(env, replyData) {
   }
 
   // Check if reply already exists
-  const checkRes = await fetch(
-    `${env.SUPABASE_URL}/rest/v1/replies?gmail_id=eq.${replyData.gmail_id}`,
-    {
-      headers: {
-        'apikey': env.SUPABASE_SERVICE_KEY,
-        'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`
+  if (replyData.gmail_id) {
+    const checkRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/replies?gmail_id=eq.${encodeURIComponent(replyData.gmail_id)}`,
+      {
+        headers: {
+          'apikey': env.SUPABASE_SERVICE_KEY,
+          'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`
+        }
       }
-    }
-  )
+    )
 
-  if (checkRes.ok) {
-    const existing = await checkRes.json()
-    if (existing.length > 0) return existing[0] // Already saved
+    if (checkRes.ok) {
+      const existing = await checkRes.json()
+      if (existing.length > 0) return existing[0]
+    }
   }
 
   // Detect sentiment using AI (optional - requires Groq/OpenAI)
@@ -98,6 +101,8 @@ export async function saveReply(env, replyData) {
   const bodyLower = (replyData.body || '').toLowerCase()
   if (negativeKeywords.some((k) => bodyLower.includes(k))) {
     sentiment = 'negative'
+  } else if (bodyLower.includes('?') || bodyLower.includes('can we') || bodyLower.includes('how much') || bodyLower.includes('when can') || bodyLower.includes('schedule')) {
+    sentiment = 'question'
   } else if (positiveKeywords.some((k) => bodyLower.includes(k))) {
     sentiment = 'positive'
   }
@@ -118,7 +123,8 @@ export async function saveReply(env, replyData) {
       received_at: replyData.received_at,
       sentiment: sentiment,
       is_read: false,
-      gmail_id: replyData.gmail_id
+      gmail_id: replyData.gmail_id || null,
+      whatsapp_alerted: false
     })
   })
 
@@ -129,7 +135,36 @@ export async function saveReply(env, replyData) {
   }
 
   const data = await res.json()
-  return data[0] || data
+  const saved = data[0] || data
+
+  if (saved && (sentiment === 'positive' || sentiment === 'question')) {
+    try {
+        const alert = await sendWhatsAppAlert(env, {
+        fromEmail: replyData.from_email,
+        companyName: replyData.company_name || 'Unknown Company',
+        replyBody: replyData.body,
+        sentiment,
+        sentimentScore: sentiment === 'question' ? 88 : 92
+      })
+      if (alert.sent) {
+        const alertRes = await fetch(`${env.SUPABASE_URL}/rest/v1/replies?id=eq.${encodeURIComponent(saved.id)}&whatsapp_alerted=eq.false`, {
+          method: 'PATCH',
+          headers: {
+            apikey: env.SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ whatsapp_alerted: true, whatsapp_alerted_at: new Date().toISOString() })
+        })
+        if (!alertRes.ok) console.error('Failed to mark WhatsApp alert:', await alertRes.text())
+        saved.whatsapp_alerted = true
+      }
+    } catch (error) {
+      console.error('WhatsApp alert failed:', error)
+    }
+  }
+
+  return saved
 }
 
 export async function getReplies(env, limit = 100) {
@@ -183,6 +218,8 @@ export async function handleEmailReplyWebhook(env, payload) {
     to_email: payload.to,
     subject: payload.subject,
     body: payload.text || payload.html || '',
+    gmail_id: payload.message_id || payload.id || null,
+    company_name: payload.company_name || 'Unknown Company',
     received_at: new Date().toISOString()
   }
 

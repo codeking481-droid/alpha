@@ -12,6 +12,7 @@ export async function findCompaniesApollo(env, niche, location, count = 20) {
     },
     body: JSON.stringify({
       q_organization_keyword_tags: [niche],
+      q_organization_name: niche,
       organization_locations: location ? [location] : undefined,
       per_page: Math.min(count, 50),
       page: 1,
@@ -26,7 +27,7 @@ export async function findCompaniesApollo(env, niche, location, count = 20) {
   }
 
   const apolloData = await apolloRes.json()
-  const companies = apolloData.organizations || []
+  const companies = apolloData.organizations || apolloData.companies || []
 
   // Enrich with emails using Hunter.io
   const enriched = await Promise.all(
@@ -50,10 +51,10 @@ export async function findCompaniesApollo(env, niche, location, count = 20) {
       return {
         id: company.id,
         name: company.name,
-        website: company.website_url,
+        website: company.website_url || company.website || (company.primary_domain ? `https://${company.primary_domain}` : ''),
         email: email || company.email_status?.deliverable_email,
-        industry: company.industry,
-        location: company.city || company.country,
+        industry: company.industry || niche,
+        location: [company.city, company.state, company.country].filter(Boolean).join(', '),
         linkedinUrl: company.linkedin_url,
         employees: company.employee_count,
         foundedYear: company.founded_year,

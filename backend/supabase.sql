@@ -155,8 +155,16 @@ create table if not exists replies (
   sentiment text default 'neutral',
   is_read boolean default false,
   original_email_id uuid references sent_emails(id),
+  gmail_id text unique,
+  whatsapp_alerted boolean default false,
+  whatsapp_alerted_at timestamp,
   created_at timestamp default now()
 );
+
+alter table replies add column if not exists gmail_id text;
+alter table replies add column if not exists whatsapp_alerted boolean default false;
+alter table replies add column if not exists whatsapp_alerted_at timestamp;
+create unique index if not exists replies_gmail_id_key on replies(gmail_id) where gmail_id is not null;
 
 -- Leads cache (company search results)
 create table if not exists leads_cache (

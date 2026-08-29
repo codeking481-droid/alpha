@@ -20,6 +20,7 @@ import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.j
 import { sendEmail, trackSentEmail, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
 import { findCompaniesApollo, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
+import { sendWhatsAppAlert } from './services/whatsappAlert.js'
 
 const app = new Hono()
 app.use('*', cors({
@@ -783,15 +784,41 @@ app.post('/api/companies/find', async (c) => {
       return c.json({ error: 'niche is required' }, 400)
     }
 
-    // Check cache first
-    let companies = await getCachedLeads(c.env, niche)
+    const searchKey = `${niche}|${location || 'Worldwide'}`
+    let companies = await getCachedLeads(c.env, searchKey)
+    let source = 'Apollo'
     
     if (!companies) {
-      // Find companies using Apollo
-      companies = await findCompaniesApollo(c.env, niche, location, count)
+      try {
+        companies = await findCompaniesApollo(c.env, niche, location, count)
+      } catch (error) {
+        console.warn('Apollo company search failed:', error.message)
+        companies = []
+      }
+
+      // Keep results real when Apollo returns no organizations: the existing
+      // provider pipeline uses Apollo people plus public business listings.
+      if (!companies.length) {
+        const realLeads = await findLeads(c.env, location || 'Worldwide', niche, count)
+        companies = realLeads.map((lead) => ({
+          id: lead.id,
+          name: lead.company || lead.name,
+          website: lead.website || '',
+          email: lead.email || '',
+          industry: lead.industry || niche,
+          location: lead.location || location || '',
+          linkedinUrl: lead.linkedin || lead.linkedinUrl || '',
+          employees: lead.employees,
+          revenue: lead.revenue,
+          source: lead.source
+        }))
+        source = companies[0]?.source || 'Real provider fallback'
+      }
       
       // Cache results for 24h
-      await cacheLeads(c.env, niche, companies)
+      await cacheLeads(c.env, searchKey, companies)
+    } else {
+      source = 'Cache'
     }
 
     return c.json({
@@ -800,7 +827,8 @@ app.post('/api/companies/find', async (c) => {
       count: companies.length,
       niche: niche,
       location: location,
-      cached: !companies.some(c => c.foundedYear) // Simple cache detection
+      source,
+      cached: source === 'Cache'
     })
   } catch (e) {
     return c.json({ error: e.message }, 500)
@@ -859,6 +887,23 @@ app.post('/api/webhooks/email-reply', async (c) => {
   } catch (e) {
     console.error('Webhook error:', e)
     return c.json({ error: e.message }, 500)
+  }
+})
+
+app.post('/api/test/whatsapp-alert', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env)
+    if (!admin) return c.json({ error: 'Unauthorized' }, 401)
+    const result = await sendWhatsAppAlert(c.env, {
+      fromEmail: 'ceo@testcompany.com',
+      companyName: 'Test Company Ltd',
+      replyBody: 'This looks very interesting! Can we schedule a call tomorrow to discuss the $500 package?',
+      sentiment: 'positive',
+      sentimentScore: 92
+    })
+    return c.json(result)
+  } catch (error) {
+    return c.json({ error: error.message }, 500)
   }
 })
 
