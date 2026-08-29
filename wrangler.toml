@@ -7,4 +7,6 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENV = "production"
+PAYSTACK_CURRENCY = "NGN"
+PAYSTACK_NGN_RATE = "1500"
 
