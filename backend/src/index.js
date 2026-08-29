@@ -17,7 +17,13 @@ import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
 
 const app = new Hono()
-app.use('*', cors())
+app.use('*', cors({
+  origin: (origin) => origin || '*',
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  credentials: true,
+  maxAge: 86400,
+}))
 app.use('*', async (c, next) => {
   try { await next() } catch (e) {
     console.error(e)
