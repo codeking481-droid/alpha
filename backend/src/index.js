@@ -81,8 +81,66 @@ app.get('/api/companies/my-companies', async (c) => {
   try {
     const user = getUserFromRequest(c)
     if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
-    const arr = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}&order=created_at.desc`)
-    return c.json({ companies: arr || [], total: (arr || []).length, note: 'Real saved companies' })
+    let query = `user_id=eq.${user.id}`
+    const status = c.req.query('status') || ''
+    const niche = c.req.query('niche') || ''
+    const search = c.req.query('search') || ''
+    const source = c.req.query('source') || ''
+    if (status) query += `&status=eq.${status}`
+    if (niche) query += `&niche=ilike.*${niche}*`
+    if (source) query += `&source=eq.${source}`
+    if (search) query += `&or=(company_name.ilike.*${search}*,domain.ilike.*${search}*)`
+    query += '&order=created_at.desc'
+    const arr = await sbSelect(c.env, 'companies', query)
+    const stats = { total: (arr||[]).length, new: (arr||[]).filter(x=>x.status==='new').length, contacted: (arr||[]).filter(x=>x.status==='contacted').length, replied: (arr||[]).filter(x=>x.status==='replied').length, hot: (arr||[]).filter(x=>x.status==='hot').length }
+    return c.json({ companies: arr || [], total: (arr || []).length, stats, note: 'Real saved companies' })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/companies/save', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const body = await c.req.json().catch(() => ({}))
+    const domain = (body.domain || '').toLowerCase().trim()
+    if (!domain || !body.companyName) return c.json({ error: 'companyName and domain required' }, 400)
+    // Dedup
+    const existing = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}&domain=ilike.*${domain}*`)
+    if (existing && existing.length > 0) return c.json({ error: 'already saved', company: existing[0] }, 409)
+    const row = { user_id: user.id, company_name: body.companyName, domain, owner_name: body.ownerName || '', owner_email: body.ownerEmail || '', niche: body.niche || '', product: body.product || '', source: body.source || 'apollo', website: body.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
+    const saved = await sbInsert(c.env, 'companies', row)
+    return c.json({ success: true, company: saved || row })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/companies/save-bulk', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const body = await c.req.json().catch(() => ({}))
+    const list = body.companies || []
+    const results = []; let saved = 0, skipped = 0, failed = 0;
+    for (const item of list) {
+      try {
+        const domain = (item.domain || '').toLowerCase().trim()
+        if (!domain || !item.companyName) { failed++; continue }
+        const existing = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}&domain=ilike.*${domain}*`)
+        if (existing && existing.length > 0) { skipped++; results.push({ skipped: true, reason: 'already saved', company: existing[0] }); continue }
+        const row = { user_id: user.id, company_name: item.companyName, domain, owner_name: item.ownerName || '', owner_email: item.ownerEmail || '', niche: item.niche || '', product: item.product || '', source: item.source || 'apollo', website: item.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
+        const s = await sbInsert(c.env, 'companies', row)
+        saved++; results.push({ success: true, company: s || row })
+      } catch (e) { failed++; results.push({ success: false, error: e.message }) }
+    }
+    return c.json({ success: true, total: list.length, saved, skipped_duplicates: skipped, failed, details: results })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.delete('/api/companies/:id', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const id = c.req.param('id')
+    const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${user.id}`)
+    if (!row || row.length === 0) return c.json({ error: 'not found or not yours' }, 404)
+    const ok = await deleteOne(c.env, 'companies', id)
+    return c.json({ success: true, deleted: ok })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.get('/api/companies', async (c) => c.json(await list(c.env, 'companies')))
