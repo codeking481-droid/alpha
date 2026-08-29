@@ -829,6 +829,11 @@ app.post('/api/companies/find', async (c) => {
       await cacheLeads(c.env, searchKey, companies)
     } else {
       source = 'Cache'
+      const cachedDirectory = companies.every((company) => /\b(list|best|top|guide|directory|companies)\b/i.test(company.name || ''))
+      if (cachedDirectory) {
+        companies = await findCompaniesWikipedia(niche, location, count)
+        source = 'Wikipedia'
+      }
     }
 
     if (!companies.length) {
