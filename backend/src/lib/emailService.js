@@ -1,8 +1,6 @@
 // Email sending service using Resend API
 // Sends outreach emails and tracks them in Supabase
 
-import { crypto } from 'node:crypto'
-
 export async function sendEmail(env, to, subject, htmlContent, companyName, industry, customHeaders = {}) {
   if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured')
   if (!env.FROM_EMAIL) throw new Error('FROM_EMAIL not configured')
