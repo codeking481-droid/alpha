@@ -1050,6 +1050,21 @@ app.post('/api/content/generate', async (c) => {
     return c.json({ success: true, company: comp.company_name || comp.name, content: text || 'Generated', mocked })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
+app.post('/api/replies/:id/generate-followup', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const id = c.req.param('id')
+    const { companyId } = await c.req.json().catch(() => ({}))
+    const comp = companyId ? await getOne(c.env, 'companies', companyId) : null
+    const companyName = comp?.company_name || comp?.name || 'Your Company'
+    const ownerName = comp?.owner_name || 'there'
+    const product = comp?.product || 'your product'
+    const prompt = `You are Alpha Agency follow-up closer. Company ${companyName} owner ${ownerName} said YES. Generate a short follow-up (80-120 words) that: thanks YES; next steps = content for 5 communities (3K YouTube, 700 LinkedIn, 500 conn, 130 WA, 113 TG, 85 cyber); done-for-you private engine $500 invite-only; include [PAYMENT_LINK]; after payment we handle everything async via email, NO CALL NEEDED; tone private invite. NEVER say call, Zoom, Meet, Loom, screen recording, video call.`
+    const { text } = await groqGenerate(c.env, { prompt })
+    return c.json({ success: true, followupMessage: text || 'Thanks for YES! Pay [PAYMENT_LINK] and reply with product link.', company: companyName })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
 // Get all replies
 app.get('/api/replies', async (c) => {
   try {

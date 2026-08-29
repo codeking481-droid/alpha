@@ -55,6 +55,7 @@ export const Inbox = () => {
                 <div className="bg-white/70 rounded-xl p-3 text-sm text-[#4B5563] mb-3">{r.content||r.reply_text||r.text||'Reply text'}</div>
                 <div className="flex gap-2">
                   <button onClick={() => navigate(`/saved-companies`)} className="bg-[#0A0A0A] text-white rounded-lg px-4 py-2 text-sm font-black">Generate Content →</button>
+                  <button onClick={() => alert('Follow-up generated: Thanks for YES! Pay [PAYMENT_LINK] - no call needed. Send via Resend to close $500.') } className="bg-amber-500 text-white rounded-lg px-4 py-2 text-sm font-black">Generate Follow-up →</button>
                   <button onClick={() => navigate(`/saved-companies`)} className="border rounded-lg px-4 py-2 text-sm font-black">Mark Hot</button>
                 </div>
               </div>
