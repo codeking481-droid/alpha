@@ -5,9 +5,10 @@ const ADMIN_EMAIL = 'alphatekxcompany@gmail.com'
 
 export async function verifyAccessCode(env, code) {
   if (!code) return { ok: false, error: 'code required' }
+  const upper = String(code).trim().toUpperCase()
   // Try Supabase
   try {
-    const rows = await sbSelect(env, 'access_codes', `code=eq.${String(code).trim().toUpperCase()}&limit=1`)
+    const rows = await sbSelect(env, 'access_codes', `code=eq.${encodeURIComponent(upper)}&limit=1`)
     if (rows && rows[0]) {
       if (rows[0].used) return { ok: false, error: 'code already used' }
       await sbUpdate(env, 'access_codes', rows[0].id, { used: true })
@@ -16,7 +17,6 @@ export async function verifyAccessCode(env, code) {
   } catch {}
   // Fallback: env.ACCESS_CODES (comma-separated) or allow any 6+ char in dev
   const envCodes = (env.ACCESS_CODES || '').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
-  const upper = String(code).trim().toUpperCase()
   if (envCodes.length && envCodes.includes(upper)) return { ok: true, code: { code: upper } }
   if (env.ENV !== 'production' && upper.length >= 6) return { ok: true, code: { code: upper }, mocked: true }
   return { ok: false, error: 'invalid code' }

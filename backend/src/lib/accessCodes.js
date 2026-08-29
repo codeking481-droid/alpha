@@ -42,7 +42,7 @@ export async function verifyAccessCodeWithUser(env, code, userId) {
   const upper = String(code).trim().toUpperCase();
   if (getSupabase(env)) {
     try {
-      const rows = await sbSelect(env, 'access_codes', `code=eq.${upper}&limit=1`);
+      const rows = await sbSelect(env, 'access_codes', `code=eq.${encodeURIComponent(upper)}&limit=1`);
       const row = rows && rows[0];
       if (!row) return { valid: false, error: 'Invalid code' };
       if (row.used) return { valid: false, error: 'Invalid or already used code' };
