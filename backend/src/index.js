@@ -18,7 +18,7 @@ import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
 import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.js'
 import { sendEmail, trackSentEmail, getSentEmails, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
-import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
+import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads, searchCompanies } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 import { sendHotLeadAlert } from './services/hotLeadAlert.js'
 
@@ -757,53 +757,44 @@ app.post('/api/outreach/send-email', async (c) => {
 // Spec aliases: outreach bulk + status
 app.post('/api/outreach/bulk', async (c) => {
   try {
-    const { companies, company_ids, template, subject, message, body } = await c.req.json().catch(() => ({}))
-    let list = companies || company_ids || []
-    // If ids, resolve from companies table / leads
-    if (list.length && typeof list[0] === 'string') {
-      const ids = list
-      const all = await list(c.env, 'companies')
-      list = ids.map(id => all.find(co => String(co.id) === String(id))).filter(Boolean).map(co => ({ company: co.name, email: co.email || `${co.name.replace(/\s+/g,'')}@example.com`, name: co.name }))
-    }
-    if (!Array.isArray(list) || list.length === 0) return c.json({ error: 'companies array required (20 for bulk)' }, 400)
-    const subj = subject || template?.subject || 'Quick idea for {company}'
-    const msg = message || body || template?.body || 'Hi {owner_name}, saw {company_name} — we help brands scale with paid ads. $500 package...'
+    const { companies } = await c.req.json().catch(() => ({}))
+    if (!Array.isArray(companies) || companies.length === 0) return c.json({ error: 'companies array required (max 20)' }, 400)
+    // Deduplicate and send each company with 30s delay
     const results = []
-    for (let i = 0; i < Math.min(list.length, 20); i++) {
-      const co = list[i]
-      const to = co.email || co.to_email
-      const cname = co.company || co.companyName || co.name || 'there'
-      if (!to) { results.push({ success: false, error: 'no email', company: cname }); continue }
-      try {
-        const personal = personalizateMessage(msg, cname, co.industry || 'business')
-        const html = formatEmailHTML(subj, personal, cname)
-        const { emailId, threadId } = await sendEmail(c.env, to, personalizateMessage(subj, cname, ''), html, cname, co.industry || '')
-        await trackSentEmail(c.env, to, cname, co.industry || '', subj, personal, threadId, emailId).catch(()=>{})
-        results.push({ success: true, to, company: cname, emailId })
-      } catch (e) { results.push({ success: false, error: e.message, company: cname }) }
-      if (i < list.length - 1) await new Promise(r => setTimeout(r, 30000)) // 30s delay to avoid spam
+    for (let i = 0; i < Math.min(companies.length, 20); i++) {
+      const lead = companies[i]
+      // Check duplicate before sending
+      const dedup = await checkCompanyDuplicate(env, lead.domain, lead.ownerEmail)
+      if (dedup.skipped) {
+        results.push({ skipped: true, reason: 'already_contacted', company: lead.companyName, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count })
+        continue
+      }
+      const result = await sendOutreachEmail(env, lead)
+      if (result.skipped) {
+        results.push({ skipped: true, reason: 'already_contacted', company: lead.companyName, last_contacted_at: result.last_contacted_at })
+        continue
+      }
+      results.push({ success: true, company: result.company, resend_id: result.resend_id, outreach_count: result.outreach_count })
+      // 30s delay between sends
+      if (i < Math.min(companies.length, 20) - 1) await new Promise(r => setTimeout(r, 30000))
     }
-    return c.json({ success: true, sent: results.filter(r=>r.success).length, failed: results.filter(r=>!r.success).length, results })
+    const sent = results.filter(r => r.success).length
+    const skipped = results.filter(r => r.skipped).length
+    const failed = results.filter(r => !r.success && !r.skipped).length
+    return c.json({ success: true, total: Math.min(companies.length, 20), sent, skipped_duplicates: skipped, failed, details: results })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.post('/api/outreach/send', async (c) => {
   try {
-    const { company_id, companyId, company, to, email, template, subject, message, body } = await c.req.json().catch(()=>({}))
-    let target = company || null
-    if ((company_id || companyId) && !target) {
-      const all = await list(c.env, 'companies')
-      target = all.find(x => String(x.id) === String(company_id || companyId))
-    }
-    const toEmail = to || email || target?.email
-    const cname = target?.name || company?.name || 'there'
-    if (!toEmail) return c.json({ error: 'to/email or company_id required' }, 400)
-    const subj = subject || template?.subject || `Quick idea for ${cname}`
-    const msg = message || body || template?.body || `Hi ${cname}, we help brands scale with paid ads — $500 package`
-    const personal = personalizateMessage(msg, cname, target?.industry || '')
-    const html = formatEmailHTML(subj, personal, cname)
-    const { emailId, threadId } = await sendEmail(c.env, toEmail, subj, html, cname, target?.industry || '')
-    await trackSentEmail(c.env, toEmail, cname, target?.industry || '', subj, personal, threadId, emailId).catch(()=>{})
-    return c.json({ success: true, emailId, threadId, to: toEmail })
+    const { companyName, domain, ownerName, ownerEmail, niche } = await c.req.json().catch(()=>({}))
+    // Step 1: Check for duplicate in Supabase companies table
+    const dedup = await checkCompanyDuplicate(env, domain, ownerEmail)
+    if (dedup.skipped) return c.json({ error: 'already contacted', reason: dedup.reason, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count }, 409)
+    // Step 2: Send real outreach email via Resend + mark company
+    const result = await sendOutreachEmail(env, { companyName, domain, ownerName, ownerEmail, niche })
+    if (result.skipped) return c.json({ error: 'already contacted', reason: result.reason, last_contacted_at: result.last_contacted_at }, 409)
+    if (result.error) return c.json({ error: result.error }, 500)
+    return c.json({ success: true, company: result.company, resend_id: result.resend_id, marked_contacted: true, outreach_count: result.outreach_count })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.get('/api/outreach/status', async (c) => {

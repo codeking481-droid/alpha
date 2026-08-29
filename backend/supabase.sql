@@ -1,20 +1,27 @@
--- Alpha Agency — Supabase tables
+-- Alpha Agency �?" Supabase tables
 -- Run in Supabase SQL Editor: https://app.supabase.com/project/_/sql
 
 -- Enable UUID
 create extension if not exists "pgcrypto";
 
--- Companies
+-- Companies (with dedup and outreach tracking)
 create table if not exists companies (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  industry text,
-  status text default 'active',
-  projects_count integer default 0,
-  revenue decimal(10,2) default 0,
-  last_activity timestamp,
+  domain text unique,
+  owner_email text,
+  niche text,
+  location text,
+  status text default 'new' check (status in ('new','contacted','replied','hot','closed_won','lost')),
+  contacted_at timestamp,
+  outreach_count integer default 0,
+  last_outreach_at timestamp,
   created_at timestamp default now()
 );
+
+-- Unique indexes for dedup
+create unique index if not exists idx_companies_domain on companies(domain) where domain is not null;
+create unique index if not exists idx_companies_name_lower on companies(lower(name)) where name is not null;
 
 -- Content
 create table if not exists content (
@@ -130,17 +137,18 @@ create table if not exists campaigns (
   updated_at timestamp default now()
 );
 
--- Sent emails (outreach tracking)
+-- Sent emails (outreach tracking - Resend + Gmail)
 create table if not exists sent_emails (
   id uuid primary key default gen_random_uuid(),
+  company_id uuid references companies(id) on delete set null,
   to_email text not null,
-  company_name text,
-  industry text,
-  subject text,
+  subject text not null,
   body text,
-  thread_id text unique,
+  provider text default 'resend' check (provider in ('resend','gmail')),
+  resend_id text,
+  gmail_message_id text,
+  status text default 'sent' check (status in ('sent','delivered','bounced','opened','clicked')),
   sent_at timestamp default now(),
-  status text default 'sent',
   created_at timestamp default now()
 );
 
@@ -152,7 +160,7 @@ create table if not exists replies (
   subject text,
   body text,
   received_at timestamp,
-  sentiment text default 'neutral',
+  sentiment text default 'neutral' check (sentiment in ('interested','question','neutral','out_of_office')),
   is_read boolean default false,
   original_email_id uuid references sent_emails(id),
   gmail_id text unique,
@@ -170,10 +178,11 @@ alter table replies add column if not exists hot_lead_alerted boolean default fa
 alter table replies add column if not exists hot_lead_alerted_at timestamp;
 create unique index if not exists replies_gmail_id_key on replies(gmail_id) where gmail_id is not null;
 
--- Leads cache (company search results)
+-- Leads cache (company search results) - prevents duplicate search results
 create table if not exists leads_cache (
   id uuid primary key default gen_random_uuid(),
   niche text not null,
+  domain text unique,
   data jsonb,
   created_at timestamp default now(),
   expires_at timestamp
@@ -183,7 +192,7 @@ create table if not exists leads_cache (
 insert into access_codes (code, used) values ('126213JESUSISKING', false) on conflict (code) do nothing;
 insert into access_codes (code, used) values ('126213JESUS', false) on conflict (code) do nothing;
 
--- RLS — disable for now (add policies when auth live)
+-- RLS �?" disable for now (add policies when auth live)
 alter table companies disable row level security;
 alter table content disable row level security;
 alter table leads disable row level security;
