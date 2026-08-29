@@ -55,8 +55,13 @@ export const Landing = () => {
             <a href="#pricing" onClick={(e)=>{e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">Pricing</a>
             <button onClick={handleLogin} className="bg-white border-2 border-[#EDEDED] rounded-xl px-6 py-2.5 text-[14px] font-black hover:bg-gray-50">Log in</button>
             <button onClick={handleGoogleSignup} className="bg-[#0A0A0A] hover:bg-black text-white rounded-xl px-7 py-3 text-[14px] font-black shadow-[0_6px_16px_rgba(0,0,0,0.15)]">Get access — $50 →</button>
+            <span className="text-[12px] font-bold bg-[#5E17EB] text-white px-2.5 py-1 rounded-full]">24 keys live</span>
+            <span className="text-[12px] font-bold bg-[#5E17EB] text-white px-2.5 py-1 rounded-full]">Apollo • Hunter • Resend • ec6d08f0</span>
           </div>
           <button onClick={handleLogin} className="xl:hidden bg-[#0A0A0A] text-white rounded-xl px-6 py-2.5 text-[14px] font-black">Get access</button>
+          <div className="absolute right-0 top-0 mt-2 mr-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse opacity-60"></span>
+          </div>
         </nav>
       </div>
 
@@ -68,12 +73,12 @@ export const Landing = () => {
               <span className="bg-[#5E17EB] text-white rounded-full px-2.5 py-1 text-[10px] font-black">● LIVE</span>
               10,420+ REAL COMPANIES FOUND • VERIFIED VIA APOLLO + HUNTER
             </div>
-            <h1 className="mt-6 text-[42px] md:text-[62px] lg:text-[74px] font-black tracking-[-0.045em] leading-[0.85] text-[#0A0A0A]">
+            <h1 className="mt-6 text-[48px] md:text-[72px] lg:text-[88px] font-black tracking-[-0.045em] leading-[0.85] text-[#0A0A0A]">
               <span className="text-[#0A0A0A]">Alpha Agency</span><br />
               <span className="bg-gradient-to-r from-[#5E17EB] via-[#7C3AED] to-[#A78BFA] bg-clip-text text-transparent">Outbound Model</span>
             </h1>
             <p className="mt-5 text-[17px] md:text-[19px] leading-[1.5] text-[#4B5563] max-w-[620px] font-medium">
-              <b>Outbound:</b> We search companies, find owner emails, and send cold emails pitching our 4,500+ audience done-for-you for $500. <b>Inbound $50:</b> Public tool for DIY company search + verified emails + AI content generator — you post yourself, no community access.
+              <b>Outbound:</b> We search real companies, find owner emails, and help you get them via direct DM + cold email. Our private engine reaches brands on our 4,500+ audience. Public access is DIY tool for $50 — you find, you post yourself, we give you DM + email scripts.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
               <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">113 TELEGRAM</span>
@@ -154,7 +159,7 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* PLATFORM — PUBLIC */}
+{/* PLATFORM — PUBLIC */}
       <section id="platform" className="max-w-[1360px] mx-auto px-4 md:px-6 pt-10">
         <div className="text-center">
           <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.18em] uppercase">Platform — $50 to find, create, deliver</p>
@@ -165,7 +170,7 @@ export const Landing = () => {
           {[
             {n:"1", t:"Find Real Companies", d:"Apollo + Hunter + Google Places + Overpass. Niche + location + limit. Dedupe by website. Save to dashboard. CSV import.", c:"from-[#5E17EB] to-[#7C3AED]"},
             {n:"2", t:"Get Verified Emails", d:"Every company comes with owner name, website, verified email, product. Hunter check. No info@ guess.", c:"from-[#0A0A0A] to-[#272727]"},
-            {n:"3", t:"Create What They Need", d:"Companies tell you what they need — you create and deliver. Track who you emailed, who replied, who’s hot.", c:"from-[#059669] to-[#047857]"},
+            {n:"3", t:"Create What They Need", d:"Companies tell you what they need — you create and deliver. Track who you emailed, who replied, who's hot.", c:"from-[#059669] to-[#047857]"},
           ].map(card=>(
             <div key={card.n} className="bg-white border border-[#EDEDED] rounded-2xl p-7 md:p-8 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
               <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${card.c} flex items-center justify-center text-white font-black text-[18px]`}>{card.n}</div>
@@ -176,7 +181,34 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* PRIVATE — 4,500+ AUDIENCE ACROSS 5 COMMUNITIES */}
+      {/* DIRECT DM + COLD EMAIL HELP */}
+      <section className="max-w-[1360px] mx-auto px-4 md:px-6 py-10">
+        <div className="bg-gradient-to-br from-[#0A0A0A] via-[#1A0A4A] to-[#5E17EB] rounded-[28px] p-8 md:p-12 lg:p-16 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-[80px]" />
+          <div className="relative grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
+            <div>
+              <h2 className="text-[32px] md:text-[48px] font-black leading-[0.9] tracking-tight">Get Companies via DM & Email — We Show You How</h2>
+              <p className="mt-4 text-white/70 md:text-[16px] leading-[1.6]">We don't just give you emails, we help you get companies via direct DM and email outreach — templates, follow-ups, tracking.</p>
+              <div className="mt-6 grid md:grid-cols-3 gap-4">
+                <div className="bg-[#111] rounded-2xl p-6 flex flex-col gap-4">
+                  <h4 className="text-[18px] font-black">📩 Cold Email Templates</h4>
+                  <p className="text-white/60">Proven templates that get YES from skincare brands. Copy, paste, send from site. Track replies.</p>
+                </div>
+                <div className="bg-[#111] rounded-2xl p-6 flex flex-col gap-4">
+                  <h4 className="text-[18px] font-black">💬 Direct DM Scripts</h4>
+                  <p className="text-white/60">LinkedIn DM + Instagram DM scripts to reach owners directly. What to say to get reply.</p>
+                </div>
+                <div className="bg-[#111] rounded-2xl p-6 flex flex-col gap-4">
+                  <h4 className="text-[18px] font-black">🤝 We Help You Close</h4>
+                  <p className="text-white/60">We don't just give you emails, we help you get companies via DM and email outreach — templates, follow-ups, tracking.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BLACK SECTION - WE REACH BRANDS ON OUR COMMUNITIES */}
       <section className="max-w-[1360px] mx-auto px-4 md:px-6 pt-10">
         <div className="bg-[#0A0A0A] rounded-[28px] p-6 md:p-10 lg:p-12 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#5E17EB] rounded-full blur-[90px] opacity-20" />
@@ -184,7 +216,7 @@ export const Landing = () => {
             <div>
               <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.16em] uppercase">4,500+ Audience Across 5 Communities</p>
               <h2 className="mt-2 text-[28px] md:text-[40px] font-black leading-[0.95] tracking-tight">We Reach Brands<br/>on Our Communities</h2>
-              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">We reach out to brands and manage everything done-for-you on our 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity) for $500. If price is an issue we can negotiate to $300 for 3 channels. $50 tool access is DIY only — no community posting.</p>
+              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">We reach out to brands and manage everything done-for-you on our 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity). This private engine is invite-only for brands we contact. $50 public access is DIY tool only — no community posting, you post yourself.</p>
               <div className="mt-6 grid grid-cols-2 gap-3">
                 {[
                   {p:"LinkedIn Followers", v:"700+", s:"700 followers"},
@@ -220,7 +252,7 @@ export const Landing = () => {
                 ))}
               </div>
               <div className="mt-4 bg-[#FFFCF8] border rounded-xl p-3 text-[12px]">
-                <b>Team inbox → </b> When a brand replies, you get pinged and can generate their posts right here.
+                <b>Team inbox → </b> When a brand replies via DM or email, you get pinged and can generate their posts right here. We help you get companies via direct DM.
               </div>
             </div>
           </div>
@@ -261,18 +293,19 @@ export const Landing = () => {
             <p className="mt-2 text-center text-[11px] text-white/40">For heavy users • Private invite on request</p>
           </div>
         </div>
-        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">$50 = DIY tool: search companies + verified emails + AI content generator (you post yourself). $500 = DFY done-for-you: we reach out to brands, manage everything, post on 4,500+ audience. Messaging & private audience feature is <b className="text-[#0A0A0A]">team only</b> — not included in $50 public access.</p>
+        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">$50 = DIY tool: search companies + verified emails + AI content generator (you post yourself). Private 4,500+ audience posting is team only — not included in $50 public access. Brands we reach out to get private invite.</p>
       </section>
 
       {/* TESTIMONIALS */}
       <section className="max-w-[1360px] mx-auto px-4 md:px-6">
         <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 md:p-8">
-          <h3 className="text-[18px] font-black">What you get</h3>
-          <div className="mt-4 grid md:grid-cols-3 gap-6 text-[13.5px] leading-[1.6] text-[#4B5563]">
-            <div><b className="text-[#0A0A0A]">Real, not mock.</b> Apollo + Hunter + Places. No info@ guess. Every email verified.</div>
-            <div><b className="text-[#0A0A0A]">You control outreach.</b> 100 emails show on your site, you track YES, generate content for them, post manually.</div>
-            <div><b className="text-[#0A0A0A]">Private engine.</b> We reach out to brands done-for-you on 4,500+ audience for $500. Invite only.</div>
-          </div>
+<h3 className="text-[18px] font-black">What you get</h3>
+            <div className="mt-4 grid md:grid-cols-4 gap-6 text-[13.5px] leading-[1.6] text-[#4B5563]">
+              <div><b className="text-[#0A0A0A]">Real, not mock.</b> Apollo + Hunter + Places. No info@ guess. Every email verified.</div>
+              <div><b className="text-[#0A0A0A]">You control outreach.</b> 100 emails show on your site, you track YES, generate content for them, post manually.</div>
+              <div><b className="text-[#0A0A0A]">Private engine.</b> We reach out to brands done-for-you on 4,500+ audience. Invite only.</div>
+              <div><b className="text-[#0A0A0A]">Direct DM help.</b> We help you get companies via direct DM + cold email — templates + tracking.</div>
+            </div>
         </div>
       </section>
 
@@ -287,9 +320,10 @@ export const Landing = () => {
           <div className="bg-white border border-[#EDEDED] rounded-2xl overflow-hidden">
             {[
               {q:"What does $50 give me?", a:"Access to find real companies: niche + location + limit, with company, website, owner, verified email, product. Export CSV, dedupe. DIY AI content generator included. You post yourself — no community publishing. One-time, not monthly."},
-              {q:"Can I send emails from the site?", a:"No — the $50 tool is DIY for company search + emails. Outbound cold email (we reach out to brands for $500 DFY) is managed by our team via Gmail OAuth. Your dashboard tracks who you email externally."},
-              {q:"Is the 4,500+ audience across 5 communities public?", a:"No. It's invite-only for brands we choose. Public sees '$50 DIY tool' without community posting. We pitch it one-to-one via Gmail when a brand is a good fit for $500 DFY."},
               {q:"How do you find companies?", a:"Apollo mixed_companies + Hunter domain-search, plus Tavily/Serply/Overpass fallback, cached 24h in leads_cache. All real, no mock lists. You can also CSV import."},
+              {q:"Do you help with DM outreach?", a:"Yes, we help you get companies via direct DM + cold email — we give you LinkedIn + Instagram DM scripts, cold email templates, follow-ups, and tracking. $50 DIY includes templates."},
+              {q:"Can I send emails from the site?", a:"Yes, track who you emailed, who replied, who's hot. Private audience posting stays team only."},
+              {q:"Is the 4,500+ audience across 5 communities public?", a:"No, private invite only. We reach out to brands we find. $50 public is DIY tool only."},
             ].map((f,i)=>(
               <div key={f.q} className="border-b last:border-0 border-[#F3F4F6]">
                 <button onClick={()=> setActiveFaq(i)} className="w-full text-left px-6 py-4 flex items-center justify-between gap-4">
