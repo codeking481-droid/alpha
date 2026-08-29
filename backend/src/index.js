@@ -17,7 +17,7 @@ import { generateCampaignPlan } from './lib/campaignPlanner.js'
 import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
 import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.js'
-import { sendEmail, trackSentEmail, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
+import { sendEmail, trackSentEmail, getSentEmails, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
 import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 import { sendHotLeadAlert } from './services/hotLeadAlert.js'
@@ -754,6 +754,66 @@ app.post('/api/outreach/send-email', async (c) => {
   }
 })
 
+// Spec aliases: outreach bulk + status
+app.post('/api/outreach/bulk', async (c) => {
+  try {
+    const { companies, company_ids, template, subject, message, body } = await c.req.json().catch(() => ({}))
+    let list = companies || company_ids || []
+    // If ids, resolve from companies table / leads
+    if (list.length && typeof list[0] === 'string') {
+      const ids = list
+      const all = await list(c.env, 'companies')
+      list = ids.map(id => all.find(co => String(co.id) === String(id))).filter(Boolean).map(co => ({ company: co.name, email: co.email || `${co.name.replace(/\s+/g,'')}@example.com`, name: co.name }))
+    }
+    if (!Array.isArray(list) || list.length === 0) return c.json({ error: 'companies array required (20 for bulk)' }, 400)
+    const subj = subject || template?.subject || 'Quick idea for {company}'
+    const msg = message || body || template?.body || 'Hi {owner_name}, saw {company_name} — we help brands scale with paid ads. $500 package...'
+    const results = []
+    for (let i = 0; i < Math.min(list.length, 20); i++) {
+      const co = list[i]
+      const to = co.email || co.to_email
+      const cname = co.company || co.companyName || co.name || 'there'
+      if (!to) { results.push({ success: false, error: 'no email', company: cname }); continue }
+      try {
+        const personal = personalizateMessage(msg, cname, co.industry || 'business')
+        const html = formatEmailHTML(subj, personal, cname)
+        const { emailId, threadId } = await sendEmail(c.env, to, personalizateMessage(subj, cname, ''), html, cname, co.industry || '')
+        await trackSentEmail(c.env, to, cname, co.industry || '', subj, personal, threadId, emailId).catch(()=>{})
+        results.push({ success: true, to, company: cname, emailId })
+      } catch (e) { results.push({ success: false, error: e.message, company: cname }) }
+      if (i < list.length - 1) await new Promise(r => setTimeout(r, 30000)) // 30s delay to avoid spam
+    }
+    return c.json({ success: true, sent: results.filter(r=>r.success).length, failed: results.filter(r=>!r.success).length, results })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/outreach/send', async (c) => {
+  try {
+    const { company_id, companyId, company, to, email, template, subject, message, body } = await c.req.json().catch(()=>({}))
+    let target = company || null
+    if ((company_id || companyId) && !target) {
+      const all = await list(c.env, 'companies')
+      target = all.find(x => String(x.id) === String(company_id || companyId))
+    }
+    const toEmail = to || email || target?.email
+    const cname = target?.name || company?.name || 'there'
+    if (!toEmail) return c.json({ error: 'to/email or company_id required' }, 400)
+    const subj = subject || template?.subject || `Quick idea for ${cname}`
+    const msg = message || body || template?.body || `Hi ${cname}, we help brands scale with paid ads — $500 package`
+    const personal = personalizateMessage(msg, cname, target?.industry || '')
+    const html = formatEmailHTML(subj, personal, cname)
+    const { emailId, threadId } = await sendEmail(c.env, toEmail, subj, html, cname, target?.industry || '')
+    await trackSentEmail(c.env, toEmail, cname, target?.industry || '', subj, personal, threadId, emailId).catch(()=>{})
+    return c.json({ success: true, emailId, threadId, to: toEmail })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/outreach/status', async (c) => {
+  try {
+    const sent = await getSentEmails(c.env, 100).catch(()=>[])
+    const replies = hasSupabase(c.env) ? await getGmailReplies(c.env, 50).catch(()=>[]) : []
+    return c.json({ success: true, sent: sent.length, replies: replies.length, sentEmails: sent.slice(0,10), recentReplies: replies.slice(0,10) })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
 // Get sent emails history
 app.get('/api/outreach/sent-emails', async (c) => {
   try {
@@ -799,7 +859,11 @@ app.post('/api/companies/find', async (c) => {
       // Keep results real when Apollo returns no organizations: the existing
       // provider pipeline uses Apollo people plus public business listings.
       if (!companies.length) {
-        const realLeads = await findLeads(c.env, location || 'Worldwide', niche, count)
+        const physicalNiches = ['hotel', 'motel', 'restaurant', 'cafe', 'bar', 'shop', 'bank', 'school', 'store', 'hospital', 'clinic', 'pharmacy', 'gym', 'salon']
+        const isPhysicalSearch = physicalNiches.some((term) => niche.toLowerCase().includes(term))
+        const realLeads = isPhysicalSearch
+          ? await findLeads(c.env, location || 'Worldwide', niche, count)
+          : []
         companies = realLeads.map((lead) => ({
           id: lead.id,
           name: lead.company || lead.name,
@@ -859,6 +923,32 @@ app.post('/api/companies/find', async (c) => {
   } catch (e) {
     return c.json({ error: e.message }, 500)
   }
+})
+// Spec alias: POST /api/companies/search
+app.post('/api/companies/search', async (c) => {
+  try {
+    const { niche, location, count = 20, limit } = await c.req.json().catch(()=>({}))
+    if (!niche) return c.json({ error: 'niche is required' }, 400)
+    const loc = location || 'USA'
+    const cnt = Math.min(Number(limit || count) || 20, 50)
+    // Reuse same search logic via internal fetch to keep DRY
+    const searchKey = `${niche}|${loc}`
+    let companies = await getCachedLeads(c.env, searchKey)
+    let source='Apollo'
+    if (!companies) {
+      try { companies = await findCompaniesApollo(c.env, niche, loc, cnt) } catch {}
+      if (!companies || !companies.length) {
+        const leads = await findLeads(c.env, loc, niche, cnt).catch(()=>[])
+        companies = leads.map(l=>({id:l.id,name:l.company||l.name,website:l.website||'',email:l.email||'',industry:l.industry||niche,location:l.location||loc,source:l.source}))
+      }
+      if (companies?.length) await cacheLeads(c.env, searchKey, companies).catch(()=>{})
+    } else source='Cache'
+    // Persist to companies table for dashboard
+    for (const co of (companies||[]).slice(0,5)) {
+      try { await create(c.env, 'companies', { name: co.name, website: co.website, industry: co.industry, status: 'active', revenue: 0 }) } catch {}
+    }
+    return c.json({ success: true, companies: companies||[], count: (companies||[]).length, niche, location: loc, source })
+  } catch (e) { return c.json({ error: e.message }, 500) }
 })
 
 // ──────────────────────────────────────────────────
@@ -920,17 +1010,56 @@ app.post('/api/test/hot-lead-alert', async (c) => {
   try {
     const admin = await requireAdmin(c, c.env)
     if (!admin) return c.json({ error: 'Unauthorized' }, 401)
+    const body = await c.req.json().catch(() => ({}))
+    // Allow custom test body, default is explicit TEST marker — NOT fake schedule trap
     const result = await sendHotLeadAlert(c.env, {
-      fromEmail: 'ceo@testcompany.com',
-      companyName: 'Test Company Ltd',
-      replyBody: 'This looks very interesting! Can we schedule a call tomorrow to discuss the $500 package?',
-      sentiment: 'positive',
-      sentimentScore: 92
+      fromEmail: body.fromEmail || 'ceo@testcompany.com',
+      companyName: body.companyName || 'Test Company Ltd',
+      companyId: body.companyId || 'test-123',
+      ownerName: body.ownerName || 'Test Owner',
+      replyBody: body.replyBody || '[TEST] Interested in $500 package — please reply via dashboard. Timestamp: ' + new Date().toISOString(),
+      sentiment: body.sentiment || 'positive',
+      sentimentScore: body.sentimentScore || 92
     })
     return c.json(result)
   } catch (error) {
     return c.json({ error: error.message }, 500)
   }
+})
+
+// ── Telegram (spec-compliant)
+app.post('/api/telegram/test', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env)
+    if (!admin) return c.json({ error: 'Unauthorized: Admin required' }, 401)
+    const body = await c.req.json().catch(() => ({}))
+    const result = await sendHotLeadAlert(c.env, {
+      fromEmail: body.fromEmail || 'ceo@testcompany.com',
+      companyName: body.companyName || 'Test Company Ltd',
+      companyId: body.companyId || 'test-123',
+      ownerName: body.ownerName || 'Test Owner',
+      replyBody: body.replyBody || '[TEST] Hot lead reply — $500 package interest. ' + new Date().toISOString(),
+      sentiment: 'positive',
+      sentimentScore: 92
+    })
+    return c.json({ success: true, ...result })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/telegram/send', async (c) => {
+  try {
+    const admin = await requireAdmin(c, c.env)
+    if (!admin) return c.json({ error: 'Unauthorized' }, 401)
+    const { message, text } = await c.req.json().catch(() => ({}))
+    const msg = message || text
+    if (!msg) return c.json({ error: 'message required' }, 400)
+    if (!c.env.TELEGRAM_BOT_TOKEN || !c.env.TELEGRAM_CHAT_ID) return c.json({ error: 'Telegram not configured' }, 500)
+    const r = await fetch(`https://api.telegram.org/bot${c.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: c.env.TELEGRAM_CHAT_ID, text: String(msg).slice(0, 4000) })
+    })
+    const data = await r.json().catch(() => ({}))
+    return r.ok && data.ok !== false ? c.json({ success: true, data }) : c.json({ error: data.description || `Telegram ${r.status}` }, 500)
+  } catch (e) { return c.json({ error: e.message }, 500) }
 })
 
 // ── Outcomes
@@ -1214,5 +1343,19 @@ app.post('/api/ad-engine/delivery', async (c) => {
 })
 app.get('/api/ad-engine/template', (c) => c.json({ success: true, template: generateCampaignPlan({ company: 'Demo', niche: 'demo' }).days, pricing: PRICING, community: COMMUNITY }))
 
-export default app
+export default {
+  fetch: app.fetch,
+  async scheduled(event, env, ctx) {
+    // Cron every 2 minutes — poll Gmail for real replies and alert 113 Telegram members
+    ctx.waitUntil((async () => {
+      try {
+        console.log(`[cron] ${new Date().toISOString()} — syncing Gmail replies`)
+        const saved = await syncGmailReplies(env)
+        console.log(`[cron] synced ${saved.length} replies, hot-lead alerts handled in replyService`)
+      } catch (e) {
+        console.error('[cron] Gmail sync failed', e.message)
+      }
+    })())
+  }
+}
 

@@ -7,7 +7,7 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;')
 }
 
-export async function sendHotLeadAlert(env, { fromEmail, companyName, replyBody, sentiment, sentimentScore }) {
+export async function sendHotLeadAlert(env, { fromEmail, companyName, companyId, ownerName, replyBody, sentiment, sentimentScore }) {
   if (sentiment !== 'positive' && sentiment !== 'question') return { skipped: true }
 
   const safeCompany = escapeHtml(companyName || 'Unknown Company')
@@ -55,7 +55,13 @@ export async function sendHotLeadAlert(env, { fromEmail, companyName, replyBody,
 
   if (env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
     try {
-      const telegramMessage = `HOT REPLY!\nFrom: ${fromEmail || 'Unknown sender'}\nCompany: ${companyName || 'Unknown Company'}\nSentiment: ${String(sentiment).toUpperCase()} (${score}%)\n\nSaid: "${String(replyBody || '').slice(0, 200)}"\n\nReply NOW to close $500!`
+      // Spec format — real reply only, truncated 200 chars, no fake schedule message
+      const truncatedReply = String(replyBody || '').slice(0, 200)
+      const timestamp = new Date().toISOString()
+      const dashboardBase = (env.FRONTEND_URL || 'https://alphatekx.name.ng').replace(/\/$/, '')
+      const inboxPath = companyId ? `/inbox/${companyId}` : '/inbox'
+      const displayOwner = ownerName || companyName || 'Unknown Owner'
+      const telegramMessage = `🔥 HOT LEAD - REPLY NOW! 🔥\n\n🏢 Company: ${companyName || 'Unknown Company'}\n👤 Owner: ${displayOwner}\n📧 Email: ${fromEmail || 'Unknown sender'}\n💬 Reply: "${truncatedReply}"\n\n💰 Potential: $500 Package\n⚡ Action: Reply NOW in dashboard!\n\n🔗 Dashboard: ${dashboardBase}${inboxPath}\n⏰ Time: ${timestamp}`
       const response = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -139,9 +139,30 @@ export async function saveReply(env, replyData) {
 
   if (saved && (sentiment === 'positive' || sentiment === 'question')) {
     try {
+        // Enrich with real company data if available — lookup by email domain in companies/sent_emails
+        let companyId = replyData.company_id || null
+        let ownerName = replyData.company_name || null
+        let companyName = replyData.company_name || null
+        if (!companyId && env.SUPABASE_URL && replyData.from_email) {
+          try {
+            const domain = (replyData.from_email.match(/@(.+?)>?$/) || [])[1] || ''
+            if (domain) {
+              const r = await fetch(`${env.SUPABASE_URL}/rest/v1/sent_emails?to_email=ilike.%${encodeURIComponent(domain)}&limit=1`, {
+                headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` }
+              })
+              if (r.ok) {
+                const rows = await r.json()
+                if (rows[0]) { companyName = rows[0].company_name || companyName; ownerName = rows[0].company_name || ownerName }
+              }
+            }
+          } catch {}
+        }
+        if (!companyName) companyName = (replyData.from_email?.split('@')[1]?.split('.')[0] || 'Unknown Company')
         const alert = await sendHotLeadAlert(env, {
         fromEmail: replyData.from_email,
-        companyName: replyData.company_name || 'Unknown Company',
+        companyName,
+        companyId,
+        ownerName: ownerName || companyName,
         replyBody: replyData.body,
         sentiment,
         sentimentScore: sentiment === 'question' ? 88 : 92

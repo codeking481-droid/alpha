@@ -3,8 +3,8 @@
 
 export function getSupabase(env) {
   const url = env.SUPABASE_URL
-  // Prefer service key for writes (bypasses RLS) — anon is read-only when RLS enabled
-  const key = env.SUPABASE_SERVICE_KEY || env.SUPABASE_ANON_KEY
+  // Support both SERVICE_KEY and SERVICE_ROLE_KEY naming (Dashboard uses ROLE)
+  const key = env.SUPABASE_SERVICE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY
   if (!url || !key) return null
   return { url: url.replace(/\/$/, ''), key }
 }
