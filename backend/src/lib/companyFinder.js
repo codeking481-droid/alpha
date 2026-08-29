@@ -66,6 +66,30 @@ export async function findCompaniesApollo(env, niche, location, count = 20) {
   return enriched.filter((c) => c.name) // Filter out empty results
 }
 
+export async function findCompaniesWikidata(niche, location, count = 20) {
+  const query = [niche, location].filter(Boolean).join(' ')
+  const searchRes = await fetch(
+    `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&language=en&format=json&limit=${Math.min(count, 20)}`,
+    { headers: { 'User-Agent': 'AlphaAgency/1.0' } }
+  )
+  if (!searchRes.ok) throw new Error(`Wikidata search ${searchRes.status}`)
+
+  const searchData = await searchRes.json()
+  return (searchData.search || [])
+    .filter((item) => item.label && item.description)
+    .map((item) => ({
+      id: item.id,
+      name: item.label,
+      website: `https://www.wikidata.org/wiki/${item.id}`,
+      email: '',
+      industry: niche,
+      location: location || '',
+      linkedinUrl: '',
+      description: item.description,
+      source: 'Wikidata'
+    }))
+}
+
 export async function cacheLeads(env, niche, data) {
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) {
     throw new Error('Supabase not configured')
