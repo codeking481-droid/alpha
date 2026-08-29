@@ -18,7 +18,7 @@ import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
 import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.js'
 import { sendEmail, trackSentEmail, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
-import { findCompaniesApollo, findCompaniesWikidata, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
+import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 import { sendHotLeadAlert } from './services/hotLeadAlert.js'
 
@@ -816,8 +816,8 @@ app.post('/api/companies/find', async (c) => {
       }
 
       if (!companies.length) {
-        companies = await findCompaniesWikidata(niche, location, count)
-        source = 'Wikidata'
+        companies = await findCompaniesWikipedia(niche, location, count)
+        source = 'Wikipedia'
       }
       
       // Cache results for 24h

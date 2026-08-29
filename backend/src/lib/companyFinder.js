@@ -90,6 +90,29 @@ export async function findCompaniesWikidata(niche, location, count = 20) {
     }))
 }
 
+export async function findCompaniesWikipedia(niche, location, count = 20) {
+  const searchRes = await fetch(
+    `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(niche)}&format=json&srlimit=${Math.min(count, 20)}`,
+    { headers: { 'User-Agent': 'AlphaAgency/1.0' } }
+  )
+  if (!searchRes.ok) throw new Error(`Wikipedia search ${searchRes.status}`)
+
+  const searchData = await searchRes.json()
+  return (searchData.query?.search || [])
+    .filter((item) => item.title)
+    .map((item) => ({
+      id: `wikipedia-${item.pageid}`,
+      name: item.title,
+      website: `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title.replace(/ /g, '_'))}`,
+      email: '',
+      industry: niche,
+      location: location || '',
+      linkedinUrl: '',
+      description: String(item.snippet || '').replace(/<[^>]+>/g, ''),
+      source: 'Wikipedia'
+    }))
+}
+
 export async function cacheLeads(env, niche, data) {
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) {
     throw new Error('Supabase not configured')
