@@ -1065,6 +1065,38 @@ app.post('/api/replies/:id/generate-followup', async (c) => {
     return c.json({ success: true, followupMessage: text || 'Thanks for YES! Pay [PAYMENT_LINK] and reply with product link.', company: companyName })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
+app.post('/api/replies/:id/reject', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const id = c.req.param('id')
+    await sbUpdate(c.env, 'replies', id, { followup_status: 'rejected' })
+    return c.json({ success: true, status: 'rejected' })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/replies/:id/approve-send', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const id = c.req.param('id')
+    const { editedMessage } = await c.req.json().catch(() => ({}))
+    const reply = await sbSelect(c.env, 'replies', `id=eq.${id}&user_id=eq.${user.id}`)
+    if (!reply || reply.length === 0) return c.json({ error: 'not found' }, 404)
+    const r = reply[0]
+    if (r.followup_status && r.followup_status !== 'pending_approval') return c.json({ error: 'already sent or rejected' }, 400)
+    const comp = await getOne(c.env, 'companies', r.company_id) || null
+    const msg = editedMessage || r.followup_message || 'Thanks for YES! Pay [PAYMENT_LINK] and reply with product link + image.'
+    // Validate no banned words
+    const banned = ['call', 'zoom', 'meet', 'loom', 'screen recording', 'video call']
+    const lower = msg.toLowerCase()
+    for (const b of banned) if (lower.includes(b)) return c.json({ error: 'Cannot mention call or screen recording' }, 400)
+    const replaced = msg.replace('[PAYMENT_LINK]', env.PAYMENT_LINK || 'https://paystack.com/pay/alpha')
+    const sent = await sendEmailResend(c.env, { to: r.owner_email || r.to || comp?.owner_email, subject: `Next steps for ${comp?.company_name || 'your company'} - 4,500+ feature`, html: `<p>${replaced.replace(/\n/g,'<br>')}</p>`, text: replaced, from: env.FROM_EMAIL || 'noreply@alphatekx.name.ng' })
+    await sbUpdate(c.env, 'replies', id, { followup_status: 'sent', followup_sent_at: new Date().toISOString(), followup_resend_id: sent.id || null })
+    await updateOne(c.env, 'companies', comp?.id || r.company_id, { status: 'hot', last_outreach_at: new Date().toISOString(), outreach_count: (comp?.outreach_count || 0) + 1 })
+    return c.json({ success: true, resend_id: sent.id || null, message: msg })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
 // Get all replies
 app.get('/api/replies', async (c) => {
   try {
