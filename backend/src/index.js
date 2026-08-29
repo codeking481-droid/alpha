@@ -813,6 +813,11 @@ app.post('/api/companies/find', async (c) => {
           source: lead.source
         }))
         source = companies[0]?.source || 'Real provider fallback'
+        const directoryArticle = companies.every((company) => /\b(list|best|top|guide|directory|companies)\b/i.test(company.name || ''))
+        if (source === 'Tavily' && directoryArticle) {
+          companies = await findCompaniesWikipedia(niche, location, count)
+          source = 'Wikipedia'
+        }
       }
 
       if (!companies.length) {
