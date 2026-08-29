@@ -4,6 +4,7 @@ import { sbSelect, sbInsert, sbUpdate, sbDelete, sbGetOne, getSupabase } from '.
 import { groqGenerate, promptContent, promptLeadEmail } from './lib/groq.js'
 import { verifyAccessCode, getUserFromRequest, requireAuth, requireAdmin } from './lib/auth.js'
 import { generateAccessCode, generatePaidAccessCode, verifyAccessCodeWithUser, getAccessCodes } from './lib/accessCodes.js'
+import { createApiToken, getApiTokens, revokeApiToken, deleteApiToken, verifyApiToken } from './lib/apiTokens.js'
 import { initializePayment, verifyPayment } from './lib/payment.js'
 import { findLeads } from './lib/leadFinder.js'
 import { sendEmailResend } from './lib/email.js'
@@ -32,7 +33,7 @@ app.use('*', async (c, next) => {
 })
 
 // In-memory fallback when Supabase is not configured.
-const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], outcomes: [], client_outcomes: [], campaigns: [] }
+const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], api_tokens: [], outcomes: [], client_outcomes: [], campaigns: [] }
 const hasSupabase = (env) => !!getSupabase(env)
 
 // Helpers â€” use Supabase if configured, else memory
@@ -474,6 +475,13 @@ app.post('/api/auth/verify-code', async (c) => {
     const { code } = await c.req.json().catch(()=>({}))
     if (!code) return c.json({ error: 'Code is required' }, 400)
     const upper = String(code).trim().toUpperCase()
+    // The owner code lives only in Worker secrets and can be used only by the
+    // configured owner account. It is never sent to, or embedded in, the UI.
+    if (upper === String(c.env.OWNER_ACCESS_CODE || '').trim().toUpperCase()) {
+      const admin = await requireAdmin(c, c.env)
+      if (!admin) return c.json({ error: 'This access code is reserved for the account owner' }, 403)
+      return c.json({ success: true, ok: true, message: 'Owner access granted' })
+    }
     // If Authorization present, verify with user binding (prompt #12 behavior)
     const auth = c.req.header('Authorization') || ''
     if (auth) {
@@ -630,7 +638,53 @@ app.get('/api/auth/me', (c) => {
 })
 app.post('/api/auth/logout', (c) => c.json({ ok: true }))
 
-// â”€â”€ Outcomes
+// ── API Tokens — Create and manage tokens for team members
+app.get('/api/tokens', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user) return c.json({ error: 'Unauthorized' }, 401)
+    const tokens = await getApiTokens(c.env, user.email)
+    return c.json({ success: true, tokens })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+app.post('/api/tokens', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user) return c.json({ error: 'Unauthorized' }, 401)
+    const { name } = await c.req.json().catch(() => ({}))
+    const token = await createApiToken(c.env, user.email, name)
+    return c.json({ success: true, token }, 201)
+  } catch (e) {
+    return c.json({ error: e.message }, 403)
+  }
+})
+
+app.delete('/api/tokens/:id', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user) return c.json({ error: 'Unauthorized' }, 401)
+    await deleteApiToken(c.env, c.req.param('id'), user.email)
+    return c.json({ success: true })
+  } catch (e) {
+    return c.json({ error: e.message }, 403)
+  }
+})
+
+app.patch('/api/tokens/:id/revoke', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user) return c.json({ error: 'Unauthorized' }, 401)
+    await revokeApiToken(c.env, c.req.param('id'), user.email)
+    return c.json({ success: true })
+  } catch (e) {
+    return c.json({ error: e.message }, 403)
+  }
+})
+
+// ── Outcomes
 // ── Outcomes — Prompt #9 (proof layer) — primary
 app.post('/api/outcomes', async (c) => {
   try {

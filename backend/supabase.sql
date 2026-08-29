@@ -100,6 +100,17 @@ create table if not exists access_codes (
   created_at timestamp default now()
 );
 
+-- API Tokens (for team member access via API)
+create table if not exists api_tokens (
+  id uuid primary key default gen_random_uuid(),
+  token_key text unique not null,
+  email text not null,
+  name text,
+  last_used timestamp,
+  is_active boolean default true,
+  created_at timestamp default now()
+);
+
 -- Team members
 create table if not exists team_members (
   id uuid primary key default gen_random_uuid(),
@@ -122,4 +133,5 @@ alter table clients disable row level security;
 alter table invoices disable row level security;
 alter table contracts disable row level security;
 alter table access_codes disable row level security;
+alter table api_tokens disable row level security;
 alter table team_members disable row level security;

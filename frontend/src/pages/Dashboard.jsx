@@ -126,6 +126,22 @@ export const Dashboard = () => {
             </div>
             <p className="text-[22px] md:text-[28px] font-bold tracking-tight text-white leading-none mt-6">THE MONEY MAKER</p>
           </button>
+
+          {/* API Tokens - Blue */}
+          <button
+            onClick={() => navigate('/api-tokens')}
+            className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02]"
+          >
+            <div className="w-10 h-10 bg-[#DBEAFE] rounded-xl flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </div>
+            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">API Tokens</h3>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Generate tokens for team members to access the API</p>
+          </button>
         </div>
 
         {/* TODAY'S GOAL */}
