@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiUrl } from '../lib/api';
 
 const DEMO_RESULTS = [
   { name: 'OpenAI', website: 'openai.com', email: 'contact@openai.com', logo: 'openai', color: 'bg-[#5A7BF7]' },
@@ -30,7 +31,7 @@ export const FindCompanies = () => {
       } else if (search.toLowerCase().includes('lagos') || search.toLowerCase().includes('abuja') || search.toLowerCase().includes('port harcourt')) {
         // keep city Lagos, niche as is
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leads/find`, {
+      const res = await fetch(apiUrl('/api/leads/find'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -132,7 +133,7 @@ export const FindCompanies = () => {
                   </div>
                   <button onClick={async () => {
                     try {
-                      await fetch(`${import.meta.env.VITE_API_URL}/api/outreach/leads`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ name: c.name, email: c.email, website: c.website, phone: c.phone }) });
+                      await fetch(apiUrl('/api/outreach/leads'), { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ name: c.name, email: c.email, website: c.website, phone: c.phone }) });
                     } catch {}
                     alert(`Saved ${c.name}`);
                   }} className="bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-xl px-6 md:px-7 py-2.5 text-[15px] font-medium transition-colors shrink-0 cursor-pointer">

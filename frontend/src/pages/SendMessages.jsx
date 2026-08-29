@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiUrl } from '../lib/api';
 
 export const SendMessages = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ Would you be open to a quick 15-min chat next week to see if this could be usefu
     }
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/outreach/send`, {
+      const res = await fetch(apiUrl('/api/outreach/send'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

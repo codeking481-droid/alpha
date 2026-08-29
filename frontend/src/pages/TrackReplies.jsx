@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiUrl } from '../lib/api';
 
 const DEMO_REPLIES = [
   { id: 1, from: 'Sarah Chen', date: 'Today • 09:12', content: "Thanks for sending the proposal over! I reviewed the scope and we're ready to move forward. Can we schedule a call for next week to discuss pricing?", unread: true },
@@ -13,7 +14,7 @@ export const TrackReplies = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/replies`, { credentials: 'include' })
+    fetch(apiUrl('/api/replies'), { credentials: 'include' })
       .then(res => res.text().then(t => { try { return t ? JSON.parse(t) : {}; } catch { return {}; } }))
       .then(data => {
         const arr = data.replies || data.messages || [];

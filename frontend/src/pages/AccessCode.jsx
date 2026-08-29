@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-
-const MASTER_CODES = ['126213JESUSISKING', '126213JESUS'];
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+import { API_URL } from '../lib/api';
 
 export const AccessCode = () => {
   const [code, setCode] = useState('');
@@ -68,15 +66,6 @@ export const AccessCode = () => {
     e.preventDefault();
     const upper = code.trim().toUpperCase();
     if (!upper) { setMessage('❌ Enter a code'); return; }
-
-    // MASTER instant unlock - no API needed, fixes Unexpected end of JSON
-    if (MASTER_CODES.includes(upper)) {
-      localStorage.setItem('master_unlocked', 'true');
-      localStorage.setItem('demo_hasAccess', 'true');
-      setMessage('✅ Access granted! Redirecting...');
-      setTimeout(() => navigate('/dashboard'), 600);
-      return;
-    }
 
     setLoading(true);
     setMessage('');
@@ -145,18 +134,9 @@ export const AccessCode = () => {
         setMessage(`❌ Paystack: ${detail.slice(0,220)} — Go Worker → Settings → Add secret PAYSTACK_SECRET_KEY=sk_live_... then Save and deploy. For now use master 126213JESUSISKING`);
         return;
       }
-      if (data.mock || data.reference) {
-        localStorage.setItem('master_unlocked', 'true');
-        localStorage.setItem('demo_hasAccess', 'true');
-        setMessage(`✅ Payment ready! Redirecting...`);
-        setTimeout(() => navigate('/dashboard'), 700);
-        return;
-      }
       setMessage(`❌ ${res.status}: ${detail.slice(0,200)}`);
     } catch (err) {
-      // Network fallback - still unlock for testing
-      localStorage.setItem('master_unlocked', 'true');
-      setMessage('❌ ' + err.message + ' - Use master 126213JESUSISKING to unlock');
+      setMessage('❌ ' + err.message);
     } finally {
       setLoading(false);
     }

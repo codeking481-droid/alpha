@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { apiUrl } from '../lib/api';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -21,7 +22,7 @@ export const useAuth = () => {
       setHasAccess(true);
     }
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/auth/check-access`, {
+    fetch(apiUrl('/api/auth/check-access'), {
       credentials: 'include'
     }).then(res => res.text().then(t => {
       try { return t ? JSON.parse(t) : {}; } catch { return {}; }
