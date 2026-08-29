@@ -821,6 +821,17 @@ app.post('/api/companies/find', async (c) => {
       source = 'Cache'
     }
 
+    if (!companies.length) {
+      return c.json({
+        success: false,
+        error: 'No real companies found. Configure APOLLO_API_KEY, or search a physical business niche with a location.',
+        companies: [],
+        count: 0,
+        niche,
+        location
+      }, 503)
+    }
+
     return c.json({
       success: true,
       companies: companies,
