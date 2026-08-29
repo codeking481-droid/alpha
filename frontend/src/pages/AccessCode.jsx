@@ -131,10 +131,16 @@ export const AccessCode = () => {
       });
       const text = await res.text();
       let data = {};
-      try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text.slice(0,300) || `HTTP ${res.status}` }; }
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text.slice(0,500) || `HTTP ${res.status} empty` }; }
       const url = data.checkoutUrl || data.authorization_url || data.url || data.data?.authorization_url;
       if (url) {
         window.location.href = url;
+        return;
+      }
+      // Show real backend error verbatim so Paystack key issues are visible
+      const detail = data.error || data.message || text.slice(0,400) || `HTTP ${res.status}`;
+      if (detail.includes('PAYSTACK_SECRET_KEY') || detail.includes('Paystack')) {
+        setMessage(`❌ Paystack: ${detail.slice(0,220)} — Go Worker → Settings → Add secret PAYSTACK_SECRET_KEY=sk_live_... then Save and deploy. For now use master 126213JESUSISKING`);
         return;
       }
       if (data.mock || data.reference) {
@@ -144,14 +150,7 @@ export const AccessCode = () => {
         setTimeout(() => navigate('/dashboard'), 700);
         return;
       }
-      // Fallback mock success when Paystack not configured - still let user in
-      if (!res.ok && (text.includes('PAYSTACK') || text.includes('Paystack') || data.error?.includes('PAYSTACK'))) {
-        localStorage.setItem('master_unlocked', 'true');
-        setMessage(`✅ Test mode: Paystack key not set. Use master 126213JESUSISKING or set PAYSTACK_SECRET_KEY for real payments. Redirecting...`);
-        setTimeout(() => navigate('/dashboard'), 1200);
-        return;
-      }
-      setMessage('❌ ' + (data.error || data.message || 'Could not start payment.'));
+      setMessage(`❌ ${res.status}: ${detail.slice(0,200)}`);
     } catch (err) {
       // Network fallback - still unlock for testing
       localStorage.setItem('master_unlocked', 'true');
