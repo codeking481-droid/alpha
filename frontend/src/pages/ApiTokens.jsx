@@ -13,9 +13,18 @@ export const ApiTokens = () => {
   const [showNewTokenModal, setShowNewTokenModal] = useState(false);
   const [newToken, setNewToken] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    if (user && user.email?.toLowerCase() !== 'alphatekxcompany@gmail.com') {
+      setUnauthorized(true);
+      setTimeout(() => navigate('/dashboard'), 2000);
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
-    if (user) {
+    if (user && user.email?.toLowerCase() === 'alphatekxcompany@gmail.com') {
       fetchTokens();
     }
   }, [user]);
@@ -151,6 +160,14 @@ export const ApiTokens = () => {
   return (
     <div className="min-h-screen bg-[#FFFCF8] px-4 py-4 font-['Inter',sans-serif]">
       <div className="max-w-[1120px] mx-auto">
+        {/* UNAUTHORIZED MESSAGE */}
+        {unauthorized && (
+          <div className="mb-4 p-4 bg-[#FEE2E2] border border-[#FECACA] rounded-lg text-[#DC2626] text-center">
+            <p className="font-medium">Access Denied</p>
+            <p className="text-[14px] mt-1">This page is only accessible to admin users. Redirecting to dashboard...</p>
+          </div>
+        )}
+
         {/* TOP NAV */}
         <div className="bg-[#FFFCF8] md:bg-white border border-[#EDEDED]/60 md:border-[#EDEDED] rounded-2xl px-5 md:px-6 py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           <button

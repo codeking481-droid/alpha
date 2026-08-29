@@ -14,6 +14,7 @@ export const Dashboard = () => {
   };
 
   const displayName = user?.email?.split('@')[0] ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1) : 'Alex';
+  const isAdmin = user?.email?.toLowerCase() === 'alphatekxcompany@gmail.com';
 
   return (
     <div className="min-h-screen bg-[#FFFCF8] px-4 py-4 font-['Inter',sans-serif]">
@@ -127,7 +128,8 @@ export const Dashboard = () => {
             <p className="text-[22px] md:text-[28px] font-bold tracking-tight text-white leading-none mt-6">THE MONEY MAKER</p>
           </button>
 
-          {/* API Tokens - Blue */}
+          {/* API Tokens - Blue (Admin Only) */}
+          {isAdmin && (
           <button
             onClick={() => navigate('/api-tokens')}
             className="bg-[#EFF6FF] border border-[#DBEAFE] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02]"
@@ -142,6 +144,7 @@ export const Dashboard = () => {
             <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">API Tokens</h3>
             <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Generate tokens for team members to access the API</p>
           </button>
+          )}
         </div>
 
         {/* TODAY'S GOAL */}
