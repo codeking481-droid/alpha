@@ -178,6 +178,32 @@ alter table replies add column if not exists hot_lead_alerted boolean default fa
 alter table replies add column if not exists hot_lead_alerted_at timestamp;
 create unique index if not exists replies_gmail_id_key on replies(gmail_id) where gmail_id is not null;
 
+-- Vault + Inbox columns (prompt: VAULT + INBOX TWO CARDS)
+alter table companies add column if not exists user_id uuid;
+alter table companies add column if not exists company_name text;
+alter table companies add column if not exists owner_name text;
+alter table companies add column if not exists owner_email text;
+alter table companies add column if not exists product text;
+alter table companies add column if not exists source text default 'apollo';
+alter table companies add column if not exists website text;
+alter table companies add column if not exists saved_at timestamp default now();
+alter table companies add column if not exists is_real boolean default true;
+alter table companies add column if not exists closed_won_at timestamp;
+alter table companies add column if not exists amount decimal(10,2) default 0;
+alter table companies add column if not exists updated_at timestamp;
+
+-- Replies: user_id, company_id, followup columns
+alter table replies add column if not exists user_id uuid;
+alter table replies add column if not exists company_id uuid references companies(id) on delete set null;
+alter table replies add column if not exists reply_text text;
+alter table replies add column if not exists followup_message text;
+alter table replies add column if not exists followup_status text check (followup_status in ('pending_approval','sent','rejected',null));
+alter table replies add column if not exists followup_generated_at timestamp;
+alter table replies add column if not exists followup_sent_at timestamp;
+alter table replies add column if not exists followup_resend_id text;
+alter table replies add column if not exists gmail_id text;
+alter table replies add column if not exists sentiment text default 'neutral';
+
 -- Leads cache (company search results) - prevents duplicate search results
 create table if not exists leads_cache (
   id uuid primary key default gen_random_uuid(),
@@ -191,6 +217,11 @@ create table if not exists leads_cache (
 -- Seed master codes (single-use, instant unlock)
 insert into access_codes (code, used) values ('126213JESUSISKING', false) on conflict (code) do nothing;
 insert into access_codes (code, used) values ('126213JESUS', false) on conflict (code) do nothing;
+
+-- Indexes for Vault + Inbox
+create index if not exists idx_companies_user_id on companies(user_id);
+create index if not exists idx_replies_user_id on replies(user_id);
+create index if not exists idx_replies_company_id on replies(company_id);
 
 -- RLS �?" disable for now (add policies when auth live)
 alter table companies disable row level security;

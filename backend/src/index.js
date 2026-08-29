@@ -1090,13 +1090,73 @@ app.post('/api/replies/:id/approve-send', async (c) => {
     const banned = ['call', 'zoom', 'meet', 'loom', 'screen recording', 'video call']
     const lower = msg.toLowerCase()
     for (const b of banned) if (lower.includes(b)) return c.json({ error: 'Cannot mention call or screen recording' }, 400)
-    const replaced = msg.replace('[PAYMENT_LINK]', env.PAYMENT_LINK || 'https://paystack.com/pay/alpha')
-    const sent = await sendEmailResend(c.env, { to: r.owner_email || r.to || comp?.owner_email, subject: `Next steps for ${comp?.company_name || 'your company'} - 4,500+ feature`, html: `<p>${replaced.replace(/\n/g,'<br>')}</p>`, text: replaced, from: env.FROM_EMAIL || 'noreply@alphatekx.name.ng' })
+    const replaced = msg.replace('[PAYMENT_LINK]', c.env.PAYMENT_LINK || 'https://paystack.com/pay/alpha')
+    const sent = await sendEmailResend(c.env, { to: r.owner_email || r.to || comp?.owner_email, subject: `Next steps for ${comp?.company_name || 'your company'} - 4,500+ feature`, html: `<p>${replaced.replace(/\n/g,'<br>')}</p>`, text: replaced, from: c.env.FROM_EMAIL || 'noreply@alphatekx.name.ng' })
     await sbUpdate(c.env, 'replies', id, { followup_status: 'sent', followup_sent_at: new Date().toISOString(), followup_resend_id: sent.id || null })
     await updateOne(c.env, 'companies', comp?.id || r.company_id, { status: 'hot', last_outreach_at: new Date().toISOString(), outreach_count: (comp?.outreach_count || 0) + 1 })
+    // Also insert sent_emails record
+    try {
+      await sbInsert(c.env, 'sent_emails', {
+        user_id: user.id, company_id: comp?.id || r.company_id,
+        to_email: r.owner_email || r.to || comp?.owner_email,
+        subject: `Next steps for ${comp?.company_name || 'your company'} - 4,500+ feature`,
+        body: replaced, provider: 'resend', resend_id: sent.id || null, status: 'sent'
+      })
+    } catch {}
+    // Send Telegram confirmation
+    try {
+      if (c.env.TELEGRAM_BOT_TOKEN && c.env.TELEGRAM_CHAT_ID) {
+        await fetch(`https://api.telegram.org/bot${c.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: c.env.TELEGRAM_CHAT_ID, text: `✅ Follow-up sent to ${comp?.company_name || 'company'} — payment link sent. resend_id: ${sent.id || 'n/a'}` })
+        })
+      }
+    } catch {}
     return c.json({ success: true, resend_id: sent.id || null, message: msg })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
+
+// Get my replies (Vault + Inbox — user-scoped with company join)
+app.get('/api/replies/my-replies', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const sentiment = c.req.query('sentiment') || ''
+    let query = `user_id=eq.${user.id}`
+    if (sentiment) query += `&sentiment=eq.${sentiment}`
+    query += '&order=received_at.desc'
+    const arr = await sbSelect(c.env, 'replies', query) || []
+    // Enrich with company data
+    const enriched = []
+    for (const r of arr) {
+      let company = null
+      if (r.company_id) {
+        try {
+          const comp = await sbSelect(c.env, 'companies', `id=eq.${r.company_id}&limit=1`)
+          if (comp && comp[0]) company = { name: comp[0].company_name || comp[0].name, domain: comp[0].domain, owner_email: comp[0].owner_email, company_name: comp[0].company_name || comp[0].name }
+        } catch {}
+      }
+      if (!company && r.from_email) {
+        company = { name: r.from_email.split('@')[1]?.split('.')[0] || 'Unknown', domain: r.from_email.split('@')[1] || '', owner_email: r.from_email, company_name: r.from_email.split('@')[1]?.split('.')[0] || 'Unknown' }
+      }
+      enriched.push({ ...r, company, company_name: r.company_name || company?.company_name || company?.name || 'Unknown', reply_text: r.reply_text || r.body || r.content || '' })
+    }
+    const hot = enriched.filter(r => r.sentiment === 'interested' || r.sentiment === 'positive').length
+    const pending = enriched.filter(r => r.followup_status === 'pending_approval').length
+    const replied = enriched.filter(r => r.followup_status === 'sent').length
+    // Compute stats from companies
+    let stats = { hot: 0, replied: 0, closed_won: 0, revenue: 0, pending_approval: pending }
+    try {
+      const comps = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}`) || []
+      stats.hot = comps.filter(x => x.status === 'hot').length
+      stats.replied = comps.filter(x => x.status === 'replied').length
+      stats.closed_won = comps.filter(x => x.status === 'closed_won').length
+      stats.revenue = comps.filter(x => x.status === 'closed_won').length * 500
+    } catch {}
+    return c.json({ replies: enriched, total: enriched.length, hot: hot, hot_count: hot, pending_count: pending, replied, ...stats, note: 'Real replies with company joins' })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
 // Get all replies
 app.get('/api/replies', async (c) => {
   try {

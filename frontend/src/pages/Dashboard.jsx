@@ -74,7 +74,10 @@ export const Dashboard = () => {
           <button onClick={() => navigate('/saved-companies')} className="relative bg-[#EDE8FF] border border-[#C4B5FD] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group">
             <div className="w-10 h-10 bg-[#5E17EB] rounded-xl flex items-center justify-center mb-4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg></div>
             <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Vault</h3>
-            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Saved companies you found — send email, track replies, close $500</p>
+            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Saved companies — send email via Resend, track replies, close $500 deal</p>
+            <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#C4B5FD] bg-[#F0EFFF] flex items-center justify-center text-[#5E17EB] group-hover:bg-white transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+            </span>
           </button>
           {/* Send Messages - Cream/Yellow */}
           <button
@@ -110,11 +113,14 @@ export const Dashboard = () => {
             <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Monitor responses and engagement performance</p>
           </button>
 
-          {/* Inbox / Sent Tracking */}
-          <button onClick={() => navigate('/inbox')} className="bg-[#FFF6E5] border border-[#FDE68A]/80 rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02]">
+          {/* Inbox / Hot Leads */}
+          <button onClick={() => navigate('/inbox')} className="bg-[#FFF6E5] border border-[#FDE68A]/80 rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group">
             <div className="w-10 h-10 bg-[#B45309] rounded-xl flex items-center justify-center mb-4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg></div>
             <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Inbox</h3>
-            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Reply tracking + follow-up approval + where messages sent</p>
+            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Hot leads + YES follow-up approval + Telegram 113 alert</p>
+            <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#FDE68A] bg-[#FFF6E5] flex items-center justify-center text-[#B45309] group-hover:bg-white transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+            </span>
           </button>
           {/* Campaigns - Violet MONEY MAKER */}
           <button

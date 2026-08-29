@@ -186,6 +186,64 @@ export async function saveReply(env, replyData) {
     } catch (error) {
       console.error('Hot-lead alert failed:', error)
     }
+
+    // AUTO-GENERATE FOLLOWUP when sentiment is positive (YES) — pending_approval, never auto-send
+    if (sentiment === 'positive' || (replyData.body || '').toLowerCase().match(/\byes\b/)) {
+      try {
+        // Find company for context
+        let comp = null
+        if (companyId) {
+          const compRes = await fetch(`${env.SUPABASE_URL}/rest/v1/companies?id=eq.${companyId}&limit=1`, {
+            headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` }
+          })
+          if (compRes.ok) { const rows = await compRes.json(); comp = rows[0] || null }
+        }
+        const compName = comp?.company_name || comp?.name || companyName || 'Your Company'
+        const owner = comp?.owner_name || ownerName || 'there'
+        const product = comp?.product || 'your product'
+        // Generate via Groq
+        const groqKey = env.GROQ_API_KEY
+        let followupMsg = `Thanks for YES! Next steps: we generate content + post on 5 communities (3K YouTube, 700+ LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber = 4,500+). Private engine $500 invite-only. Pay here: ${env.PAYMENT_LINK || '[PAYMENT_LINK]'}. After payment we handle everything async via email — no call needed. Reply with your product link + 1 image.`
+        if (groqKey) {
+          try {
+            const gRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: 'llama-3.1-8b-instant',
+                messages: [{ role: 'user', content: `Generate 80-120 words follow-up for ${compName} owner ${owner} who said YES to feature ${product} to 4,500+ audience. Must include: Thanks for YES, next steps we generate content + post on 5 communities (3K YouTube, 700+ LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber = 4,500+), private engine $500 one-time invite-only, payment link ${env.PAYMENT_LINK || '[PAYMENT_LINK]'}, after payment handle everything async via email no call needed, ask for product link + 1 image. DO NOT SAY call, Zoom, Meet, Loom, screen recording, video call. Tone friendly private exclusive.` }],
+                temperature: 0.7, max_tokens: 300
+              })
+            })
+            if (gRes.ok) {
+              const gData = await gRes.json()
+              const generated = gData.choices?.[0]?.message?.content || ''
+              if (generated) followupMsg = generated.replace(/\[PAYMENT_LINK\]/g, env.PAYMENT_LINK || '[PAYMENT_LINK]')
+            }
+          } catch {}
+        }
+        // Save followup to reply
+        await fetch(`${env.SUPABASE_URL}/rest/v1/replies?id=eq.${saved.id}`, {
+          method: 'PATCH',
+          headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ followup_message: followupMsg, followup_status: 'pending_approval', followup_generated_at: new Date().toISOString() })
+        })
+        saved.followup_message = followupMsg
+        saved.followup_status = 'pending_approval'
+        // Update company status to replied/hot
+        if (companyId) {
+          await fetch(`${env.SUPABASE_URL}/rest/v1/companies?id=eq.${companyId}`, {
+            method: 'PATCH',
+            headers: { apikey: env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'replied' })
+          }).catch(() => {}
+          )
+        }
+        console.log(`[replyService] Auto-generated followup for ${compName} — pending_approval`)
+      } catch (error) {
+        console.error('Auto-generate followup failed:', error)
+      }
+    }
   }
 
   return saved
