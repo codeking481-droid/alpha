@@ -124,7 +124,7 @@ export async function saveReply(env, replyData) {
       sentiment: sentiment,
       is_read: false,
       gmail_id: replyData.gmail_id || null,
-      whatsapp_alerted: false
+      hot_lead_alerted: false
     })
   })
 
@@ -147,17 +147,17 @@ export async function saveReply(env, replyData) {
         sentimentScore: sentiment === 'question' ? 88 : 92
       })
       if (alert.sent) {
-        const alertRes = await fetch(`${env.SUPABASE_URL}/rest/v1/replies?id=eq.${encodeURIComponent(saved.id)}&whatsapp_alerted=eq.false`, {
+        const alertRes = await fetch(`${env.SUPABASE_URL}/rest/v1/replies?id=eq.${encodeURIComponent(saved.id)}&hot_lead_alerted=eq.false`, {
           method: 'PATCH',
           headers: {
             apikey: env.SUPABASE_SERVICE_KEY,
             Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ whatsapp_alerted: true, whatsapp_alerted_at: new Date().toISOString() })
+          body: JSON.stringify({ hot_lead_alerted: true, hot_lead_alerted_at: new Date().toISOString() })
         })
         if (!alertRes.ok) console.error('Failed to mark hot-lead alert:', await alertRes.text())
-        saved.whatsapp_alerted = true
+        saved.hot_lead_alerted = true
       }
     } catch (error) {
       console.error('Hot-lead alert failed:', error)

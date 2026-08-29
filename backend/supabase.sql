@@ -158,12 +158,16 @@ create table if not exists replies (
   gmail_id text unique,
   whatsapp_alerted boolean default false,
   whatsapp_alerted_at timestamp,
+  hot_lead_alerted boolean default false,
+  hot_lead_alerted_at timestamp,
   created_at timestamp default now()
 );
 
 alter table replies add column if not exists gmail_id text;
 alter table replies add column if not exists whatsapp_alerted boolean default false;
 alter table replies add column if not exists whatsapp_alerted_at timestamp;
+alter table replies add column if not exists hot_lead_alerted boolean default false;
+alter table replies add column if not exists hot_lead_alerted_at timestamp;
 create unique index if not exists replies_gmail_id_key on replies(gmail_id) where gmail_id is not null;
 
 -- Leads cache (company search results)
