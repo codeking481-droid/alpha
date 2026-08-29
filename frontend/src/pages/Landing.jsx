@@ -76,6 +76,14 @@ export const Landing = () => {
             <p className="mt-5 text-[17px] md:text-[19px] leading-[1.5] text-[#4B5563] max-w-[620px] font-medium">
               AlphaTekX finds <b className="text-[#0A0A0A]">real brands</b> with Apollo + Hunter verified emails. You get company, website, owner, email, product — and create what they ask for. <b className="text-[#0A0A0A]">No guesswork, no fake lists.</b>
             </p>
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
+              <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">113 TELEGRAM</span>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">3K YOUTUBE</span>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">130 WHATSAPP</span>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">85 CYBER</span>
+              <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">700+ LINKEDIN</span>
+              <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">LIVE</span>
+            </div>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button onClick={handleGoogleSignup} disabled={loading} className="bg-[#0A0A0A] hover:bg-black text-white rounded-2xl px-8 py-4 text-[16px] font-black flex items-center justify-center gap-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] disabled:opacity-60">
                 <span className="w-7 h-7 bg-white rounded-full flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
@@ -169,21 +177,23 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* PRIVATE — YOUR 32-PIECE ENGINE (HIDDEN PRICE) */}
+      {/* PRIVATE — 4,500+ AUDIENCE ACROSS 5 COMMUNITIES */}
       <section className="max-w-[1360px] mx-auto px-4 md:px-6 pt-10">
         <div className="bg-[#0A0A0A] rounded-[28px] p-6 md:p-10 lg:p-12 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#5E17EB] rounded-full blur-[90px] opacity-20" />
           <div className="relative grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
             <div>
-              <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.16em] uppercase">Private Engine — Team Only • Invite Only</p>
+              <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.16em] uppercase">4,500+ Audience Across 5 Communities</p>
               <h2 className="mt-2 text-[28px] md:text-[40px] font-black leading-[0.95] tracking-tight">We Reach Brands<br/>on Our Communities</h2>
-              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">For selected brands we feature their product across <b className="text-white">our</b> LinkedIn, WhatsApp, Telegram and YouTube — 32 pieces in 7 days. Private, not public. Ask for invite.</p>
+              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">For selected brands we feature their product across our LinkedIn, WhatsApp, Telegram and YouTube — 4,500+ targeted audience across 5 communities. Private, not public. Ask for invite.</p>
               <div className="mt-6 grid grid-cols-2 gap-3">
                 {[
-                  {p:"LinkedIn", v:"10 posts", s:"700 + 500"},
-                  {p:"WhatsApp", v:"10 posts", s:"215 • 2 groups"},
-                  {p:"Telegram", v:"10 posts", s:"113 members"},
-                  {p:"YouTube", v:"2 videos", s:"3k subs"},
+                  {p:"LinkedIn Followers", v:"700+", s:"700 followers"},
+                  {p:"LinkedIn Connections", v:"500+", s:"500 connections"},
+                  {p:"WhatsApp Channel", v:"130 members", s:"130 members (2 groups)"},
+                  {p:"Telegram Channel", v:"113 members", s:"113 members"},
+                  {p:"Cybersecurity Community", v:"85 members", s:"85 cybersecurity"},
+                  {p:"YouTube", v:"3K+ subs", s:"3,000+ subscribers"},
                 ].map(x=>(
                   <div key={x.p} className="bg-white/10 border border-white/10 rounded-2xl p-4">
                     <div className="text-[13px] font-black">{x.p}</div>
@@ -192,7 +202,7 @@ export const Landing = () => {
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-[11px] text-white/40">32 pieces total • We create & post, you get seen. Invite only.</p>
+              <p className="mt-4 text-[11px] text-white/40">4,500+ audience • 5 communities • Invite only</p>
             </div>
             <div className="bg-white rounded-2xl p-5 md:p-6 text-[#0A0A0A]">
               <div className="flex items-center justify-between">
@@ -211,7 +221,7 @@ export const Landing = () => {
                 ))}
               </div>
               <div className="mt-4 bg-[#FFFCF8] border rounded-xl p-3 text-[12px]">
-                <b>Team inbox → </b> When a brand replies, you get pinged and can generate their 32 posts right here.
+                <b>Team inbox → </b> When a brand replies, you get pinged and can generate their posts right here.
               </div>
             </div>
           </div>
@@ -252,7 +262,7 @@ export const Landing = () => {
             <p className="mt-2 text-center text-[11px] text-white/40">For heavy users • Private invite on request</p>
           </div>
         </div>
-        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">Messaging & private 32-piece feature is <b className="text-[#0A0A0A]">team only</b> — not included in $50 public access.</p>
+        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">Messaging & private 4,500+ audience feature is <b className="text-[#0A0A0A]">team only</b> — not included in $50 public access.</p>
       </section>
 
       {/* TESTIMONIALS */}
@@ -262,7 +272,7 @@ export const Landing = () => {
           <div className="mt-4 grid md:grid-cols-3 gap-6 text-[13.5px] leading-[1.6] text-[#4B5563]">
             <div><b className="text-[#0A0A0A]">Real, not mock.</b> Apollo + Hunter + Places. No info@ guess. Every email verified.</div>
             <div><b className="text-[#0A0A0A]">You control outreach.</b> 100 emails show on your site, you track YES, generate content for them, post manually.</div>
-            <div><b className="text-[#0A0A0A]">Private engine.</b> For selected brands we post 32 pieces on OUR communities. Invite only.</div>
+            <div><b className="text-[#0A0A0A]">Private engine.</b> For selected brands we feature on 4,500+ audience across 5 communities. Invite only.</div>
           </div>
         </div>
       </section>
@@ -272,14 +282,14 @@ export const Landing = () => {
         <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 items-start">
           <div>
             <h2 className="text-[28px] md:text-[36px] font-black tracking-tight leading-[0.95]">Questions?<br/><span className="text-[#5E17EB]">Clear answers.</span></h2>
-            <p className="mt-3 text-[#4B5563] md:text-[15px]"> $50 gives you company finder. Messaging & 32-piece is team private.</p>
+            <p className="mt-3 text-[#4B5563] md:text-[15px]"> $50 gives you company finder. Messaging & private 4,500+ audience is team only.</p>
             <button onClick={handleGoogleSignup} className="mt-6 bg-[#0A0A0A] text-white rounded-xl px-7 py-3.5 text-[14px] font-black">Get access — $50 →</button>
           </div>
           <div className="bg-white border border-[#EDEDED] rounded-2xl overflow-hidden">
             {[
               {q:"What does $50 give me?", a:"Access to find real companies: niche + location + limit, with company, website, owner, verified email, product. Export CSV, dedupe. You create what companies ask for. One-time, not monthly."},
-              {q:"Can I send emails from the site?", a:"No — messaging is team-only for now. We use it to contact brands about our private 32-piece feature. Your dashboard after $50 is for finding & tracking companies you contacted externally."},
-              {q:"Is the 32-piece (10+10+10+2) public?", a:"No. It's invite-only for brands we choose. Public sees 'Private Engine — Invite Only' without price. We pitch it one-to-one via Gmail when a brand is a good fit."},
+              {q:"Can I send emails from the site?", a:"No — messaging is team-only for now. We use it to contact brands about our private 4,500+ audience feature. Your dashboard after $50 is for finding & tracking companies you contacted externally."},
+              {q:"Is the 4,500+ audience across 5 communities public?", a:"No. It's invite-only for brands we choose. Public sees 'Private Engine — Invite Only' without price. We pitch it one-to-one via Gmail when a brand is a good fit."},
               {q:"How do you find companies?", a:"Apollo mixed_companies + Hunter domain-search, plus Tavily/Serply/Overpass fallback, cached 24h in leads_cache. All real, no mock lists. You can also CSV import."},
             ].map((f,i)=>(
               <div key={f.q} className="border-b last:border-0 border-[#F3F4F6]">

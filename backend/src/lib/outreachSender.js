@@ -1,9 +1,9 @@
 import { sendEmailResend } from './email.js'
 import { groqGenerate } from './groq.js'
-import { COMMUNITY, PRICING, TRUTH_CLAUSE } from './community.js'
+import { COMMUNITY, COMMUNITIES, TRUTH_CLAUSE } from './community.js'
 
 export const OFFER_TEMPLATE = {
-  subject: 'We can advertise {{company}} to 4,400+ real people this week — $500',
+  subject: 'We can advertise {{company}} to 4,500+ real audience this week — $500',
   body: `Hi {{name}},
 
 Saw {{company}} in {{industry}} — great product.
@@ -15,7 +15,7 @@ We help brands like yours get seen by real people — not bots. For {{price}} we
 • Telegram — {{telegramReach}} members → 10 posts
 • YouTube — {{youtubeReach}}+ subscribers → 2 dedicated videos
 
-That's 32 pieces — we create everything, you approve, we post to our audiences.
+That's 4,500+ targeted audience across 5 communities — we create everything, you approve, we post to our audiences.
 
 Flat {{price}} for the full 7-day campaign. No hidden fees.
 
@@ -24,6 +24,7 @@ Flat {{price}} for the full 7-day campaign. No hidden fees.
 Want us to feature {{company}} this week? Reply YES and I'll send the calendar + samples in 10 mins.
 
 — AlphaTekX
+
 alphatekxcompany@gmail.com
 `,
 }
@@ -66,7 +67,7 @@ export async function personalizeWithGroq(env, lead, opts = {}) {
   const base = personalizeOffer(lead, { ...opts, includeTruth: false })
   if (!env.GROQ_API_KEY) return personalizeOffer(lead, opts)
   try {
-    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: we advertise their product on OUR communities for $500: 10 LinkedIn posts (700+500), 10 WhatsApp posts (215), 10 Telegram posts (113), 2 YouTube videos (3k subs) = 32 pieces in 7 days. Tone friendly expert, concise. No fake numbers beyond given. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
+    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: we advertise their product on OUR communities - 3K+ YouTube subscribers, 700+ LinkedIn followers, 500+ LinkedIn connections, 130 WhatsApp channel members, 113 Telegram channel, 85 cybersecurity community = 4,500+ targeted audience for $500: 10 LinkedIn posts, 10 WhatsApp posts, 10 Telegram posts, 2 YouTube videos. Tone friendly expert, concise. No fake numbers beyond given. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
     const { text } = await groqGenerate(env, { prompt })
     const lines = text.split('\n').filter(Boolean)
     const subj = lines.find(l=>l.toLowerCase().includes('subject'))?.replace(/.*subject\s*:\s*/i,'') || base.subject

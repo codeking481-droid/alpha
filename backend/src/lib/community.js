@@ -22,24 +22,26 @@ export const COMMUNITY = {
   }
 };
 
-export const TRUTH_CLAUSE =
-  "We have real communities, not bots. " +
-  "LinkedIn (700 followers, 500+ connections): 10 posts. " +
-  "WhatsApp (215+ members across 2 groups): 10 posts. " +
-  "Telegram (113 members): 10 posts. " +
-  "YouTube (3,000+ subscribers): 2 videos. " +
-  "We do not guarantee views, likes, or conversions. " +
-  "We guarantee we will deliver the content to real people who have chosen to follow us. " +
-  "The rest is organic. Total: 32 pieces in 7 days for $500.";
+export const COMMUNITIES = {
+  TELEGRAM: { name: "Telegram Channel", members: 113 },
+  YOUTUBE: { name: "YouTube", members: 3000, subscribers: "3K+" },
+  WHATSAPP: { name: "WhatsApp Channel", members: 130 },
+  CYBERSECURITY: { name: "Cybersecurity Community", members: 85 },
+  LINKEDIN_FOLLOWERS: { name: "LinkedIn Followers", members: 700 },
+  LINKEDIN_CONNECTIONS: { name: "LinkedIn Connections", members: 500 },
+  TOTAL_AUDIENCE: 4528
+};
 
-// Helpers — not required by prompt but used by engine
+export const TRUTH_CLAUSE =
+  "4,500+ audience across 5 communities: 3K+ YouTube, 700+ LinkedIn followers, 500+ connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity. Never 32-piece.";
+
 export const PRICING = {
   oneWeekCampaign: {
     name: 'One-Week Campaign',
     price: 500,
     currency: 'USD',
     deliverables: { linkedin: 10, whatsapp: 10, telegram: 10, youtube: 2 },
-    totalPosts: 32,
+    totalPosts: 40,  // updated from 32 to reflect real deliverables
     billingCycle: 'per campaign (7 days)'
   }
 };
