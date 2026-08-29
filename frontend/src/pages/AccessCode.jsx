@@ -39,12 +39,15 @@ export const AccessCode = () => {
     setLoading(true);
     setMessage('Verifying payment...');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify?reference=${reference}`, { credentials: 'include' });
+      const emailParam = userEmail ? `&email=${encodeURIComponent(userEmail)}` : '';
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify?reference=${reference}${emailParam}`, { credentials: 'include' });
       const data = await res.json();
-      if (data.success && data.accessCode) {
-        setCode(data.accessCode);
-        setMessage(`✅ Payment verified! Your code: ${data.accessCode}. Redirecting...`);
-        setTimeout(() => navigate('/dashboard'), 2000);
+      const codeOut = data.accessCode || data.code;
+      if ((data.success || data.code) && codeOut) {
+        setCode(codeOut);
+        localStorage.setItem('demo_hasAccess', 'true');
+        setMessage(`✅ Payment verified! Your code: ${codeOut}. Redirecting...`);
+        setTimeout(() => navigate('/dashboard'), 1200);
       } else {
         setMessage('❌ ' + (data.error || 'Payment verification failed'));
       }
@@ -82,20 +85,29 @@ export const AccessCode = () => {
   };
 
   const handlePayment = async () => {
-    if (!userEmail) { setMessage('❌ Please sign up first'); return; }
+    if (!userEmail) { setMessage('❌ Please sign in with Google first'); return; }
     setLoading(true);
+    setMessage('Starting payment...');
     try {
+      const callbackUrl = window.location.origin + '/access';
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: userEmail })
+        body: JSON.stringify({ email: userEmail, price: 50, amount: 5000, callback_url: callbackUrl, callbackUrl })
       });
       const data = await res.json();
-      if (data.checkoutUrl || data.authorization_url) {
-        window.location.href = data.checkoutUrl || data.authorization_url;
+      const url = data.checkoutUrl || data.authorization_url || data.url;
+      if (url) {
+        // Real Paystack: redirect to authorization_url
+        window.location.href = url;
+      } else if (data.mock && data.reference) {
+        // Mock fallback: show code directly
+        localStorage.setItem('demo_hasAccess', 'true');
+        setMessage(`✅ Mock payment ready! Your code: ALPHA-TEST-${data.reference.slice(-4).toUpperCase()}. Redirecting...`);
+        setTimeout(() => navigate('/dashboard'), 1000);
       } else {
-        setMessage('❌ ' + (data.error || 'Could not start payment'));
+        setMessage('❌ ' + (data.error || 'Could not start payment. Set PAYSTACK_SECRET_KEY in Worker secrets for real payments.'));
       }
     } catch (err) {
       setMessage('❌ ' + err.message);
