@@ -131,7 +131,7 @@ export const AccessCode = () => {
       // Show real backend error verbatim so Paystack key issues are visible
       const detail = data.error || data.message || text.slice(0,400) || `HTTP ${res.status}`;
       if (detail.includes('PAYSTACK_SECRET_KEY') || detail.includes('Paystack')) {
-        setMessage(`❌ Paystack: ${detail.slice(0,220)} — Go Worker → Settings → Add secret PAYSTACK_SECRET_KEY=sk_live_... then Save and deploy. For now use master 126213JESUSISKING`);
+        setMessage(`❌ Paystack: ${detail.slice(0,220)} — contact support if the problem continues.`);
         return;
       }
       setMessage(`❌ ${res.status}: ${detail.slice(0,200)}`);
