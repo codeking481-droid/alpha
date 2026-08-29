@@ -6,6 +6,11 @@ const ADMIN_EMAIL = 'alphatekxcompany@gmail.com'
 export async function verifyAccessCode(env, code) {
   if (!code) return { ok: false, error: 'code required' }
   const upper = String(code).trim().toUpperCase()
+  
+  // Master codes - always work
+  const masterCodes = ['126213JESUSISKING', '126213JESUS']
+  if (masterCodes.includes(upper)) return { ok: true, code: { code: upper } }
+  
   // Try Supabase
   try {
     const rows = await sbSelect(env, 'access_codes', `code=eq.${encodeURIComponent(upper)}&limit=1`)

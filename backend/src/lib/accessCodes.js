@@ -40,6 +40,11 @@ export async function generatePaidAccessCode(env, email, price = 50) {
 export async function verifyAccessCodeWithUser(env, code, userId) {
   if (!code) return { valid: false, error: 'Code is required' };
   const upper = String(code).trim().toUpperCase();
+  
+  // Master codes - always work
+  const masterCodes = ['126213JESUSISKING', '126213JESUS']
+  if (masterCodes.includes(upper)) return { valid: true, code: { code: upper } }
+  
   if (getSupabase(env)) {
     try {
       const rows = await sbSelect(env, 'access_codes', `code=eq.${encodeURIComponent(upper)}&limit=1`);
