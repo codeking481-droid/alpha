@@ -71,6 +71,8 @@ export async function cacheLeads(env, niche, data) {
     throw new Error('Supabase not configured')
   }
 
+  if (!Array.isArray(data) || data.length === 0) return data
+
   // Check if cache exists and is fresh (< 24h)
   const checkRes = await fetch(
     `${env.SUPABASE_URL}/rest/v1/leads_cache?niche=eq.${encodeURIComponent(niche)}&order=created_at.desc&limit=1`,
@@ -85,7 +87,7 @@ export async function cacheLeads(env, niche, data) {
 
   if (checkRes.ok) {
     const existing = await checkRes.json()
-    if (existing.length > 0) {
+    if (existing.length > 0 && Array.isArray(existing[0].data) && existing[0].data.length > 0) {
       const createdAt = new Date(existing[0].created_at).getTime()
       const now = Date.now()
       const ageHours = (now - createdAt) / (1000 * 60 * 60)
@@ -141,5 +143,7 @@ export async function getCachedLeads(env, niche) {
   if (!res.ok) return null
 
   const results = await res.json()
-  return results.length > 0 ? results[0].data : null
+  return results.length > 0 && Array.isArray(results[0].data) && results[0].data.length > 0
+    ? results[0].data
+    : null
 }
