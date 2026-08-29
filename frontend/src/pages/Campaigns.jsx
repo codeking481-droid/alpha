@@ -1,318 +1,217 @@
-import { useState, useEffect } from 'react';
-import { CampaignCard } from '../components/campaigns/CampaignCard';
-import { CreateCampaign } from '../components/campaigns/CreateCampaign';
-import { API_URL } from '../lib/api.js';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const WEEK_TEMPLATE = [
-  { day: 1, linkedin: 'Announcement', whatsapp: 'Teaser', telegram: 'Intro', youtube: '—' },
-  { day: 2, linkedin: 'Problem-solution', whatsapp: 'Deep dive', telegram: 'Poll', youtube: '—' },
-  { day: 3, linkedin: 'Social proof', whatsapp: 'Testimonial', telegram: 'Discussion', youtube: '—' },
-  { day: 4, linkedin: 'Educational', whatsapp: 'Tip', telegram: 'AMA', youtube: 'Video 1' },
-  { day: 5, linkedin: 'Industry insight', whatsapp: 'Offer', telegram: 'Feedback', youtube: '—' },
-  { day: 6, linkedin: 'CTA', whatsapp: 'Reminder', telegram: 'Urgency', youtube: '—' },
-  { day: 7, linkedin: 'Recap', whatsapp: 'Final push', telegram: 'Thank you', youtube: 'Video 2' },
+const defaultPosts = [
+  { id: '01', platform: 'LinkedIn', type: 'Announcment', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Launch announcement: Acme Innovations introduces new AI workflow automation to save teams 10hrs/week →' },
+  { id: '02', platform: 'WhatsApp', type: 'Teaser', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: 'Teaser: Something big is coming this week. Want early access? Reply "YES" to join the waitlist →' },
+  { id: '03', platform: 'Telegram', type: 'Intro', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Intro: Meet the team behind the product. Why we built this for agencies like yours →' },
+  { id: '04', platform: 'LinkedIn', type: 'Educational', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Educational: How the 10-post system drives 3x engagement without extra ad spend →' },
+  { id: '05', platform: 'WhatsApp', type: 'Testimonial', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: 'Testimonial: "We got 5 new leads in 48h after the campaign." — Client feedback →' },
+  { id: '06', platform: 'Telegram', type: 'Poll', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Poll: What\'s your biggest marketing challenge? A) Content • B) Leads • C) Retention →' },
+  { id: '07', platform: 'LinkedIn', type: 'Case Study', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Case Study: How we helped a SaaS company cut onboarding time by 60% using automated posts →' },
+  { id: '08', platform: 'WhatsApp', type: 'Tip', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: 'Tip: 3 quick ways to keep clients engaged on WhatsApp without spamming →' },
+  { id: '09', platform: 'Telegram', type: 'Promo', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Promo: Limited spots available — 20% off setup if you join this week. Ends Friday →' },
+  { id: '10', platform: 'LinkedIn', type: 'Recap', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Recap: Week 1 results + what\'s next. Full performance summary drops tomorrow →' },
 ];
 
+const platformIcon = (platform) => {
+  if (platform === 'LinkedIn') return <div className="w-6 h-6 bg-[#0A66C2] rounded-full flex items-center justify-center shrink-0"><span className="text-white text-[11px] font-bold">in</span></div>;
+  if (platform === 'WhatsApp') return <div className="w-6 h-6 bg-[#25D366] rounded-full flex items-center justify-center shrink-0"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M19.05 4.91A9.82 9.82 0 0 0 12.03 2C6.55 2 2.07 6.47 2.07 11.95c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.82 9.82 0 0 0 4.78 1.22h.01c5.48 0 9.95-4.47 9.95-9.95 0-2.66-1.03-5.15-2.94-7.04zm-7.02 14.5h-.01a8.13 8.13 0 0 1-4.14-1.13l-.3-.18-3.12.82.83-3.04-.2-.31a8.17 8.17 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.25 8.24z"/></svg></div>;
+  return <div className="w-6 h-6 bg-[#229ED9] rounded-full flex items-center justify-center shrink-0"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg></div>;
+};
+
 export const Campaigns = () => {
-  const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState('');
-  const [tab, setTab] = useState('manage'); // manage | one-week
-  const [autoForm, setAutoForm] = useState({ campaignId:'', perDay:'10', atHour:'9', leads:'', template:'' });
-  const [autoMsg, setAutoMsg] = useState('');
-  const [queue, setQueue] = useState(null);
-  // Ad Engine one-week state
-  const [awCompany, setAwCompany] = useState('');
-  const [awNiche, setAwNiche] = useState('');
-  const [awPlan, setAwPlan] = useState(null);
-  const [awContent, setAwContent] = useState(null);
-  const [awDelivery, setAwDelivery] = useState(null);
-  const [awLoading, setAwLoading] = useState('');
-  const [community, setCommunity] = useState(null);
+  const navigate = useNavigate();
+  const [companyName, setCompanyName] = useState('Acme Innovations');
+  const [industry, setIndustry] = useState('SaaS / Technology');
+  const [clientCount, setClientCount] = useState('24');
+  const [posts, setPosts] = useState(defaultPosts);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
 
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/campaigns`);
-      const data = await res.json().catch(()=>[]);
-      setCampaigns(Array.isArray(data) ? data : data.campaigns || []);
-    } catch { setCampaigns([]); }
-    finally { setLoading(false); }
+  const generatePosts = () => {
+    const name = companyName || 'Acme Innovations';
+    const ind = industry || 'SaaS / Technology';
+    const count = clientCount || '24';
+    setPosts([
+      { id: '01', platform: 'LinkedIn', type: 'Announcment', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Launch announcement: ${name} introduces new AI workflow automation to save teams 10hrs/week →` },
+      { id: '02', platform: 'WhatsApp', type: 'Teaser', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: `Teaser: Something big is coming for ${name}. Want early access? Reply "YES" to join the waitlist →` },
+      { id: '03', platform: 'Telegram', type: 'Intro', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: `Intro: Meet the team behind the product. Why we built this for agencies like yours in ${ind} →` },
+      { id: '04', platform: 'LinkedIn', type: 'Educational', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Educational: How the 10-post system drives 3x engagement for ${ind} without extra ad spend →` },
+      { id: '05', platform: 'WhatsApp', type: 'Testimonial', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: `Testimonial: "${name} got 5 new leads in 48h after the campaign." — Client feedback →` },
+      { id: '06', platform: 'Telegram', type: 'Poll', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: `Poll: What's your biggest ${ind} challenge? A) Content • B) Leads • C) Retention →` },
+      { id: '07', platform: 'LinkedIn', type: 'Case Study', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Case Study: How we helped ${name} trusted by ${count} clients cut onboarding by 60% →` },
+      { id: '08', platform: 'WhatsApp', type: 'Tip', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: `Tip: 3 quick ways to keep clients engaged on WhatsApp without spamming →` },
+      { id: '09', platform: 'Telegram', type: 'Promo', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: `Promo: Limited spots for ${name} — 20% off setup if you join this week. Ends Friday →` },
+      { id: '10', platform: 'LinkedIn', type: 'Recap', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Recap: Week 1 results for ${name} + what's next. Full summary drops tomorrow →` },
+    ]);
   };
 
-  const fetchCommunity = async ()=>{
-    try { const r=await fetch(`${API_URL}/api/community`); const d=await r.json(); setCommunity(d); } catch {}
+  const copyToClipboard = (content) => {
+    navigator.clipboard.writeText(content);
   };
 
-  const fetchQueue = async (cid) => {
-    const q = cid || autoForm.campaignId;
-    if (!q) { setQueue(null); return; }
-    const res = await fetch(`${API_URL}/api/automation/status?campaignId=${encodeURIComponent(q)}`);
-    const data = await res.json().catch(()=>({}));
-    setQueue(data.status || data.queues || data);
+  const startEdit = (post) => {
+    setEditingId(post.id);
+    setEditContent(post.content);
   };
 
-  useEffect(()=>{ fetchAll(); fetchCommunity(); }, []);
-
-  const handleAction = async (action, camp) => {
-    const token = localStorage.getItem('alpha.token') || '';
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    try {
-      if (action==='delete') {
-        if (!confirm(`Delete ${camp.name}?`)) return;
-        const res = await fetch(`${API_URL}/api/campaigns/${camp.id}`, { method:'DELETE', headers });
-        if (!res.ok) throw new Error('Delete failed');
-        setMsg(`✅ Deleted ${camp.name}`);
-        fetchAll();
-        return;
-      }
-      if (action==='automation') {
-        setAutoForm(f=> ({...f, campaignId: camp.id}));
-        document.getElementById('auto-panel')?.scrollIntoView({behavior:'smooth'});
-        return;
-      }
-      const res = await fetch(`${API_URL}/api/campaigns/${camp.id}/${action}`, { method:'POST', headers });
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) throw new Error(data.error || action+' failed');
-      setMsg(`✅ ${camp.name} → ${action}`);
-      fetchAll();
-    } catch (e) { setMsg(`❌ ${e.message}`); }
+  const saveEdit = () => {
+    setPosts(posts.map(p => p.id === editingId ? { ...p, content: editContent } : p));
+    setEditingId(null);
   };
 
-  const handleSchedule = async (e) => {
-    e.preventDefault();
-    setAutoMsg('');
-    const leads = autoForm.leads.split(',').map(s=>s.trim()).filter(Boolean).map(email=>({ email }));
-    const finalLeads = leads.length ? leads : [{email:'demo1@example.com'},{email:'demo2@example.com'},{email:'demo3@example.com'}];
-    try {
-      const res = await fetch(`${API_URL}/api/automation/schedule`, {
-        method:'POST', headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({ campaignId: autoForm.campaignId, leads: finalLeads, template: autoForm.template || 'Hi {{name}}, quick idea for {{company}}...', schedule:{ type:'daily', perDay: Number(autoForm.perDay)||10, atHour: Number(autoForm.atHour)||9 } }),
-      });
-      const data = await res.json().catch(()=>({}));
-      if (!res.ok) throw new Error(data.error || 'Schedule failed');
-      setAutoMsg(`✅ Scheduled ${finalLeads.length} leads — ${autoForm.perDay}/day at ${autoForm.atHour}:00`);
-      fetchQueue(autoForm.campaignId);
-    } catch (err){ setAutoMsg(`❌ ${err.message}`); }
-  };
-
-  const handlePauseResume = async (type) => {
-    if (!autoForm.campaignId) { setAutoMsg('Pick campaign first'); return; }
-    const res = await fetch(`${API_URL}/api/automation/${type}`, {
-      method:'POST', headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ campaignId: autoForm.campaignId }),
-    });
-    const data = await res.json().catch(()=>({}));
-    setAutoMsg(data.success ? `✅ ${type}d` : `❌ ${data.error}`);
-    fetchQueue();
-  };
-
-  const handleTick = async () => {
-    if (!autoForm.campaignId) return;
-    const res = await fetch(`${API_URL}/api/automation/tick`, {
-      method:'POST', headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ campaignId: autoForm.campaignId, perDay: Number(autoForm.perDay)||10 }),
-    });
-    const data = await res.json().catch(()=>({}));
-    setAutoMsg(data.success ? `✅ Sent ${data.sent?.length||0}, remaining ${data.remaining}` : `❌ ${data.error}`);
-    fetchQueue();
-  };
-
-  // Ad Engine handlers
-  const handleGeneratePlan = async (e)=>{
-    e?.preventDefault();
-    if(!awCompany) { setAwLoading('Company required'); return; }
-    setAwLoading('Generating 7-day plan…');
-    try {
-      const res = await fetch(`${API_URL}/api/ad-engine/plan`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ company: awCompany, niche: awNiche || 'business' }) });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error);
-      setAwPlan(data.plan || data);
-      setMsg(`✅ Plan for ${awCompany} — 10+10+10+2 in 7 days`);
-    } catch(e){ setAwLoading(`❌ ${e.message}`); return; }
-    setAwLoading('');
-  };
-  const handleGenerateContent = async ()=>{
-    if(!awPlan) { setAwLoading('Generate plan first'); return; }
-    setAwLoading('Generating content via Groq… (32 posts)');
-    try{
-      const res = await fetch(`${API_URL}/api/ad-engine/generate-content`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ company: awPlan.company || awCompany, niche: awPlan.niche || awNiche, plan: awPlan }) });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data.error);
-      setAwContent(data.content || data);
-      setAwDelivery(data.delivery || null);
-    } catch(e){ setAwLoading(`❌ ${e.message}`); return; }
-    setAwLoading('');
-  };
-  const handlePrepareDelivery = async ()=>{
-    if(!awContent) return;
-    try{
-      const res = await fetch(`${API_URL}/api/ad-engine/delivery`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ content: awContent }) });
-      const data = await res.json();
-      setAwDelivery(data.delivery || data);
-    } catch{}
+  const exportCSV = () => {
+    const csv = `#,Platform,Post Type,Content\n` + posts.map(p => `${p.id},${p.platform},${p.type},"${p.content.replace(/"/g, '""')}"`).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `campaign-${companyName.replace(/\s+/g,'-')}.csv`;
+    a.click();
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-white text-[#0B0215] flex items-center justify-center font-black">⬢</div>
-        <div>
-          <h1 className="text-xl font-black tracking-tight text-[#0A0A0A]">CAMPAIGNS — Run & Track</h1>
-          <p className="text-xs text-[#6B7280]">Ad Engine • 1-week = 10 LinkedIn + 10 WhatsApp + 10 Telegram + 2 YouTube = $500</p>
+    <div className="min-h-screen bg-[#FFF7F0] md:bg-[#FFFCF8] font-['Inter',sans-serif] pb-20">
+      {/* Top nav */}
+      <div className="bg-[#FFFDF9] md:bg-white border-b border-[#EDEDED] px-4 py-3 sticky top-0 z-10">
+        <div className="max-w-[1120px] mx-auto flex items-center justify-between">
+          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 border border-[#0A0A0A] rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#0A0A0A] bg-white hover:bg-[#FAFAFA]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#5E17EB] rounded-lg flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
+            </div>
+            <span className="text-[18px] font-bold tracking-tight text-[#0A0A0A]">Alpha Agency</span>
+            <span className="hidden sm:inline bg-[#EDE9FF] text-[#5E17EB] text-[12px] font-medium px-3 py-1 rounded-full">the money maker</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="text-[#0A0A0A]"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M18 8A6 6 0 0 0 6 8c0 7-6 9-6 9h16s-6-2-6-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+            <div className="w-8 h-8 bg-[#EDE9FF] rounded-full flex items-center justify-center text-[#5E17EB] text-[12px] font-bold">AA</div>
+          </div>
         </div>
-        <button onClick={fetchAll} className="ml-auto text-xs px-3 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] hover:bg-[#F3F4F6]">Refresh</button>
       </div>
 
-      <div className="flex gap-2 p-1 rounded-full bg-white border border-[#EDEDED] w-fit">
-        <button onClick={()=>setTab('manage')} className={`px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase ${tab==='manage'?'bg-[#FFD700] text-[#0B0215]':'text-[#6B7280]'}`}>Manage</button>
-        <button onClick={()=>setTab('one-week')} className={`px-4 py-2 rounded-full text-xs font-black tracking-widest uppercase ${tab==='one-week'?'bg-[#FFD700] text-[#0B0215]':'text-[#6B7280]'}`}>✨ One-Week Ad Engine</button>
-        <a href="/approvals" className="px-4 py-2 rounded-full text-xs font-bold text-[#6B7280] hover:text-[#0A0A0A]">Approvals →</a>
-      </div>
-
-      {msg && <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2">{msg}</p>}
-
-      {tab==='one-week' ? (
-        <div className="space-y-6">
-          {/* Community strip */}
-          {community && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">LinkedIn</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.linkedin?.followers} followers</div><div className="text-xs text-[#9CA3AF]">{community.community?.linkedin?.connections}+ connections • 10 posts</div></div>
-              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">WhatsApp (Main Group)</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.whatsapp?.groups?.find(g=>g.name.includes('Main'))?.members || 130} members</div><div className="text-xs text-[#9CA3AF]">10 posts</div></div>
-              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">WhatsApp (Cyber Security)</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.whatsapp?.groups?.find(g=>g.name.includes('Cyber'))?.members || 85} members</div><div className="text-xs text-[#9CA3AF]">10 posts</div></div>
-              <div className="rounded-2xl bg-white border border-[#EDEDED] p-4"><div className="text-[11px] tracking-widest uppercase font-bold text-[#9CA3AF]">Telegram + YouTube</div><div className="text-lg font-black text-[#0A0A0A] mt-1">{community.community?.telegram?.members} TG • {community.community?.youtube?.subscribers}+ YT</div><div className="text-xs text-[#9CA3AF]">10 TG posts • 2 videos</div></div>
-            </div>
-          )}
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-            <h4 className="text-xs font-black tracking-widest uppercase text-amber-400">🔒 Truth Clause — every proposal includes this</h4>
-            <p className="text-xs text-[#6B7280] mt-2 leading-relaxed">{community?.truthClause || 'We have real communities, not bots. LinkedIn (700 followers, 500+ connections): 10 posts. WhatsApp (215+ members across 2 groups): 10 posts. Telegram (54 members): 10 posts. YouTube (3,000+ subscribers): 2 videos. We do not guarantee views, likes, or conversions. We guarantee we will deliver the content to real people who have chosen to follow us. The rest is organic.'}</p>
+      <div className="max-w-[1120px] mx-auto px-4">
+        {/* Title */}
+        <div className="text-center md:text-left mt-6">
+          <h1 className="text-[28px] md:text-[40px] font-bold tracking-tight text-[#0A0A0A] leading-tight">Campaigns - 10 Posts System</h1>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-3">
+            <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 10 posts</span>
+            <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="8.6" x2="15.4" y2="15.4"/><line x1="8.6" y1="15.4" x2="15.4" y2="8.6"/></svg> 3 platforms</span>
+            <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h8"/></svg> 1 week</span>
+            <span className="inline-flex items-center gap-1.5 bg-[#5E17EB] text-white text-[13px] font-semibold px-3 py-1.5 rounded-full">$ &nbsp;1 week • $500</span>
           </div>
+        </div>
 
-          <div className="rounded-2xl border border-[#EDEDED] bg-white p-4 sm:p-6">
-            <h3 className="text-sm font-black tracking-widest uppercase text-[#0A0A0A]">Generate 1-Week Campaign</h3>
-            <p className="text-xs text-[#6B7280] mt-1">Pick approved company → generate 7-day plan → generate 32 posts → prepare delivery</p>
-            <form onSubmit={handleGeneratePlan} className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input value={awCompany} onChange={e=>setAwCompany(e.target.value)} placeholder="Company (e.g. Paystack Alumni Co)" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#0A0A0A]/25" required />
-              <input value={awNiche} onChange={e=>setAwNiche(e.target.value)} placeholder="Niche (e.g. fintech)" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#0A0A0A]/25" />
-              <button type="submit" className="bg-[#FFD700] text-[#0B0215] rounded-xl font-black text-xs tracking-widest uppercase">Generate 7-Day Plan</button>
-            </form>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <select onChange={e=>{ const v=e.target.value; if(v){ const [c,n]=v.split('|'); setAwCompany(c); setAwNiche(n); } }} className="bg-[#FFFCF8] border border-[#EDEDED] rounded-full px-3 py-2 text-xs text-[#6B7280]">
-                <option value="">— Pick from existing campaigns —</option>
-                {campaigns.slice(0,10).map(c=> <option key={c.id} value={`${c.name||c.company}|${c.niche||''}`}>{c.name||c.company} — {c.niche||'niche'}</option>)}
-              </select>
-              <button onClick={handleGenerateContent} disabled={!awPlan} className="px-4 py-2 rounded-full bg-white text-[#0B0215] text-xs font-black disabled:opacity-40">Generate 32 Posts (Groq)</button>
-              <button onClick={handlePrepareDelivery} disabled={!awContent} className="px-4 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] text-xs disabled:opacity-40">Prepare Delivery</button>
-              <span className="text-xs text-[#6B7280] py-2 ml-2">$500 / week</span>
+        {/* Campaign Inputs */}
+        <div className="mt-6 bg-white border border-[#EDEDED] rounded-xl p-5 md:p-6 shadow-sm">
+          <h2 className="text-[18px] font-bold text-[#0A0A0A] flex items-center gap-2"><span className="text-[#5E17EB]">✨</span> Campaign Inputs</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div>
+              <label className="text-[13px] font-semibold text-[#0A0A0A]">Company Name</label>
+              <div className="mt-1.5 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="8" width="18" height="12" rx="1"/><path d="M7 8V6a5 5 0 0 1 10 0v2"/><path d="M7 12h10M7 16h10"/></svg></span>
+                <input value={companyName} onChange={(e)=>setCompanyName(e.target.value)} placeholder="e.g., Dangote Cement" className="w-full border border-[#E5E7EB] rounded-lg pl-9 pr-3 py-2.5 text-[14px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white" />
+              </div>
             </div>
-            {awLoading && <p className="text-xs text-[#6B7280] mt-3 whitespace-pre-wrap">{awLoading}</p>}
+            <div>
+              <label className="text-[13px] font-semibold text-[#0A0A0A]">Industry</label>
+              <div className="mt-1.5 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span>
+                <input value={industry} onChange={(e)=>setIndustry(e.target.value)} placeholder="e.g., Construction" className="w-full border border-[#E5E7EB] rounded-lg pl-9 pr-3 py-2.5 text-[14px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[13px] font-semibold text-[#0A0A0A]">Clients Count</label>
+              <div className="mt-1.5 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                <input value={clientCount} onChange={(e)=>setClientCount(e.target.value)} placeholder="e.g., 500" className="w-full border border-[#E5E7EB] rounded-lg pl-9 pr-3 py-2.5 text-[14px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white" />
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* 7-day grid */}
-          <div className="overflow-x-auto rounded-2xl border border-[#EDEDED] bg-white/[0.02]">
-            <table className="w-full text-xs">
-              <thead><tr className="text-[#9CA3AF] text-[11px] tracking-widest uppercase"><th className="text-left p-3">Day</th><th className="text-left p-3">LinkedIn</th><th className="text-left p-3">WhatsApp</th><th className="text-left p-3">Telegram</th><th className="text-left p-3">YouTube</th></tr></thead>
-              <tbody>
-                {(awPlan?.days || WEEK_TEMPLATE).map(row=> (
-                  <tr key={row.day} className="border-t border-[#EDEDED] text-[#0A0A0A]/70">
-                    <td className="p-3 font-black text-[#0A0A0A] whitespace-nowrap">{row.day} • {row.weekday || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][row.day-1]} {row.date ? `• ${row.date}`:''} <span className="text-[#0A0A0A]/25 font-normal hidden sm:inline">{row.label || WEEK_TEMPLATE[row.day-1]?.linkedin}</span></td>
-                    <td className="p-3">{row.linkedin}</td>
-                    <td className="p-3">{row.whatsapp}</td>
-                    <td className="p-3">{row.telegram}</td>
-                    <td className="p-3">{row.youtube}</td>
+        {/* 10-Post Engine */}
+        <div className="mt-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[20px] md:text-[24px] font-bold tracking-tight text-[#0A0A0A]">10-Post Engine</h2>
+            <span className="bg-[#EDE9FF] text-[#5E17EB] text-[12px] font-semibold px-3 py-1 rounded-full">Draft • Ready to generate</span>
+          </div>
+          <p className="text-[13px] text-[#6B7280] mt-1">Review and manage the 10 posts generated for this campaign</p>
+
+          {/* Table */}
+          <div className="mt-3 bg-white border border-[#EDEDED] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[760px]">
+              <thead>
+                <tr className="bg-[#F9FAFB] border-b border-[#EDEDED] text-[12px] font-semibold text-[#6B7280]">
+                  <th className="text-center py-2.5 px-3 w-10">#</th>
+                  <th className="text-left py-2.5 px-2">Platform</th>
+                  <th className="text-left py-2.5 px-2">Post Type</th>
+                  <th className="text-left py-2.5 px-2">Content</th>
+                  <th className="text-left py-2.5 px-3 w-[130px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EDEDED]">
+                {posts.map((post) => (
+                  <tr key={post.id} className="hover:bg-[#FAFAFA] text-[13px]">
+                    <td className="text-center py-2.5 px-3 text-[#6B7280] font-medium">{post.id}</td>
+                    <td className="py-2.5 px-2">
+                      <div className="flex items-center gap-1.5">
+                        {platformIcon(post.platform)}
+                        <span className="font-medium text-[#0A0A0A] text-[13px]">{post.platform}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-2">
+                      <span className={`inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full ${post.typeColor}`}>{post.type}</span>
+                    </td>
+                    <td className="py-2.5 px-2 max-w-[420px]">
+                      {editingId === post.id ? (
+                        <div className="flex gap-2">
+                          <input value={editContent} onChange={(e)=>setEditContent(e.target.value)} className="flex-1 border border-[#5E17EB] rounded-lg px-2 py-1 text-[12px] focus:outline-none" />
+                          <button onClick={saveEdit} className="bg-[#5E17EB] text-white text-[11px] px-2 py-1 rounded">Save</button>
+                          <button onClick={()=>setEditingId(null)} className="bg-gray-200 text-[11px] px-2 py-1 rounded">Cancel</button>
+                        </div>
+                      ) : (
+                        <span className="text-[#0A0A0A] leading-tight line-clamp-2">{post.content}</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex gap-1.5">
+                        <button onClick={()=>copyToClipboard(post.content)} className="inline-flex items-center gap-1 border border-[#E5E7EB] bg-white rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-[#0A0A0A] hover:bg-[#F9FAFB]">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v3"/></svg>
+                          Copy
+                        </button>
+                        <button onClick={()=>startEdit(post)} className="inline-flex items-center gap-1 bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-lg px-2.5 py-1.5 text-[11px] font-medium">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          Edit
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {awPlan && <div className="p-3 text-xs text-[#6B7280] border-t border-[#EDEDED]">Deliverables: {awPlan.summary?.linkedin||10} LinkedIn + {awPlan.summary?.whatsapp||10} WhatsApp + {awPlan.summary?.telegram||10} Telegram + {awPlan.summary?.youtube||2} YouTube = {awPlan.summary?.total||32} posts • {awPlan.startDate} → {awPlan.endDate} • ${awPlan.price}</div>}
           </div>
 
-          {/* Generated content */}
-          {awContent && (
-            <div className="rounded-2xl border border-[#EDEDED] bg-white p-4 sm:p-6">
-              <h3 className="text-sm font-black text-[#0A0A0A]">Content — {awContent.total} posts • {awContent.breakdown?.linkedin} LI • {awContent.breakdown?.whatsapp} WA • {awContent.breakdown?.telegram} TG • {awContent.breakdown?.youtube} YT</h3>
-              <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-[520px] overflow-auto pr-1">
-                {awContent.items.map((it, i)=> (
-                  <div key={i} className="rounded-xl bg-[#FFFCF8] border border-[#EDEDED] p-3">
-                    <div className="flex items-center gap-2 text-[11px] tracking-widest uppercase font-black">
-                      <span className={`px-2 py-1 rounded-full ${it.platform==='linkedin'?'bg-sky-500/15 text-sky-400': it.platform==='whatsapp'?'bg-emerald-500/15 text-emerald-400': it.platform==='telegram'?'bg-violet-500/15 text-violet-400':'bg-red-500/15 text-red-400'}`}>{it.platform}</span>
-                      <span className="text-[#9CA3AF]">Day {it.day} • {it.type}</span>
-                      {it.mocked && <span className="ml-auto text-amber-400/60">mock</span>}
-                    </div>
-                    <div className="text-xs text-[#0A0A0A]/80 whitespace-pre-wrap mt-2 leading-relaxed">{it.content}</div>
-                    <button onClick={()=> navigator.clipboard.writeText(it.content)} className="mt-2 text-[11px] px-2 py-1 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] hover:bg-[#F3F4F6]">Copy</button>
-                  </div>
-                ))}
-              </div>
+          {/* Bottom bar */}
+          <div className="mt-4 bg-[#FFFCF8] border-t border-[#EDEDED] -mx-4 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+            <span className="text-[13px] text-[#0A0A0A] font-medium">10 of 10 posts ready • Estimated reach: 12.5k across platforms <span className="inline-flex items-center justify-center w-4 h-4 border border-[#6B7280] rounded-full text-[10px]">i</span></span>
+            <div className="flex gap-2">
+              <button onClick={exportCSV} className="inline-flex items-center gap-1.5 bg-white border border-[#0A0A0A] text-[#0A0A0A] rounded-lg px-4 py-2 text-[13px] font-medium hover:bg-[#FAFAFA]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
+              <button onClick={generatePosts} className="inline-flex items-center gap-1.5 bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-lg px-4 py-2 text-[13px] font-semibold">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
+                Generate All Posts
+              </button>
             </div>
-          )}
-
-          {/* Delivery helper */}
-          {awDelivery && (
-            <div className="rounded-2xl border border-[#FFD700]/20 bg-[#FFD700]/5 p-4 sm:p-6">
-              <h3 className="text-sm font-black text-[#FFD700] tracking-widest uppercase">Delivery Helper — copy/paste ready</h3>
-              <div className="mt-4 space-y-4">
-                {awDelivery.sections.map(s=> (
-                  <div key={s.platform}>
-                    <div className="text-xs font-black tracking-widest uppercase text-[#6B7280]">{s.platform} — {s.count} posts</div>
-                    <div className="mt-2 space-y-2">
-                      {s.items.slice(0,4).map((it, idx)=> (
-                        <div key={idx} className="rounded-xl bg-[#FFFCF8] border border-[#EDEDED] p-3">
-                          <div className="text-[11px] text-[#9CA3AF]">#{it.n} • Day {it.day} • {it.type}</div>
-                          <div className="text-xs text-[#0A0A0A]/70 whitespace-pre-wrap mt-1 line-clamp-4">{it.content}</div>
-                        </div>
-                      ))}
-                      {s.items.length>4 && <div className="text-xs text-[#0A0A0A]/25">+ {s.items.length-4} more</div>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-[#9CA3AF] mt-4">You deliver to real communities. No auto-post — you control quality.</p>
-            </div>
-          )}
+          </div>
         </div>
-      ) : (
-        <>
-          <CreateCampaign onCreated={fetchAll} />
-          {loading ? <p className="text-center text-[#9CA3AF] py-8 text-sm">Loading campaigns…</p> : campaigns.length===0 ? (
-            <div className="glass rounded-2xl p-10 text-center">
-              <div className="text-2xl">⬢</div>
-              <p className="text-[#0A0A0A] font-bold mt-2">No campaigns yet</p>
-              <p className="text-[#9CA3AF] text-xs mt-1">Create one above — it lands in Supabase campaigns or in-memory. Or use One-Week Ad Engine → Generate plan.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {campaigns.map(c=> <CampaignCard key={c.id} campaign={c} onAction={handleAction} />)}
-            </div>
-          )}
-
-          <div id="auto-panel" className="mature-card rounded-[16px] p-5 sm:p-6">
-            <h3 className="eyebrow text-[#6B7280]">Email Automation — schedule • pause • resume • tick</h3>
-            <p className="text-xs text-[#9CA3AF] mt-1">POST /api/automation/schedule • GET /api/automation/status • POST /pause|resume|tick</p>
-            <form onSubmit={handleSchedule} className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-              <select value={autoForm.campaignId} onChange={e=>setAutoForm({...autoForm,campaignId:e.target.value})} className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A]" required>
-                <option value="">— Pick campaign —</option>
-                {campaigns.map(c=> <option key={c.id} value={c.id}>{c.name} — {c.status}</option>)}
-              </select>
-              <input value={autoForm.perDay} onChange={e=>setAutoForm({...autoForm,perDay:e.target.value})} placeholder="Per day (10)" type="number" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#0A0A0A]/25" />
-              <input value={autoForm.atHour} onChange={e=>setAutoForm({...autoForm,atHour:e.target.value})} placeholder="At hour (9)" type="number" min="0" max="23" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#0A0A0A]/25" />
-              <input value={autoForm.leads} onChange={e=>setAutoForm({...autoForm,leads:e.target.value})} placeholder="Leads emails, comma" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#0A0A0A]/25 lg:col-span-2" />
-              <input value={autoForm.template} onChange={e=>setAutoForm({...autoForm,template:e.target.value})} placeholder="Template (optional)" className="bg-[#FFFCF8] border border-[#EDEDED] rounded-xl px-3 py-2.5 text-sm text-[#0A0A0A] placeholder:text-[#0A0A0A]/25 lg:col-span-4" />
-              <button type="submit" className="bg-[#FFD700] text-[#0B0215] rounded-xl font-black text-xs tracking-widest uppercase py-2.5 lg:col-span-2">Schedule daily</button>
-            </form>
-            <div className="flex flex-wrap gap-2 mt-4">
-              <button onClick={()=> fetchQueue()} className="px-4 py-2 rounded-full bg-[#F9FAFB] border border-[#EDEDED] text-[#6B7280] text-xs">Status</button>
-              <button onClick={()=> handlePauseResume('pause')} className="px-4 py-2 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-400 text-xs font-bold">Pause</button>
-              <button onClick={()=> handlePauseResume('resume')} className="px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 text-xs font-bold">Resume</button>
-              <button onClick={handleTick} className="px-4 py-2 rounded-full bg-white text-[#0B0215] text-xs font-black">Tick — send batch</button>
-            </div>
-            {autoMsg && <p className="text-xs mt-3 text-[#6B7280] whitespace-pre-wrap">{autoMsg}</p>}
-            {queue && (<pre className="mt-3 bg-[#FFFCF8] border border-[#EDEDED] rounded-xl p-3 text-xs text-[#6B7280] overflow-auto max-h-40">{JSON.stringify(queue, null, 2)}</pre>)}
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 };
-
-export default Campaigns;

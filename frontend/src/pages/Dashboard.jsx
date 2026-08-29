@@ -1,112 +1,165 @@
-﻿import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
-// Existing mature modules — keep real functionality under violet shell
-import ContentStudio from './ContentStudio.jsx';
-import OutreachEngine from './OutreachEngine.jsx';
-import Analytics from './Analytics.jsx';
-import DealDesk from './DealDesk.jsx';
-import Campaigns from './Campaigns.jsx';
-import Approvals from './Approvals.jsx';
+export const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-// Inline Command Hub — light violet brand, real data
-import { useLocalStorage } from '../hooks/useLocalStorage.js';
-import { store } from '../lib/store.js';
-import { useEffect } from 'react';
-
-function CommandHubLite() {
-  const [companies, setCompanies] = useLocalStorage("alpha.companies", [])
-  useEffect(()=>{ store.getCompanies().then(r=>{ if(r && r.length>0 && companies.length===0) setCompanies(r) }) }, [])
-  const revenue = companies.length ? `$${companies.reduce((s,c)=> s + (parseInt(String(c.revenue||'0').replace(/[^0-9]/g,''))||0),0)}k` : '$0';
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold" style={{color:'#0A0A0A'}}>Command Hub</h2>
-          <p className="text-sm" style={{color:'#777777'}}>Real data • {companies.length} companies • Empty until you add</p>
-        </div>
-        <Link to="/outreach" className="btn-primary" style={{background:'#5E17EB'}}>Find Leads →</Link>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="card"><div className="text-xs font-bold tracking-widest uppercase" style={{color:'#999999'}}>Companies</div><div className="text-2xl font-bold mt-1" style={{color:'#0A0A0A'}}>{companies.length}</div><div className="text-xs mt-1" style={{color:'#999999'}}>Real</div></div>
-        <div className="card"><div className="text-xs font-bold tracking-widest uppercase" style={{color:'#999999'}}>Revenue</div><div className="text-2xl font-bold mt-1" style={{color:'#5E17EB'}}>{revenue}</div><div className="text-xs mt-1" style={{color:'#999999'}}>Proof layer</div></div>
-        <div className="card"><div className="text-xs font-bold tracking-widest uppercase" style={{color:'#999999'}}>Reach</div><div className="text-2xl font-bold mt-1" style={{color:'#0A0A0A'}}>4,469 <span className="text-xs font-normal" style={{color:'#999999'}}>LI+WA+TG+YT</span></div><div className="text-xs mt-1" style={{color:'#999999'}}>No bots</div></div>
-      </div>
-      {companies.length===0 ? (
-        <div className="card text-center py-10">
-          <div className="text-3xl mb-2">🚀</div>
-          <p className="font-bold" style={{color:'#0A0A0A'}}>Your Agency Awaits</p>
-          <p className="text-sm mt-1" style={{color:'#777777'}}>Add your first company to start.</p>
-          <Link to="/outreach" className="btn-primary mt-4 inline-flex" style={{background:'#5E17EB'}}>Find Companies</Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {companies.map(c=> (
-            <div key={c.id} className="card">
-              <div className="font-bold" style={{color:'#0A0A0A'}}>{c.name || c.company || 'Company'}</div>
-              <div className="text-xs mt-1" style={{color:'#777777'}}>{c.industry || '—'} • {c.status || 'active'}</div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="card mt-6" style={{background:'rgba(94,23,235,0.04)', borderColor:'rgba(94,23,235,0.15)'}}>
-        <p className="text-sm" style={{color:'#5E17EB', fontWeight:600}}>🔒 Truth Clause: We have real communities (700 LI • 215 WA • 54 TG • 3k YT). We do not guarantee views — we guarantee delivery to real people.</p>
-      </div>
-    </div>
-  )
-}
-
-const badges = [
-  { id: 'hub', label: 'Command Hub', icon: '🚀' },
-  { id: 'content', label: 'Content Studio', icon: '✍️' },
-  { id: 'outreach', label: 'Outreach Engine', icon: '📧' },
-  { id: 'approvals', label: 'Approvals', icon: '✓' },
-  { id: 'campaigns', label: 'Campaigns', icon: '⬢' },
-  { id: 'analytics', label: 'Analytics', icon: '📊' },
-  { id: 'deals', label: 'Deal Desk', icon: '💰' },
-];
-
-export default function Dashboard() {
-  const [activeBadge, setActiveBadge] = useState('hub');
-
-  const renderBadge = () => {
-    switch (activeBadge) {
-      case 'hub': return <CommandHubLite />;
-      case 'content': return <ContentStudio />;
-      case 'outreach': return <OutreachEngine />;
-      case 'approvals': return <Approvals />;
-      case 'campaigns': return <Campaigns />;
-      case 'analytics': return <Analytics />;
-      case 'deals': return <DealDesk />;
-      default: return <CommandHubLite />;
-    }
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
   };
 
+  const displayName = user?.email?.split('@')[0] ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1) : 'Alex';
+
   return (
-    <div className="min-h-screen" style={{background:'#FFFFFB'}}>
-      {/* Top Navigation — violet brand, light */}
-      <div className="border-b sticky top-0 z-10" style={{background:'#FFFFFB', borderColor:'#EAEAEA'}}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center gap-1 py-3 overflow-x-auto">
-            {badges.map((badge) => (
-              <button
-                key={badge.id}
-                onClick={() => setActiveBadge(badge.id)}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
-                style={activeBadge === badge.id ? {background:'#5E17EB', color:'#FFFFFB'} : {color:'#555555'}}
-              >
-                {badge.icon} {badge.label}
-              </button>
-            ))}
-            <span className="ml-auto hidden sm:inline text-xs font-bold px-3 py-1 rounded-full" style={{background:'rgba(94,23,235,0.08)', color:'#5E17EB'}}>v1.0 • Violet OS</span>
+    <div className="min-h-screen bg-[#FFFCF8] px-4 py-4 font-['Inter',sans-serif]">
+      <div className="max-w-[1120px] mx-auto">
+        {/* TOP NAV - Alpha OS */}
+        <div className="bg-[#FFFCF8] md:bg-white border border-[#EDEDED]/60 md:border-[#EDEDED] rounded-2xl px-5 md:px-6 py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-[#5E17EB] rounded-xl flex items-center justify-center shrink-0">
+              <span className="text-white text-[26px] font-medium leading-none -mt-1">α</span>
+            </div>
+            <span className="text-[28px] md:text-[30px] font-bold tracking-tight text-[#0A0A0A]">Alpha OS</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-[15px] text-[#0A0A0A] font-normal">Welcome back, {displayName}</span>
+            <span className="sm:hidden text-[14px] text-[#0A0A0A]">Welcome, {displayName}</span>
+            <button onClick={handleLogout} className="inline-flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-[#0A0A0A] border border-[#EDEDED] px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FAFAFA] transition-colors">
+              Logout
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* DASHBOARD HEADER */}
+        <div className="mt-7 md:mt-8 mb-5">
+          <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight text-[#0A0A0A] leading-none">Dashboard</h1>
+          <p className="text-[14px] md:text-[15px] text-[#6B7280] mt-1.5">Advertisement & Marketing Platform — manage outreach and track performance</p>
+        </div>
+
+        {/* 4 CARDS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Find Companies - Lavender */}
+          <button
+            onClick={() => navigate('/find-companies')}
+            className="relative bg-[#F0EFFF] border border-[#E0D9FF] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group"
+          >
+            <div className="w-10 h-10 bg-[#EDE8FF] rounded-xl flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5E17EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M15.3 15.3L20 20" />
+              </svg>
+            </div>
+            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Find Companies</h3>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Discover and research new companies to target</p>
+            <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#C4B5FD] bg-[#F0EFFF] flex items-center justify-center text-[#5E17EB] group-hover:bg-white transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 17L17 7" />
+                <polyline points="8 7 17 7 17 16" />
+              </svg>
+            </span>
+          </button>
+
+          {/* Send Messages - Cream/Yellow */}
+          <button
+            onClick={() => navigate('/send-messages')}
+            className="bg-[#FFF6D6] border border-[#FDE68A]/80 rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02]"
+          >
+            <div className="w-10 h-10 bg-[#FFF1B8] rounded-xl flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
+            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Send Messages</h3>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Reach out to prospects with personalized messages</p>
+          </button>
+
+          {/* Track Replies - Mint */}
+          <button
+            onClick={() => navigate('/track-replies')}
+            className="bg-[#E6FFF0] border border-[#BBF7D0] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02]"
+          >
+            <div className="w-10 h-10 bg-[#D1FAE5] rounded-xl flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 20V10" />
+                <path d="M12 20V4" />
+                <path d="M6 20v-6" />
+                <rect x="2" y="18" width="4" height="3" rx="1" />
+                <rect x="8" y="13" width="4" height="8" rx="1" />
+                <rect x="14" y="8" width="4" height="13" rx="1" />
+              </svg>
+            </div>
+            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Track Replies</h3>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Monitor responses and engagement performance</p>
+          </button>
+
+          {/* Campaigns - Violet MONEY MAKER */}
+          <button
+            onClick={() => navigate('/campaigns')}
+            className="bg-[#5E17EB] border border-[#5E17EB] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 bg-[#7C3AED] rounded-xl flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                    <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h3 className="text-[22px] md:text-[24px] font-bold tracking-tight text-white leading-none">Campaigns</h3>
+                <span className="bg-white text-[#5E17EB] text-[11px] font-bold tracking-wide px-3 py-1 rounded-full">MONEY MAKER</span>
+              </div>
+            </div>
+            <p className="text-[22px] md:text-[28px] font-bold tracking-tight text-white leading-none mt-6">THE MONEY MAKER</p>
+          </button>
+        </div>
+
+        {/* TODAY'S GOAL */}
+        <div className="mt-4 bg-white border border-[#EDEDED] rounded-2xl p-5 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <h3 className="font-bold text-[18px] md:text-[20px] text-[#0A0A0A] tracking-tight">Today's Goal</h3>
+            <span className="text-[12px] md:text-[13px] text-[#6B7280]">Updated 10 min ago • Oct 5, 2024</span>
+          </div>
+          <div className="grid grid-cols-3 divide-x divide-[#EDEDED]">
+            <div className="text-center px-2 md:px-4">
+              <div className="text-[12px] md:text-[13px] text-[#6B7280] font-medium">Companies Found</div>
+              <div className="text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1">24</div>
+              <div className="inline-flex items-center gap-1 text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+                +6 from yesterday
+              </div>
+            </div>
+            <div className="text-center px-2 md:px-4">
+              <div className="text-[12px] md:text-[13px] text-[#6B7280] font-medium">Messages Sent</div>
+              <div className="text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1">128</div>
+              <div className="inline-flex items-center gap-1 text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+                +32 from yesterday
+              </div>
+            </div>
+            <div className="text-center px-2 md:px-4">
+              <div className="text-[12px] md:text-[13px] text-[#6B7280] font-medium">Earned</div>
+              <div className="text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1">$4,280</div>
+              <div className="inline-flex items-center gap-1 text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+                +$720 from yesterday
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {renderBadge()}
-      </div>
     </div>
-  )
-}
+  );
+};

@@ -1,174 +1,179 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase.js';
-import { API_URL } from '../lib/api.js';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export const AccessCode = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // ensure instant signup token exists — no extra signup page
-  useEffect(()=>{
-    let t = localStorage.getItem('alpha.token');
-    if (!t) {
-      const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
-      const payload = (()=>{ try { return btoa(JSON.stringify({ sub:id, email:`user-${id.slice(0,8)}@alpha.local`, role:'member', iat:Date.now()})) } catch { return 'eyJzdWIiOiJpbnN0YW50In0' } })();
-      t = `instant-jwt.${payload}.sig`;
-      localStorage.setItem('alpha.token', t);
-      localStorage.setItem('alpha.user', JSON.stringify({ email:`user-${id.slice(0,8)}@alpha.local`, role:'member', instant:true }));
-      localStorage.setItem('alpha.signup_at', new Date().toISOString());
-    }
-    if (localStorage.getItem('alpha.access_granted') === '1') {
-      navigate('/dashboard', { replace:true });
-    }
-  }, [navigate]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('');
-    const upper = code.trim().toUpperCase();
-    if (!upper) { setMessage('❌ Enter a code'); setLoading(false); return; }
-    let token = localStorage.getItem('alpha.token') || '';
-    try {
-      if (import.meta.env.VITE_SUPABASE_URL) {
-        const session = await supabase.auth.getSession();
-        token = session.data.session?.access_token || token;
-      }
-    } catch {}
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    try {
-      const response = await fetch(`${API_URL}/api/auth/verify-code`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ code: upper })
-      });
-      const data = await response.json().catch(()=>({}));
-      // Master is reusable — even if backend says already used, grant for owner
-      const isMaster = ['126213JESUSISKING','126213JESUS'].includes(upper);
-      if (response.ok && (data.success || data.ok)) {
-        if (!token) {
-          const payload = btoa(JSON.stringify({ sub: 'master-'+Date.now(), email: 'master@alphatekx.local', role: 'admin' }));
-          token = `mock-jwt.${payload}.sig`;
-          localStorage.setItem('alpha.token', token);
-          localStorage.setItem('alpha.user', JSON.stringify({ email: 'master@alphatekx.local', role: 'admin' }));
-        }
-        localStorage.setItem('alpha.access_granted', '1');
-        localStorage.setItem('alpha.access_code', upper);
-        localStorage.setItem('alpha.access_at', new Date().toISOString());
-        setMessage('✅ Access granted! Opening your OS…');
-        try { window.dispatchEvent(new Event('storage')); } catch {}
-        setTimeout(() => navigate('/dashboard'), 400);
+  // Get logged in user email + protected redirect + auto-verify
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) {
+        setUserEmail(data.user.email);
       } else {
-        const err = data.error || 'Invalid or already used code';
-        if (isMaster && err.toLowerCase().includes('already used')) {
-          // Fallback for old deployed worker before master-reuse patch — still grant
-          localStorage.setItem('alpha.access_granted', '1');
-          localStorage.setItem('alpha.access_code', upper);
-          localStorage.setItem('alpha.access_at', new Date().toISOString());
-          if (!token) {
-            const payload = btoa(JSON.stringify({ sub: 'master-'+Date.now(), email: 'master@alphatekx.local', role: 'admin' }));
-            token = `mock-jwt.${payload}.sig`;
-            localStorage.setItem('alpha.token', token);
+        // Check session as fallback
+        supabase.auth.getSession().then(({ data: sessionData }) => {
+          if (sessionData?.session?.user?.email) {
+            setUserEmail(sessionData.session.user.email);
+          } else if (!data?.user) {
+            // Protected: redirect to / if not logged in (allow brief delay for OAuth)
+            // Only redirect if no reference param (payment callback may still be processing)
+            const reference = searchParams.get('reference');
+            if (!reference) {
+              // give supabase a moment to restore session from redirect
+              setTimeout(() => {
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                  if (!session?.user) navigate('/');
+                });
+              }, 800);
+            }
           }
-          try { window.dispatchEvent(new Event('storage')); } catch {}
-          setMessage('✅ Access granted! (master reusable) Opening…');
-          setTimeout(() => navigate('/dashboard'), 400);
-        } else if (err.toLowerCase().includes('already used')) setMessage('⚠️ This code was already used (single-use). Contact alphatekxcompany@gmail.com or buy a new one below.');
-        else setMessage('❌ ' + err);
+        });
       }
-    } catch (error) {
-      const isMaster = ['126213JESUSISKING','126213JESUS'].includes(upper);
-      if (isMaster) {
-        // Offline fallback — grant master locally if API unreachable
-        localStorage.setItem('alpha.access_granted', '1');
-        localStorage.setItem('alpha.access_code', upper);
-        localStorage.setItem('alpha.access_at', new Date().toISOString());
-        if (!token) {
-          const payload = btoa(JSON.stringify({ sub: 'master-'+Date.now(), email: 'master@alphatekx.local', role: 'admin' }));
-          token = `mock-jwt.${payload}.sig`;
-          localStorage.setItem('alpha.token', token);
-        }
-        try { window.dispatchEvent(new Event('storage')); } catch {}
-        setMessage('✅ Access granted! (offline master) Opening…');
-        setTimeout(() => navigate('/dashboard'), 400);
+    });
+
+    // AUTO-VERIFY if coming from Paystack checkout ?reference=xxx
+    const reference = searchParams.get('reference');
+    if (reference) {
+      handleAutoVerify(reference);
+    }
+  }, []);
+
+  const handleAutoVerify = async (reference) => {
+    setLoading(true);
+    setMessage('Verifying payment...');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify?reference=${reference}`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success && data.accessCode) {
+        setCode(data.accessCode);
+        setMessage(`✅ Payment verified! Your code: ${data.accessCode}. Redirecting...`);
+        setTimeout(() => navigate('/dashboard'), 2000);
       } else {
-        setMessage('❌ ' + error.message + ' — check API_URL: ' + API_URL);
+        setMessage('❌ ' + (data.error || 'Payment verification failed'));
       }
+    } catch (e) {
+      setMessage('❌ ' + e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-[80vh] flex items-center justify-center px-6 py-12" style={{background:'#FFFCF8'}}>
-      <div className="max-w-[520px] w-full">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto text-[#0A0A0A] text-2xl" style={{background:'#5E17EB'}}>🔑</div>
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full" style={{background:'#F5F3FF', border:'1px solid #EDE9FF'}}>
-            <span style={{width:'6px', height:'6px', borderRadius:'999px', background:'#5E17EB', display:'inline-block'}} />
-            <span style={{color:'#5E17EB', fontSize:'11px', fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase'}}>Instant signup complete • Token required</span>
-          </div>
-          <h1 className="mt-4" style={{color:'#0A0A0A', fontSize:'36px', fontWeight:800, letterSpacing:'-0.03em', lineHeight:'1.05'}}>Enter Access Token</h1>
-          <p className="mt-3 mx-auto" style={{color:'#6B7280', fontSize:'15px', lineHeight:'1.6', maxWidth:'420px'}}>
-            You’re in — <span style={{color:'#0A0A0A', fontWeight:600}}>instant signup done</span>. Now enter the token to unlock everything. <span style={{color:'#0A0A0A', fontWeight:600}}>Only I issue tokens.</span> Need one? Buy below.
-          </p>
-        </div>
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage('✅ Access granted! Redirecting...');
+        setTimeout(() => navigate('/dashboard'), 1000);
+      } else {
+        setMessage('❌ ' + data.error);
+      }
+    } catch (err) {
+      setMessage('❌ ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        <div className="card" style={{background:'#FFFFFF', border:'1px solid #EDEDED', borderRadius:'16px', padding:'24px'}}>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <label style={{color:'#0A0A0A', fontSize:'11px', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase'}}>Access token • single-use • 30 days</label>
+  const handlePayment = async () => {
+    if (!userEmail) {
+      setMessage('❌ Please sign up first');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/initialize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: userEmail })
+      });
+      const data = await res.json();
+      if (data.checkoutUrl || data.authorization_url) {
+        window.location.href = data.checkoutUrl || data.authorization_url;
+      } else {
+        setMessage('❌ ' + (data.error || 'Could not start payment'));
+      }
+    } catch (err) {
+      setMessage('❌ ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isSuccess = message.startsWith('✅');
+  const isError = message.startsWith('❌');
+
+  return (
+    <div className="min-h-screen bg-[#FFFCF8] flex items-center justify-center px-4 font-['Inter',sans-serif]">
+      <div className="max-w-md w-full bg-white border border-[#EDEDED] rounded-xl p-8">
+        {/* Top icon */}
+        <div className="text-4xl text-center mb-4">🔑</div>
+
+        {/* Title */}
+        <h1 className="font-semibold text-2xl text-[#0A0A0A] text-center tracking-tight">Access Alpha Agency</h1>
+        <p className="text-sm text-[#6B7280] text-center mt-2">Buy a token or enter one you already have.</p>
+
+        <div className="mt-8">
+          {/* Section 1 - BUY BUTTON */}
+          <button
+            onClick={handlePayment}
+            disabled={loading}
+            className="w-full bg-[#0A0A0A] text-white py-4 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-[15px]"
+          >
+            Buy Access Token — $50
+          </button>
+          <p className="text-center text-xs text-[#6B7280] mt-2">One-time payment, lifetime access</p>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-[#EDEDED]"></div>
+            <span className="text-sm text-[#6B7280]">or</span>
+            <div className="flex-1 h-px bg-[#EDEDED]"></div>
+          </div>
+
+          {/* Section 2 - ENTER TOKEN FORM */}
+          <form onSubmit={handleVerify}>
             <input
               type="text"
-              placeholder="A1B2C3D4"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="input text-center tracking-widest"
-              style={{borderColor:'#E0E0E0', fontSize:'20px', letterSpacing:'0.18em', padding:'16px', background:'#FFFFFF'}}
-              required
-              autoComplete="off"
-              autoFocus
+              placeholder="ALPHA-XXXX-XXXX"
+              className="w-full border border-[#EDEDED] rounded-lg px-4 py-3 text-center text-xl tracking-widest uppercase focus:border-[#5E17EB] focus:outline-none placeholder:text-[#9CA3AF] text-[#0A0A0A] bg-white"
             />
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center"
-              style={{background:'#5E17EB', color:'#FFFFFF', height:'52px', borderRadius:'10px', fontWeight:800, fontSize:'15px', border:'none', cursor:'pointer', opacity: loading ? 0.7 : 1}}
+              className="w-full bg-white text-black border border-[#EDEDED] py-4 rounded-lg font-semibold hover:bg-gray-50 mt-3 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-[15px]"
             >
-              {loading ? 'Verifying…' : '🔓 Unlock Platform'}
+              {loading ? 'Verifying...' : 'Unlock Platform →'}
             </button>
           </form>
 
-          {message && <p className="mt-4 text-center text-sm" style={{color: message.startsWith('✅') ? '#0A7A00' : message.startsWith('⚠️') ? '#92400E' : '#C00000', background: message.startsWith('✅') ? '#F0FDF4' : message.startsWith('⚠️') ? '#FFFBEB' : '#FEF2F2', border:'1px solid #EDEDED', borderRadius:'10px', padding:'10px 12px'}}>{message}</p>}
+          {/* Message area */}
+          {message && (
+            <p className={`mt-4 text-center text-sm ${isSuccess ? 'text-green-600' : isError ? 'text-red-600' : 'text-[#6B7280]'}`}>
+              {message}
+            </p>
+          )}
         </div>
-
-        <div className="mt-6 card" style={{background:'#FFFFFF', border:'1px solid #EDEDED', borderRadius:'16px', padding:'20px'}}>
-          <div style={{color:'#0A0A0A', fontSize:'12px', fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase'}}>Don’t have a token? Buy your plan — instant issue</div>
-          <p className="mt-1" style={{color:'#6B7280', fontSize:'13px'}}>Paystack USD • Token issued instantly after verified success. One-time. Lifetime.</p>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Link to="/checkout?price=50" className="text-center inline-flex flex-col items-center justify-center" style={{background:'#0A0A0A', color:'#FFFFFF', borderRadius:'10px', padding:'14px 8px', textDecoration:'none'}}>
-              <span style={{fontWeight:800, fontSize:'16px'}}>$50 USD</span><span style={{fontSize:'11px', opacity:0.7}}>Access token</span><span style={{fontSize:'11px', marginTop:'4px', background:'#5E17EB', color:'#FFFFFF', borderRadius:'999px', padding:'2px 8px', fontWeight:700}}>Buy →</span>
-            </Link>
-            <Link to="/checkout?price=99" className="text-center inline-flex flex-col items-center justify-center" style={{background:'#5E17EB', color:'#FFFFFF', borderRadius:'10px', padding:'14px 8px', textDecoration:'none'}}>
-              <span style={{fontWeight:800, fontSize:'16px'}}>$99 USD</span><span style={{fontSize:'11px', opacity:0.9}}>Premium token</span><span style={{fontSize:'11px', marginTop:'4px', background:'#FFFFFF', color:'#5E17EB', borderRadius:'999px', padding:'2px 8px', fontWeight:800}}>Most chosen →</span>
-            </Link>
-          </div>
-          <div className="mt-3 flex items-center justify-center gap-2" style={{color:'#9CA3AF', fontSize:'11px'}}>
-            <Link to="/pricing" style={{color:'#5E17EB', fontWeight:700, textDecoration:'none'}}>See all plans →</Link>
-            <span>•</span>
-            <span>Single-use • 30-day expiry</span>
-          </div>
-        </div>
-
-        <p className="text-center mt-4" style={{color:'#9CA3AF', fontSize:'11px'}}>
-          Secure • Single-use tokens • No view guarantees — real access to real people. Contact <a href="mailto:alphatekxcompany@gmail.com" style={{color:'#5E17EB', fontWeight:600}}>alphatekxcompany@gmail.com</a>
-        </p>
       </div>
     </div>
   );
 };
-
-export default AccessCode;
