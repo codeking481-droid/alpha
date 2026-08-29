@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'https://your-worker.workers.dev',
+        target: process.env.VITE_API_URL || 'https://alpha-agency-api.workers.dev',
         changeOrigin: true,
       },
     },

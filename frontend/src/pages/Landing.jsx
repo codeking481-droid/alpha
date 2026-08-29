@@ -37,20 +37,7 @@ export const Landing = () => {
     });
   }, [navigate]);
 
-  const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder') || import.meta.env.VITE_SUPABASE_URL === 'your_supabase_url_here';
-
   const handleGoogleSignup = async () => {
-    // Demo fallback: if Supabase not configured, simulate login so flow works
-    if (isDemoMode) {
-      setLoading(true);
-      localStorage.setItem('demo_user', JSON.stringify({ email: 'demo@alpha.agency', name: 'Demo User' }));
-      localStorage.setItem('demo_hasAccess', 'false');
-      setTimeout(() => {
-        setLoading(false);
-        navigate('/access');
-      }, 400);
-      return;
-    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -71,10 +58,7 @@ export const Landing = () => {
     }
   };
 
-  const handleLogin = () => {
-    // Log in goes to same Google flow
-    handleGoogleSignup();
-  };
+  const handleLogin = () => handleGoogleSignup();
 
   const handleDownloadApp = async () => {
     if (deferredPrompt) {

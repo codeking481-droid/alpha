@@ -10,14 +10,7 @@ export const AccessCode = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const isDemo = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder') || import.meta.env.VITE_SUPABASE_URL === 'your_supabase_url_here' || localStorage.getItem('demo_user');
-
-  // Get logged in user email + protected redirect + auto-verify
   useEffect(() => {
-    const demo = localStorage.getItem('demo_user');
-    if (demo) {
-      try { setUserEmail(JSON.parse(demo).email); } catch { setUserEmail('demo@alpha.agency'); }
-    }
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user?.email) {
         setUserEmail(data.user.email);
@@ -25,12 +18,12 @@ export const AccessCode = () => {
         supabase.auth.getSession().then(({ data: sessionData }) => {
           if (sessionData?.session?.user?.email) {
             setUserEmail(sessionData.session.user.email);
-          } else if (!data?.user && !demo) {
+          } else if (!data?.user) {
             const reference = searchParams.get('reference');
             if (!reference) {
               setTimeout(() => {
                 supabase.auth.getSession().then(({ data: { session } }) => {
-                  if (!session?.user && !localStorage.getItem('demo_user')) navigate('/');
+                  if (!session?.user) navigate('/');
                 });
               }, 800);
             }
@@ -38,32 +31,18 @@ export const AccessCode = () => {
         });
       }
     });
-
     const reference = searchParams.get('reference');
-    if (reference) {
-      handleAutoVerify(reference);
-    }
+    if (reference) handleAutoVerify(reference);
   }, []);
 
   const handleAutoVerify = async (reference) => {
     setLoading(true);
     setMessage('Verifying payment...');
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      if (!apiUrl || apiUrl.includes('your-worker') || apiUrl.includes('placeholder')) {
-        // Demo: simulate verification
-        const fakeCode = 'ALPHA-DEMO-' + reference.slice(-4).toUpperCase();
-        setCode(fakeCode);
-        localStorage.setItem('demo_hasAccess', 'true');
-        setMessage(`✅ Payment verified! Your code: ${fakeCode}. Redirecting...`);
-        setTimeout(() => navigate('/dashboard'), 1200);
-        return;
-      }
-      const res = await fetch(`${apiUrl}/api/payment/verify?reference=${reference}`, { credentials: 'include' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify?reference=${reference}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success && data.accessCode) {
         setCode(data.accessCode);
-        localStorage.setItem('demo_hasAccess', 'true');
         setMessage(`✅ Payment verified! Your code: ${data.accessCode}. Redirecting...`);
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {
@@ -78,21 +57,9 @@ export const AccessCode = () => {
 
   const handleVerify = async (e) => {
     e.preventDefault();
-    if (!code.trim()) {
-      setMessage('❌ Enter a code');
-      return;
-    }
+    if (!code.trim()) { setMessage('❌ Enter a code'); return; }
     setLoading(true);
     setMessage('');
-    // Demo: accept any ALPHA-... or DEMO code
-    const upper = code.toUpperCase();
-    if (isDemo && (upper.startsWith('ALPHA') || upper.includes('DEMO') || upper.length >= 8)) {
-      localStorage.setItem('demo_hasAccess', 'true');
-      setMessage('✅ Access granted! Redirecting...');
-      setTimeout(() => navigate('/dashboard'), 800);
-      setLoading(false);
-      return;
-    }
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-code`, {
         method: 'POST',
@@ -102,48 +69,23 @@ export const AccessCode = () => {
       });
       const data = await res.json();
       if (data.success) {
-        localStorage.setItem('demo_hasAccess', 'true');
         setMessage('✅ Access granted! Redirecting...');
         setTimeout(() => navigate('/dashboard'), 1000);
       } else {
         setMessage('❌ ' + (data.error || 'Invalid code'));
       }
     } catch (err) {
-      // Fallback demo: if API down, allow ALPHA-... codes
-      if (upper.startsWith('ALPHA')) {
-        localStorage.setItem('demo_hasAccess', 'true');
-        setMessage('✅ Access granted! Redirecting...');
-        setTimeout(() => navigate('/dashboard'), 800);
-      } else {
-        setMessage('❌ ' + err.message);
-      }
+      setMessage('❌ ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handlePayment = async () => {
-    // Demo mode: simulate payment without email check
-    const apiUrl = import.meta.env.VITE_API_URL;
-    if (!apiUrl || apiUrl.includes('your-worker') || apiUrl.includes('placeholder')) {
-      setLoading(true);
-      setMessage('Redirecting to checkout...');
-      setTimeout(() => {
-        // Simulate successful payment callback
-        const ref = 'demo_' + Date.now();
-        localStorage.setItem('demo_hasAccess', 'true');
-        navigate(`/access?reference=${ref}`);
-        setLoading(false);
-      }, 800);
-      return;
-    }
-    if (!userEmail) {
-      setMessage('❌ Please sign up first');
-      return;
-    }
+    if (!userEmail) { setMessage('❌ Please sign up first'); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/payment/initialize`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -188,7 +130,6 @@ export const AccessCode = () => {
             </button>
           </form>
           {message && <p className={`mt-4 text-center text-sm ${isSuccess ? 'text-green-600' : isError ? 'text-red-600' : 'text-[#6B7280]'}`}>{message}</p>}
-          {isDemo && <p className="mt-3 text-center text-[11px] text-[#9CA3AF]">Demo mode: Use ALPHA-DEMO-1234 or click Buy to simulate payment</p>}
         </div>
       </div>
     </div>
