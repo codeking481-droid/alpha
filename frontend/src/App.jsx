@@ -7,6 +7,8 @@ import { FindCompanies } from './pages/FindCompanies';
 import { SendMessages } from './pages/SendMessages';
 import { TrackReplies } from './pages/TrackReplies';
 import { Campaigns } from './pages/Campaigns';
+import { SavedCompanies } from './pages/SavedCompanies';
+import { Inbox } from './pages/Inbox';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/send-messages" element={<ProtectedRoute requirePayment={true}><SendMessages /></ProtectedRoute>} />
         <Route path="/track-replies" element={<ProtectedRoute requirePayment={true}><TrackReplies /></ProtectedRoute>} />
         <Route path="/campaigns" element={<ProtectedRoute requirePayment={true}><Campaigns /></ProtectedRoute>} />
+        <Route path="/saved-companies" element={<ProtectedRoute requirePayment={true}><SavedCompanies /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute requirePayment={true}><Inbox /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
