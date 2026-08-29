@@ -12,7 +12,7 @@ function EmailModal({ company, onClose, onSent, getToken }) {
     setSending(true); setError('');
     try {
       const token = getToken();
-      const res = await fetch('/api/outreach/send', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/outreach/send`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ companyId: company.id, companyName: company.company_name || company.name, domain: company.domain, ownerName: company.owner_name || '', ownerEmail: company.owner_email || '', niche: company.niche || '', product: company.product || '', to: company.owner_email || '', subject, message: body })
       });
@@ -48,7 +48,7 @@ function DeleteConfirm({ company, onClose, onDeleted, getToken }) {
     setDeleting(true);
     try {
       const token = getToken();
-      const res = await fetch(`/api/companies/${company.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/companies/${company.id}`, {
         method: 'DELETE', headers: { Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include'
       });
       const data = await res.json();
@@ -113,7 +113,7 @@ export const SavedCompanies = () => {
     setLoading(true); setError('');
     try {
       const token = getToken();
-      let q = `/api/companies/my-companies?limit=20&offset=${(page - 1) * 20}`;
+      let q = `${import.meta.env.VITE_API_URL}/api/companies/my-companies?limit=20&offset=${(page - 1) * 20}`;
       if (statusFilter) q += `&status=${statusFilter}`;
       if (nicheFilter) q += `&niche=${encodeURIComponent(nicheFilter)}`;
       if (search) q += `&search=${encodeURIComponent(search)}`;
@@ -147,7 +147,7 @@ export const SavedCompanies = () => {
     if (!selectedItems.length) return;
     try {
       const token = getToken();
-      await fetch('/api/companies/save-bulk', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/companies/save-bulk`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ companies: selectedItems.map(i => ({ companyName: i.company_name || i.name, domain: i.domain, ownerName: i.owner_name, ownerEmail: i.owner_email, niche: i.niche, product: i.product, source: i.source })) })
       });

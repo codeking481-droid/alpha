@@ -26,7 +26,7 @@ function FollowupCard({ reply, user, onRefresh, getToken }) {
     setGenerating(true);
     try {
       const token = getToken();
-      const res = await fetch(`/api/replies/${reply.id}/generate-followup`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/replies/${reply.id}/generate-followup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
         credentials: 'include',
@@ -45,7 +45,7 @@ function FollowupCard({ reply, user, onRefresh, getToken }) {
     setSending(true); setError('');
     try {
       const token = getToken();
-      const res = await fetch(`/api/replies/${reply.id}/approve-send`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/replies/${reply.id}/approve-send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
         credentials: 'include',
@@ -64,7 +64,7 @@ function FollowupCard({ reply, user, onRefresh, getToken }) {
   const rejectFollowup = async () => {
     try {
       const token = getToken();
-      await fetch(`/api/replies/${reply.id}/reject`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/replies/${reply.id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
         credentials: 'include'
@@ -167,7 +167,7 @@ export const Inbox = () => {
     setLoading(true); setError('');
     try {
       const token = getToken();
-      const res = await fetch('/api/replies/my-replies', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/replies/my-replies`, {
         headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' },
         credentials: 'include'
       });
@@ -199,7 +199,7 @@ export const Inbox = () => {
   const markHot = async (companyId) => {
     try {
       const token = getToken();
-      await fetch(`/api/companies/${companyId}/status`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/companies/${companyId}/status`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ status: 'hot' })
       });
@@ -210,7 +210,7 @@ export const Inbox = () => {
   const markClosedWon = async (companyId) => {
     try {
       const token = getToken();
-      const res = await fetch(`/api/companies/${companyId}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/companies/${companyId}/status`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ status: 'closed_won' })
       });
@@ -226,7 +226,7 @@ export const Inbox = () => {
   const generateContent = async (companyId, companyName) => {
     try {
       const token = getToken();
-      const res = await fetch('/api/content/generate', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/content/generate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ companyId, type: 'post' })
       });
