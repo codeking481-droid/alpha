@@ -16,6 +16,10 @@ import { COMMUNITY, PRICING, TRUTH_CLAUSE, getTotalReach, getCampaignDeliverable
 import { generateCampaignPlan } from './lib/campaignPlanner.js'
 import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
+import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.js'
+import { sendEmail, trackSentEmail, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
+import { findCompaniesApollo, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
+import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 
 const app = new Hono()
 app.use('*', cors({
@@ -681,6 +685,180 @@ app.patch('/api/tokens/:id/revoke', async (c) => {
     return c.json({ success: true })
   } catch (e) {
     return c.json({ error: e.message }, 403)
+  }
+})
+
+// ──────────────────────────────────────────────────
+// ENGINE 3 — GENERATE CONTENT FOR REAL (AI Copywriting)
+// ──────────────────────────────────────────────────
+app.post('/api/campaigns/generate', async (c) => {
+  try {
+    const { companyName, industry, clientCount = 10, tone = 'professional' } = await c.req.json().catch(() => ({}))
+    
+    if (!companyName || !industry) {
+      return c.json({ error: 'companyName and industry are required' }, 400)
+    }
+
+    // Generate content using Groq/OpenAI
+    const result = await generateCampaignContent(c.env, companyName, industry, clientCount, tone)
+    
+    // Save to Supabase
+    const saved = await saveCampaign(c.env, companyName, industry, result.posts, result.youtubeScripts)
+    
+    return c.json({
+      success: true,
+      campaignId: saved.id,
+      companyName: result.companyName,
+      industry: result.industry,
+      posts: result.posts,
+      youtubeScripts: result.youtubeScripts,
+      generatedAt: result.generatedAt
+    }, 201)
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+// ──────────────────────────────────────────────────
+// ENGINE 2 — SEND EMAIL FOR REAL (Resend API)
+// ──────────────────────────────────────────────────
+app.post('/api/outreach/send-email', async (c) => {
+  try {
+    const { to, companyName, industry, subject, message } = await c.req.json().catch(() => ({}))
+    
+    if (!to || !companyName || !message) {
+      return c.json({ error: 'to, companyName, and message are required' }, 400)
+    }
+
+    // Personalize message
+    const personalizedMessage = personalizateMessage(message, companyName, industry)
+    const htmlContent = formatEmailHTML(subject, personalizedMessage, companyName)
+
+    // Send email via Resend
+    const { emailId, threadId } = await sendEmail(c.env, to, subject, htmlContent, companyName, industry)
+
+    // Track sent email in Supabase
+    const tracked = await trackSentEmail(c.env, to, companyName, industry, subject, message, threadId, emailId)
+
+    return c.json({
+      success: true,
+      emailId: emailId,
+      threadId: threadId,
+      to: to,
+      companyName: companyName,
+      sentAt: new Date().toISOString()
+    }, 201)
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+// Get sent emails history
+app.get('/api/outreach/sent-emails', async (c) => {
+  try {
+    const limit = parseInt(c.req.query('limit') || '50')
+    const emails = await c.env.SUPABASE_URL 
+      ? await fetch(`${c.env.SUPABASE_URL}/rest/v1/sent_emails?order=sent_at.desc&limit=${limit}`, {
+          headers: {
+            'apikey': c.env.SUPABASE_SERVICE_KEY,
+            'Authorization': `Bearer ${c.env.SUPABASE_SERVICE_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }).then(r => r.json())
+      : []
+    return c.json({ success: true, emails, count: emails.length })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+// ──────────────────────────────────────────────────
+// ENGINE 1 — FIND REAL COMPANIES (Apollo + Hunter API)
+// ──────────────────────────────────────────────────
+app.post('/api/companies/find', async (c) => {
+  try {
+    const { niche, location, count = 20 } = await c.req.json().catch(() => ({}))
+    
+    if (!niche) {
+      return c.json({ error: 'niche is required' }, 400)
+    }
+
+    // Check cache first
+    let companies = await getCachedLeads(c.env, niche)
+    
+    if (!companies) {
+      // Find companies using Apollo
+      companies = await findCompaniesApollo(c.env, niche, location, count)
+      
+      // Cache results for 24h
+      await cacheLeads(c.env, niche, companies)
+    }
+
+    return c.json({
+      success: true,
+      companies: companies,
+      count: companies.length,
+      niche: niche,
+      location: location,
+      cached: !companies.some(c => c.foundedYear) // Simple cache detection
+    })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+// ──────────────────────────────────────────────────
+// ENGINE 4 — TRACK REPLIES FOR REAL (Gmail + Sentiment)
+// ──────────────────────────────────────────────────
+
+// Get all replies
+app.get('/api/replies', async (c) => {
+  try {
+    const limit = parseInt(c.req.query('limit') || '100')
+    const sentiment = c.req.query('sentiment') // Filter by sentiment
+    
+    const replies = await getGmailReplies(c.env, limit)
+    const filtered = sentiment ? replies.filter(r => r.sentiment === sentiment) : replies
+
+    return c.json({
+      success: true,
+      replies: filtered,
+      count: filtered.length,
+      stats: {
+        total: replies.length,
+        positive: replies.filter(r => r.sentiment === 'positive').length,
+        negative: replies.filter(r => r.sentiment === 'negative').length,
+        neutral: replies.filter(r => r.sentiment === 'neutral').length
+      }
+    })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+// Sync Gmail inbox for new replies (polling)
+app.post('/api/replies/sync', async (c) => {
+  try {
+    const synced = await syncGmailReplies(c.env)
+    return c.json({
+      success: true,
+      synced: synced.length,
+      replies: synced
+    })
+  } catch (e) {
+    return c.json({ error: e.message }, 500)
+  }
+})
+
+// Webhook for Resend inbound emails
+app.post('/api/webhooks/email-reply', async (c) => {
+  try {
+    const payload = await c.req.json().catch(() => ({}))
+    const reply = await handleEmailReplyWebhook(c.env, payload)
+    return c.json({ success: true, reply })
+  } catch (e) {
+    console.error('Webhook error:', e)
+    return c.json({ error: e.message }, 500)
   }
 })
 

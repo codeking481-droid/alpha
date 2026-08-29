@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../lib/api';
 
 const defaultPosts = [
   { id: '01', platform: 'LinkedIn', type: 'Announcment', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Launch announcement: Acme Innovations introduces new AI workflow automation to save teams 10hrs/week →' },
@@ -28,23 +29,49 @@ export const Campaigns = () => {
   const [posts, setPosts] = useState(defaultPosts);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const generatePosts = () => {
-    const name = companyName || 'Acme Innovations';
-    const ind = industry || 'SaaS / Technology';
-    const count = clientCount || '24';
-    setPosts([
-      { id: '01', platform: 'LinkedIn', type: 'Announcment', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Launch announcement: ${name} introduces new AI workflow automation to save teams 10hrs/week →` },
-      { id: '02', platform: 'WhatsApp', type: 'Teaser', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: `Teaser: Something big is coming for ${name}. Want early access? Reply "YES" to join the waitlist →` },
-      { id: '03', platform: 'Telegram', type: 'Intro', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: `Intro: Meet the team behind the product. Why we built this for agencies like yours in ${ind} →` },
-      { id: '04', platform: 'LinkedIn', type: 'Educational', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Educational: How the 10-post system drives 3x engagement for ${ind} without extra ad spend →` },
-      { id: '05', platform: 'WhatsApp', type: 'Testimonial', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: `Testimonial: "${name} got 5 new leads in 48h after the campaign." — Client feedback →` },
-      { id: '06', platform: 'Telegram', type: 'Poll', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: `Poll: What's your biggest ${ind} challenge? A) Content • B) Leads • C) Retention →` },
-      { id: '07', platform: 'LinkedIn', type: 'Case Study', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Case Study: How we helped ${name} trusted by ${count} clients cut onboarding by 60% →` },
-      { id: '08', platform: 'WhatsApp', type: 'Tip', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: `Tip: 3 quick ways to keep clients engaged on WhatsApp without spamming →` },
-      { id: '09', platform: 'Telegram', type: 'Promo', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: `Promo: Limited spots for ${name} — 20% off setup if you join this week. Ends Friday →` },
-      { id: '10', platform: 'LinkedIn', type: 'Recap', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: `Recap: Week 1 results for ${name} + what's next. Full summary drops tomorrow →` },
-    ]);
+  const generatePosts = async () => {
+    if (!companyName || !industry) {
+      setError('Please enter company name and industry');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_URL}/api/campaigns/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          companyName: companyName,
+          industry: industry,
+          clientCount: parseInt(clientCount) || 10,
+          tone: 'professional'
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.posts) {
+        setPosts(data.posts.map((post, idx) => ({
+          id: String(idx + 1).padStart(2, '0'),
+          ...post
+        })));
+      } else {
+        setError(data.error || 'Failed to generate posts');
+      }
+    } catch (e) {
+      setError(e.message || 'Generation failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyToClipboard = (content) => {
@@ -110,6 +137,7 @@ export const Campaigns = () => {
         <div className="mt-6 bg-white border border-[#EDEDED] rounded-xl p-5 md:p-6 shadow-sm">
           <h2 className="text-[18px] font-bold text-[#0A0A0A] flex items-center gap-2"><span className="text-[#5E17EB]">✨</span> Campaign Inputs</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                       {error && <div className="col-span-full bg-red-50 border border-red-200 text-red-700 text-[13px] px-4 py-3 rounded-lg">{error}</div>}
             <div>
               <label className="text-[13px] font-semibold text-[#0A0A0A]">Company Name</label>
               <div className="mt-1.5 relative">
@@ -204,9 +232,10 @@ export const Campaigns = () => {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Export CSV
               </button>
-              <button onClick={generatePosts} className="inline-flex items-center gap-1.5 bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-lg px-4 py-2 text-[13px] font-semibold">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
-                Generate All Posts
+              <button onClick={generatePosts} disabled={loading} className={`inline-flex items-center gap-1.5 ${loading ? 'bg-[#A899D6] cursor-not-allowed' : 'bg-[#5E17EB] hover:bg-[#4F0FE0]'} text-white rounded-lg px-4 py-2 text-[13px] font-semibold`}>
+                {loading && <svg width="14" height="14" className="animate-spin" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0110 10"/></svg>}
+                {!loading && <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>}
+                {loading ? 'Generating...' : 'Generate All Posts'}
               </button>
             </div>
           </div>

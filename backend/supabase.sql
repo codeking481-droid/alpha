@@ -119,6 +119,54 @@ create table if not exists team_members (
   created_at timestamp default now()
 );
 
+-- Campaigns (generated content for companies)
+create table if not exists campaigns (
+  id uuid primary key default gen_random_uuid(),
+  company_name text not null,
+  industry text,
+  posts jsonb,
+  youtube_scripts jsonb,
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+
+-- Sent emails (outreach tracking)
+create table if not exists sent_emails (
+  id uuid primary key default gen_random_uuid(),
+  to_email text not null,
+  company_name text,
+  industry text,
+  subject text,
+  body text,
+  thread_id text unique,
+  sent_at timestamp default now(),
+  status text default 'sent',
+  created_at timestamp default now()
+);
+
+-- Replies (inbound email tracking)
+create table if not exists replies (
+  id uuid primary key default gen_random_uuid(),
+  from_email text not null,
+  to_email text,
+  subject text,
+  body text,
+  received_at timestamp,
+  sentiment text default 'neutral',
+  is_read boolean default false,
+  original_email_id uuid references sent_emails(id),
+  created_at timestamp default now()
+);
+
+-- Leads cache (company search results)
+create table if not exists leads_cache (
+  id uuid primary key default gen_random_uuid(),
+  niche text not null,
+  data jsonb,
+  created_at timestamp default now(),
+  expires_at timestamp
+);
+
 -- Seed master codes (single-use, instant unlock)
 insert into access_codes (code, used) values ('126213JESUSISKING', false) on conflict (code) do nothing;
 insert into access_codes (code, used) values ('126213JESUS', false) on conflict (code) do nothing;
@@ -135,3 +183,6 @@ alter table contracts disable row level security;
 alter table access_codes disable row level security;
 alter table api_tokens disable row level security;
 alter table team_members disable row level security;
+alter table campaigns disable row level security;
+alter table sent_emails disable row level security;
+alter table leads_cache disable row level security;
