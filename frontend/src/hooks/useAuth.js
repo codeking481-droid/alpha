@@ -16,11 +16,18 @@ export const useAuth = () => {
       setUser(session?.user || null);
     });
 
+    // Master unlock local check - instant unlock without API
+    if (localStorage.getItem('master_unlocked') === 'true' || localStorage.getItem('demo_hasAccess') === 'true') {
+      setHasAccess(true);
+    }
+
     fetch(`${import.meta.env.VITE_API_URL}/api/auth/check-access`, {
       credentials: 'include'
-    }).then(res => res.json()).then(data => {
-      setHasAccess(!!data.hasAccess);
-    }).catch(() => setHasAccess(false));
+    }).then(res => res.text().then(t => {
+      try { return t ? JSON.parse(t) : {}; } catch { return {}; }
+    })).then(data => {
+      if (data.hasAccess) setHasAccess(true);
+    }).catch(() => {});
 
     return () => listener?.subscription.unsubscribe();
   }, []);

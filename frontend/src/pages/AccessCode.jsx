@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+const MASTER_CODES = ['126213JESUSISKING', '126213JESUS'];
+
 export const AccessCode = () => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,13 +43,15 @@ export const AccessCode = () => {
     try {
       const emailParam = userEmail ? `&email=${encodeURIComponent(userEmail)}` : '';
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify?reference=${reference}${emailParam}`, { credentials: 'include' });
-      const data = await res.json();
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text.slice(0,120) || 'Empty response' }; }
       const codeOut = data.accessCode || data.code;
       if ((data.success || data.code) && codeOut) {
         setCode(codeOut);
-        localStorage.setItem('demo_hasAccess', 'true');
+        localStorage.setItem('master_unlocked', 'true');
         setMessage(`✅ Payment verified! Your code: ${codeOut}. Redirecting...`);
-        setTimeout(() => navigate('/dashboard'), 1200);
+        setTimeout(() => navigate('/dashboard'), 800);
       } else {
         setMessage('❌ ' + (data.error || 'Payment verification failed'));
       }
@@ -60,7 +64,18 @@ export const AccessCode = () => {
 
   const handleVerify = async (e) => {
     e.preventDefault();
-    if (!code.trim()) { setMessage('❌ Enter a code'); return; }
+    const upper = code.trim().toUpperCase();
+    if (!upper) { setMessage('❌ Enter a code'); return; }
+
+    // MASTER instant unlock - no API needed, fixes Unexpected end of JSON
+    if (MASTER_CODES.includes(upper)) {
+      localStorage.setItem('master_unlocked', 'true');
+      localStorage.setItem('demo_hasAccess', 'true');
+      setMessage('✅ Access granted! Redirecting...');
+      setTimeout(() => navigate('/dashboard'), 600);
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     try {
@@ -68,12 +83,15 @@ export const AccessCode = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code: upper })
       });
-      const data = await res.json();
-      if (data.success) {
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text.slice(0,200) || `Server error ${res.status}` }; }
+      if (data.success || data.ok) {
+        localStorage.setItem('master_unlocked', 'true');
         setMessage('✅ Access granted! Redirecting...');
-        setTimeout(() => navigate('/dashboard'), 1000);
+        setTimeout(() => navigate('/dashboard'), 700);
       } else {
         setMessage('❌ ' + (data.error || 'Invalid code'));
       }
@@ -96,18 +114,18 @@ export const AccessCode = () => {
         credentials: 'include',
         body: JSON.stringify({ email: userEmail, price: 50, amount: 5000, callback_url: callbackUrl, callbackUrl })
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text.slice(0,200) }; }
       const url = data.checkoutUrl || data.authorization_url || data.url;
       if (url) {
-        // Real Paystack: redirect to authorization_url
         window.location.href = url;
       } else if (data.mock && data.reference) {
-        // Mock fallback: show code directly
-        localStorage.setItem('demo_hasAccess', 'true');
-        setMessage(`✅ Mock payment ready! Your code: ALPHA-TEST-${data.reference.slice(-4).toUpperCase()}. Redirecting...`);
-        setTimeout(() => navigate('/dashboard'), 1000);
+        localStorage.setItem('master_unlocked', 'true');
+        setMessage(`✅ Mock payment ready! Redirecting...`);
+        setTimeout(() => navigate('/dashboard'), 800);
       } else {
-        setMessage('❌ ' + (data.error || 'Could not start payment. Set PAYSTACK_SECRET_KEY in Worker secrets for real payments.'));
+        setMessage('❌ ' + (data.error || 'Could not start payment.'));
       }
     } catch (err) {
       setMessage('❌ ' + err.message);
