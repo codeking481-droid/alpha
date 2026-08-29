@@ -1,6 +1,6 @@
 // Groq client — uses env.GROQ_API_KEY, falls back to mock when missing
 
-export async function groqGenerate(env, { prompt, model = 'llama-3.1-8b-instant' }) {
+export async function groqGenerate(env, { prompt, model = 'llama-3.3-70b-versatile' }) {
   const key = env.GROQ_API_KEY
   if (!key) {
     // Mock — clearly marked real draft

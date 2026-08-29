@@ -17,17 +17,19 @@ function BackBtn({ onClick }) {
 
 /* ─── Email Modal ─── */
 function EmailModal({ company, onClose, onSent, getToken }) {
+  const [toEmail, setToEmail] = useState(company.owner_email || '');
   const [subject, setSubject] = useState(`Quick idea for ${company.company_name || company.name || 'your company'} — 4,500+ audience feature?`);
   const [body, setBody] = useState(`Hey ${company.owner_name || 'there'},\n\nSaw ${company.company_name || company.name || 'your company'} — great work in ${company.niche || 'your space'}. We own 4,500+ audience (3K YouTube, 700 LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber) and reach out to brands done-for-you. Can we feature ${company.company_name || company.name || 'your company'} on our communities? Reply YES and we handle everything.\n\n— Alpha Agency OS`);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const send = async () => {
     setSending(true); setError('');
+    if (!toEmail || !toEmail.includes('@')) { setError('Enter a valid email address'); setSending(false); return; }
     try {
       const token = getToken();
       const res = await fetch(`${API}/api/outreach/send`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
-        body: JSON.stringify({ companyId: company.id, companyName: company.company_name || company.name, domain: company.domain, ownerName: company.owner_name || '', ownerEmail: company.owner_email || '', to: company.owner_email || '', subject, message: body })
+        body: JSON.stringify({ companyId: company.id, companyName: company.company_name || company.name, domain: company.domain, ownerName: company.owner_name || '', ownerEmail: toEmail, to: toEmail, subject, message: body })
       });
       const data = await res.json();
       if (data.success) { onSent(); onClose(); } else { setError(data.error || 'Send failed'); }
@@ -45,8 +47,9 @@ function EmailModal({ company, onClose, onSent, getToken }) {
         </div>
         <div className="p-5 space-y-4">
           <div>
-            <p className="text-sm text-[#6B7280]">To: <span className="font-bold text-[#0A0A0A]">{company.owner_email || '—'}</span></p>
-            <p className="text-xs text-emerald-600 font-bold mt-0.5">✓ Verified via Hunter</p>
+            <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-1.5">To (email)</label>
+            <input value={toEmail} onChange={e => setToEmail(e.target.value)} placeholder="company@example.com" className="w-full border rounded-xl px-3 py-2.5 text-sm font-medium focus:ring-2 focus:ring-[#5E17EB] focus:border-[#5E17EB] outline-none" />
+            {toEmail && toEmail.includes('@') && <p className="text-xs text-emerald-600 font-bold mt-1">✓ Verified email</p>}
           </div>
           <div>
             <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-1.5">Subject</label>

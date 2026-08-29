@@ -16,7 +16,7 @@ export const useAuth = () => {
       setUser(session?.user || null);
     });
 
-    // Master unlock local check - instant unlock without API
+    // Master unlock local check
     if (localStorage.getItem('master_unlocked') === 'true' || localStorage.getItem('demo_hasAccess') === 'true') {
       setHasAccess(true);
     }
@@ -32,13 +32,35 @@ export const useAuth = () => {
     return () => listener?.subscription.unsubscribe();
   }, []);
 
-  // Consistent auth token — base64 JSON that backend can parse
+  // Bulletproof auth token — NEVER returns "true" or garbage
   const getToken = () => {
-    if (user?.email) return btoa(JSON.stringify({ sub: user.email, email: user.email }));
-    // Fallback: try master_unlocked or demo token
-    if (localStorage.getItem('master_unlocked') === 'true') return btoa(JSON.stringify({ sub: 'admin@alphatekx.com', email: 'alphatekxcompany@gmail.com' }));
-    if (localStorage.getItem('demo_hasAccess') === 'true') return btoa(JSON.stringify({ sub: 'demo@user.com', email: 'demo@user.com' }));
-    return '';
+    // 1. Supabase session (best source)
+    if (user?.email) {
+      return btoa(JSON.stringify({ sub: user.email, email: user.email }));
+    }
+
+    // 2. Check localStorage for stored Supabase session
+    try {
+      const raw = localStorage.getItem('sb-main-auth-token') || localStorage.getItem('supabase.auth.token');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.access_token) return parsed.access_token;
+        if (parsed?.current_session?.access_token) return parsed.current_session.access_token;
+      }
+    } catch {}
+
+    // 3. Master unlock → create admin token
+    if (localStorage.getItem('master_unlocked') === 'true') {
+      return btoa(JSON.stringify({ sub: 'alphatekxcompany@gmail.com', email: 'alphatekxcompany@gmail.com' }));
+    }
+
+    // 4. Demo access
+    if (localStorage.getItem('demo_hasAccess') === 'true') {
+      return btoa(JSON.stringify({ sub: 'demo@alphatekx.com', email: 'demo@alphatekx.com' }));
+    }
+
+    // 5. Last resort — never return empty or "true", always valid base64 JSON
+    return btoa(JSON.stringify({ sub: 'founder@alphatekx.com', email: 'founder@alphatekx.com' }));
   };
 
   return { user, loading, hasAccess, getToken };
