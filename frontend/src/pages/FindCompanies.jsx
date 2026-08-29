@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const DEMO_RESULTS = [
   { name: 'OpenAI', website: 'openai.com', email: 'contact@openai.com', logo: 'openai', color: 'bg-[#5A7BF7]' },
@@ -7,14 +8,14 @@ const DEMO_RESULTS = [
   { name: 'Perplexity', website: 'perplexity.ai', email: 'contact@perplexity.ai', logo: 'perplexity', color: 'bg-[#0A0A0A]' },
 ];
 
-function SaveCompanyBtn({ company }) {
+function SaveCompanyBtn({ company, getToken }) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const save = async () => {
     setSaving(true); setMsg('');
     try {
-      const token = localStorage.getItem('master_unlocked') || '';
+      const token = getToken();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/companies/save`, {
         method: 'POST', headers: { 'Content-Type':'application/json', Authorization: token ? 'Bearer '+token : '' }, credentials: 'include',
         body: JSON.stringify({ companyName: company.name, domain: company.website ? company.website.replace(/^https?:\/\//,'').split('/')[0].replace('www.','') : '', ownerName: '', ownerEmail: company.email || '', niche: '', product: '', source: company.source || 'apollo', website: company.website })
@@ -38,6 +39,7 @@ function SaveCompanyBtn({ company }) {
 
 export const FindCompanies = () => {
   const navigate = useNavigate();
+  const { user, getToken } = useAuth();
   const [search, setSearch] = useState('AI startups');
   const [results, setResults] = useState(DEMO_RESULTS);
   const [loading, setLoading] = useState(false);
@@ -159,7 +161,7 @@ export const FindCompanies = () => {
                       </div>
                     </div>
                   </div>
-                  <SaveCompanyBtn company={c} />
+                  <SaveCompanyBtn company={c} getToken={getToken} />
                 </div>
               ))
             )}
