@@ -31,7 +31,9 @@ function resolveAmount(env, price, amount) {
 }
 
 function isMockAllowed(env) {
-  return env.ENV !== 'production' || !getPaystackKey(env);
+  // A missing production secret must never turn into free access.  Mock
+  // transactions are only useful for local/development testing.
+  return String(env.ENV || 'development').toLowerCase() !== 'production';
 }
 
 export async function initializePayment(env, email, amount = 5000, callbackUrl = null, price = null) {
@@ -46,7 +48,7 @@ export async function initializePayment(env, email, amount = 5000, callbackUrl =
     if (isMockAllowed(env)) {
       const pForMock = Number(price) || 50;
       const mockRef = `mock_${pForMock}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/checkout` : 'http://localhost:5173/checkout');
+      const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/access` : 'http://localhost:5173/access');
       // Use URL with reference so frontend verify picks it up
       const separator = cb.includes('?') ? '&' : '?';
       const mockUrl = `${cb}${separator}reference=${encodeURIComponent(mockRef)}&email=${encodeURIComponent(email)}`;
@@ -56,7 +58,7 @@ export async function initializePayment(env, email, amount = 5000, callbackUrl =
     throw new Error(`PAYSTACK_SECRET_KEY not set. Available env keys: [${keys || 'none'}]. Fix: npx wrangler secret put PAYSTACK_SECRET_KEY  (get key: https://dashboard.paystack.com/#/settings/developer ) — or add to backend/.dev.vars for local.`);
   }
 
-  const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/checkout` : 'https://alphatekx.name.ng/checkout');
+  const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/access` : 'https://alphatekx.name.ng/access');
 
   const body = {
     email,

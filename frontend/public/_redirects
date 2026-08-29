@@ -1,2 +1,2 @@
-/api/* https://alpha-agency-api.workers.dev/api/:splat 200
+/api/* https://alpha-agency-api.alphatekxcompany.workers.dev/api/:splat 200
 /* /index.html 200

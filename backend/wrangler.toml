@@ -2,9 +2,14 @@
 main = "src/index.js"
 compatibility_date = "2024-12-18"
 compatibility_flags = ["nodejs_compat"]
+workers_dev = true
 
 [vars]
 ENV = "production"
+# This Paystack merchant does not have USD enabled. Prices are entered in USD
+# equivalents ($50/$99) and converted to NGN by payment.js before checkout.
+PAYSTACK_CURRENCY = "NGN"
+PAYSTACK_NGN_RATE = "1500"
 
 # Supabase — create project at https://supabase.com then set:
 # npx wrangler secret put SUPABASE_URL
@@ -16,9 +21,8 @@ ENV = "production"
 # npx wrangler secret put GROQ_API_KEY
 # npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
 
-# Paystack — USD $50 / $99 — https://dashboard.paystack.com/#/settings/developer
+# Paystack — $50 / $99 converted to NGN — https://dashboard.paystack.com/#/settings/developer
 # npx wrangler secret put PAYSTACK_SECRET_KEY   # sk_test_... or sk_live_...
-# npx wrangler secret put PAYSTACK_CURRENCY     # USD (default for $50/$99) — set to NGN only if you want Naira
 # Optional: npx wrangler secret put FRONTEND_URL        # e.g. https://alphatekx.name.ng
 
 # D1 (alternative to Supabase) — npx wrangler d1 create alphatekx-db

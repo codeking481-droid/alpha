@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const MASTER_CODES = ['126213JESUSISKING', '126213JESUS'];
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export const AccessCode = () => {
   const [code, setCode] = useState('');
@@ -41,8 +42,9 @@ export const AccessCode = () => {
     setLoading(true);
     setMessage('Verifying payment...');
     try {
-      const emailParam = userEmail ? `&email=${encodeURIComponent(userEmail)}` : '';
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify?reference=${reference}${emailParam}`, { credentials: 'include' });
+      const callbackEmail = userEmail || searchParams.get('email') || '';
+      const emailParam = callbackEmail ? `&email=${encodeURIComponent(callbackEmail)}` : '';
+      const res = await fetch(`${API_URL}/api/payment/verify?reference=${encodeURIComponent(reference)}${emailParam}`, { credentials: 'include' });
       const text = await res.text();
       let data = {};
       try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text.slice(0,120) || 'Empty response' }; }
@@ -79,7 +81,7 @@ export const AccessCode = () => {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-code`, {
+      const res = await fetch(`${API_URL}/api/auth/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -123,7 +125,7 @@ export const AccessCode = () => {
     setMessage('Starting payment...');
     try {
       const callbackUrl = window.location.origin + '/access';
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/initialize`, {
+      const res = await fetch(`${API_URL}/api/payment/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -581,11 +581,14 @@ app.post('/api/payment/initialize', async (c) => {
 app.get('/api/payment/verify', async (c) => {
   try {
     const reference = c.req.query('reference') || c.req.query('trxref') || c.req.query('ref') || null;
-    const email = c.req.query('email') || null;
+    const requestedEmail = c.req.query('email') || null;
     if (!reference) return c.json({ error: 'Reference required (?reference=...)' }, 400);
-    if (!email) return c.json({ error: 'Email required (?email=...)' }, 400);
     const payment = await verifyPayment(c.env, reference);
     if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
+    // Paystack returns the customer email with the verified transaction. This
+    // makes the callback reliable even if the frontend session is still loading.
+    const email = requestedEmail || payment.customer?.email || payment.email || null;
+    if (!email) return c.json({ error: 'Email is missing from the callback and payment record' }, 400);
     const mock = !!payment.mock;
     // USD $50/$99 — infer price from amount/currency or mock ref
     let price = 50;
@@ -611,10 +614,12 @@ app.get('/api/payment/verify', async (c) => {
 })
 app.post('/api/payment/verify', async (c) => {
   try {
-    const { reference, email } = await c.req.json().catch(()=>({}));
-    if (!reference || !email) return c.json({ error: 'Reference and email are required' }, 400);
+    const { reference, email: requestedEmail } = await c.req.json().catch(()=>({}));
+    if (!reference) return c.json({ error: 'Reference is required' }, 400);
     const payment = await verifyPayment(c.env, reference);
     if (payment.status !== 'success') return c.json({ error: 'Payment not successful' }, 400);
+    const email = requestedEmail || payment.customer?.email || payment.email || null;
+    if (!email) return c.json({ error: 'Email is missing from the request and payment record' }, 400);
     const mock = !!payment.mock;
     let price = 50;
     if (mock) {
