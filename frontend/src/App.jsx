@@ -7,7 +7,6 @@ import { FindCompanies } from './pages/FindCompanies';
 import { SendMessages } from './pages/SendMessages';
 import { TrackReplies } from './pages/TrackReplies';
 import { Campaigns } from './pages/Campaigns';
-import { ApiTokens } from './pages/ApiTokens';
 
 function App() {
   return (
@@ -16,7 +15,6 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/access" element={<AccessCode />} />
         <Route path="/dashboard" element={<ProtectedRoute requirePayment={true}><Dashboard /></ProtectedRoute>} />
-        <Route path="/api-tokens" element={<ProtectedRoute requirePayment={true}><ApiTokens /></ProtectedRoute>} />
         <Route path="/find-companies" element={<ProtectedRoute requirePayment={true}><FindCompanies /></ProtectedRoute>} />
         <Route path="/send-messages" element={<ProtectedRoute requirePayment={true}><SendMessages /></ProtectedRoute>} />
         <Route path="/track-replies" element={<ProtectedRoute requirePayment={true}><TrackReplies /></ProtectedRoute>} />
