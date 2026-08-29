@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { apiUrl } from '../lib/api';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -22,7 +21,7 @@ export const useAuth = () => {
       setHasAccess(true);
     }
 
-    fetch(apiUrl('/api/auth/check-access'), {
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/check-access`, {
       credentials: 'include'
     }).then(res => res.text().then(t => {
       try { return t ? JSON.parse(t) : {}; } catch { return {}; }
@@ -33,5 +32,14 @@ export const useAuth = () => {
     return () => listener?.subscription.unsubscribe();
   }, []);
 
-  return { user, loading, hasAccess };
+  // Consistent auth token — base64 JSON that backend can parse
+  const getToken = () => {
+    if (user?.email) return btoa(JSON.stringify({ sub: user.email, email: user.email }));
+    // Fallback: try master_unlocked or demo token
+    if (localStorage.getItem('master_unlocked') === 'true') return btoa(JSON.stringify({ sub: 'admin@alphatekx.com', email: 'alphatekxcompany@gmail.com' }));
+    if (localStorage.getItem('demo_hasAccess') === 'true') return btoa(JSON.stringify({ sub: 'demo@user.com', email: 'demo@user.com' }));
+    return '';
+  };
+
+  return { user, loading, hasAccess, getToken };
 };

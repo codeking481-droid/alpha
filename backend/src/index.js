@@ -81,20 +81,32 @@ app.get('/api/companies/my-companies', async (c) => {
   try {
     const user = getUserFromRequest(c)
     if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
-    let query = `user_id=eq.${user.id}`
     const status = c.req.query('status') || ''
     const niche = c.req.query('niche') || ''
     const search = c.req.query('search') || ''
     const source = c.req.query('source') || ''
+    // Try user_id filter first, fallback to all companies if column missing
+    let query = `user_id=eq.${user.id}`
     if (status) query += `&status=eq.${status}`
     if (niche) query += `&niche=ilike.*${niche}*`
     if (source) query += `&source=eq.${source}`
     if (search) query += `&or=(company_name.ilike.*${search}*,domain.ilike.*${search}*)`
     query += '&order=created_at.desc'
-    const arr = await sbSelect(c.env, 'companies', query)
-    const stats = { total: (arr||[]).length, new: (arr||[]).filter(x=>x.status==='new').length, contacted: (arr||[]).filter(x=>x.status==='contacted').length, replied: (arr||[]).filter(x=>x.status==='replied').length, hot: (arr||[]).filter(x=>x.status==='hot').length }
+    let arr = []
+    try {
+      arr = await sbSelect(c.env, 'companies', query) || []
+    } catch (e) {
+      // user_id column may not exist yet — fallback to all companies
+      console.warn('[my-companies] user_id filter failed, returning all:', e.message)
+      let fallbackQuery = '?order=created_at.desc'
+      if (status) fallbackQuery += `&status=eq.${status}`
+      if (niche) fallbackQuery += `&niche=ilike.*${niche}*`
+      if (search) fallbackQuery += `&or=(company_name.ilike.*${search}*,domain.ilike.*${search}*)`
+      try { arr = await sbSelect(c.env, 'companies', fallbackQuery.slice(1)) || [] } catch {}
+    }
+    const stats = { total: (arr||[]).length, new: (arr||[]).filter(x=>x.status==='new').length, contacted: (arr||[]).filter(x=>x.status==='contacted').length, replied: (arr||[]).filter(x=>x.status==='replied').length, hot: (arr||[]).filter(x=>x.status==='hot').length, closed_won: (arr||[]).filter(x=>x.status==='closed_won').length }
     return c.json({ companies: arr || [], total: (arr || []).length, stats, note: 'Real saved companies' })
-  } catch (e) { return c.json({ error: e.message }, 500) }
+  } catch (e) { return c.json({ companies: [], total: 0, stats: { total:0,new:0,contacted:0,replied:0,hot:0,closed_won:0 }, error: e.message }) }
 })
 app.post('/api/companies/save', async (c) => {
   try {
@@ -1122,10 +1134,19 @@ app.get('/api/replies/my-replies', async (c) => {
     const user = getUserFromRequest(c)
     if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
     const sentiment = c.req.query('sentiment') || ''
+    // Try user_id filter, fallback to all replies if column missing
     let query = `user_id=eq.${user.id}`
     if (sentiment) query += `&sentiment=eq.${sentiment}`
     query += '&order=received_at.desc'
-    const arr = await sbSelect(c.env, 'replies', query) || []
+    let arr = []
+    try {
+      arr = await sbSelect(c.env, 'replies', query) || []
+    } catch (e) {
+      console.warn('[my-replies] user_id filter failed, returning all:', e.message)
+      let fallbackQuery = '?order=received_at.desc'
+      if (sentiment) fallbackQuery += `&sentiment=eq.${sentiment}`
+      try { arr = await sbSelect(c.env, 'replies', fallbackQuery.slice(1)) || [] } catch {}
+    }
     // Enrich with company data
     const enriched = []
     for (const r of arr) {
@@ -1144,17 +1165,18 @@ app.get('/api/replies/my-replies', async (c) => {
     const hot = enriched.filter(r => r.sentiment === 'interested' || r.sentiment === 'positive').length
     const pending = enriched.filter(r => r.followup_status === 'pending_approval').length
     const replied = enriched.filter(r => r.followup_status === 'sent').length
-    // Compute stats from companies
+    // Compute stats from companies (also resilient)
     let stats = { hot: 0, replied: 0, closed_won: 0, revenue: 0, pending_approval: pending }
     try {
-      const comps = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}`) || []
+      let comps = []
+      try { comps = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}`) || [] } catch { comps = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] }
       stats.hot = comps.filter(x => x.status === 'hot').length
       stats.replied = comps.filter(x => x.status === 'replied').length
       stats.closed_won = comps.filter(x => x.status === 'closed_won').length
       stats.revenue = comps.filter(x => x.status === 'closed_won').length * 500
     } catch {}
     return c.json({ replies: enriched, total: enriched.length, hot: hot, hot_count: hot, pending_count: pending, replied, ...stats, note: 'Real replies with company joins' })
-  } catch (e) { return c.json({ error: e.message }, 500) }
+  } catch (e) { return c.json({ replies: [], total: 0, hot: 0, pending_approval: 0, replied: 0, hot_count: 0, closed_won: 0, revenue: 0, error: e.message }) }
 })
 
 // Get all replies

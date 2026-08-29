@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-function EmailModal({ company, onClose, onSent }) {
+function EmailModal({ company, onClose, onSent, getToken }) {
   const [subject, setSubject] = useState(`Quick idea for ${company.company_name || company.name || 'your company'} — 4,500+ audience feature?`);
   const [body, setBody] = useState(`Hey ${company.owner_name || 'there'},\n\nSaw ${company.company_name || company.name || 'your company'} — great work in ${company.niche || 'your space'}. We own 4,500+ audience (3K YouTube, 700 LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber) and reach out to brands done-for-you. Can we feature ${company.company_name || company.name || 'your company'} on our communities? Reply YES and we handle everything.\n\n— Alpha Agency OS`);
   const [sending, setSending] = useState(false);
@@ -11,7 +11,7 @@ function EmailModal({ company, onClose, onSent }) {
   const send = async () => {
     setSending(true); setError('');
     try {
-      const token = localStorage.getItem('master_unlocked') || '';
+      const token = getToken();
       const res = await fetch('/api/outreach/send', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ companyId: company.id, companyName: company.company_name || company.name, domain: company.domain, ownerName: company.owner_name || '', ownerEmail: company.owner_email || '', niche: company.niche || '', product: company.product || '', to: company.owner_email || '', subject, message: body })
@@ -42,12 +42,12 @@ function EmailModal({ company, onClose, onSent }) {
   );
 }
 
-function DeleteConfirm({ company, onClose, onDeleted }) {
+function DeleteConfirm({ company, onClose, onDeleted, getToken }) {
   const [deleting, setDeleting] = useState(false);
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const token = localStorage.getItem('master_unlocked') || '';
+      const token = getToken();
       const res = await fetch(`/api/companies/${company.id}`, {
         method: 'DELETE', headers: { Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include'
       });
@@ -94,7 +94,7 @@ function StatusBadge({ status }) {
 
 export const SavedCompanies = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [items, setItems] = useState([]);
   const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, replied: 0, hot: 0, closed_won: 0 });
   const [loading, setLoading] = useState(true);
@@ -112,7 +112,7 @@ export const SavedCompanies = () => {
   const fetchData = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       let q = `/api/companies/my-companies?limit=20&offset=${(page - 1) * 20}`;
       if (statusFilter) q += `&status=${statusFilter}`;
       if (nicheFilter) q += `&niche=${encodeURIComponent(nicheFilter)}`;
@@ -146,7 +146,7 @@ export const SavedCompanies = () => {
     const selectedItems = items.filter(i => selected.has(i.id));
     if (!selectedItems.length) return;
     try {
-      const token = localStorage.getItem('master_unlocked') || '';
+      const token = getToken();
       await fetch('/api/companies/save-bulk', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ companies: selectedItems.map(i => ({ companyName: i.company_name || i.name, domain: i.domain, ownerName: i.owner_name, ownerEmail: i.owner_email, niche: i.niche, product: i.product, source: i.source })) })
@@ -353,8 +353,8 @@ export const SavedCompanies = () => {
           </div>
         )}
 
-        {modalCompany && <EmailModal company={modalCompany} onClose={() => setModalCompany(null)} onSent={() => { setModalCompany(null); fetchData(); }} />}
-        {deleteCompany && <DeleteConfirm company={deleteCompany} onClose={() => setDeleteCompany(null)} onDeleted={() => { setDeleteCompany(null); fetchData(); }} />}
+        {modalCompany && <EmailModal company={modalCompany} onClose={() => setModalCompany(null)} onSent={() => { setModalCompany(null); fetchData(); }} getToken={getToken} />}
+        {deleteCompany && <DeleteConfirm company={deleteCompany} onClose={() => setDeleteCompany(null)} onDeleted={() => { setDeleteCompany(null); fetchData(); }} getToken={getToken} />}
       </div>
     </div>
   );

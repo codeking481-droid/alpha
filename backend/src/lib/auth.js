@@ -39,10 +39,20 @@ export function getUserFromRequest(c) {
     } catch {}
     return { id: token, email: 'mock@local', role: 'member', token }
   }
+  // Try JWT format (xxx.xxx.xxx)
   try {
-    const payload = JSON.parse(atob(token.split('.')[1] || ''))
-    return { id: payload.sub || payload.user_id || token, email: payload.email, role: payload.role || 'member', token }
-  } catch { return { id: token, token } }
+    const parts = token.split('.')
+    if (parts.length >= 2) {
+      const payload = JSON.parse(atob(parts[1]))
+      return { id: payload.sub || payload.user_id || token, email: payload.email, role: payload.role || 'member', token }
+    }
+  } catch {}
+  // Try plain base64 JSON (frontend sends btoa(JSON.stringify({sub,email})))
+  try {
+    const decoded = JSON.parse(atob(token))
+    if (decoded && decoded.email) return { id: decoded.sub || decoded.email, email: decoded.email, role: decoded.role || 'member', token }
+  } catch {}
+  return { id: token, token }
 }
 
 // Middleware helpers — Worker-compatible (no supabase-js server client)

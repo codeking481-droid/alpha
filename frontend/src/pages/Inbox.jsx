@@ -11,7 +11,7 @@ function Confetti({ show }) {
   );
 }
 
-function FollowupCard({ reply, user, onRefresh }) {
+function FollowupCard({ reply, user, onRefresh, getToken }) {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState(reply.followup_message || '');
   const [sending, setSending] = useState(false);
@@ -25,7 +25,7 @@ function FollowupCard({ reply, user, onRefresh }) {
   const generateFollowup = async () => {
     setGenerating(true);
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       const res = await fetch(`/api/replies/${reply.id}/generate-followup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
@@ -44,7 +44,7 @@ function FollowupCard({ reply, user, onRefresh }) {
   const approveAndSend = async () => {
     setSending(true); setError('');
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       const res = await fetch(`/api/replies/${reply.id}/approve-send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
@@ -63,7 +63,7 @@ function FollowupCard({ reply, user, onRefresh }) {
 
   const rejectFollowup = async () => {
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       await fetch(`/api/replies/${reply.id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
@@ -152,7 +152,7 @@ function timeAgo(dateStr) {
 
 export const Inbox = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [searchParams] = useSearchParams();
   const replyIdParam = searchParams.get('replyId');
   const companyIdParam = searchParams.get('companyId');
@@ -166,7 +166,7 @@ export const Inbox = () => {
   const fetchData = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       const res = await fetch('/api/replies/my-replies', {
         headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -198,7 +198,7 @@ export const Inbox = () => {
 
   const markHot = async (companyId) => {
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       await fetch(`/api/companies/${companyId}/status`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ status: 'hot' })
@@ -209,7 +209,7 @@ export const Inbox = () => {
 
   const markClosedWon = async (companyId) => {
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       const res = await fetch(`/api/companies/${companyId}/status`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ status: 'closed_won' })
@@ -225,7 +225,7 @@ export const Inbox = () => {
 
   const generateContent = async (companyId, companyName) => {
     try {
-      const token = user?.email ? btoa(JSON.stringify({ sub: user.email, email: user.email })) : '';
+      const token = getToken();
       const res = await fetch('/api/content/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include',
         body: JSON.stringify({ companyId, type: 'post' })
@@ -346,7 +346,7 @@ export const Inbox = () => {
                   <div className="bg-white/70 rounded-xl p-3 text-sm text-[#4B5563] mb-1 whitespace-pre-wrap">{replyText}</div>
 
                   {/* Follow-up section */}
-                  <FollowupCard reply={r} user={user} onRefresh={fetchData} />
+                  <FollowupCard reply={r} user={user} onRefresh={fetchData} getToken={getToken} />
 
                   {/* Actions */}
                   <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
