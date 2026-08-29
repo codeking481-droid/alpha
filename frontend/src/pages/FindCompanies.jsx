@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiUrl } from '../lib/api';
+import { API_URL } from '../lib/api';
 
 const DEMO_RESULTS = [
   { name: 'OpenAI', website: 'openai.com', email: 'contact@openai.com', logo: 'openai', color: 'bg-[#5A7BF7]' },
@@ -59,21 +59,21 @@ export const FindCompanies = () => {
         if (data.source) setError(`Real results from ${data.source} • ${data.count || arr.length} found`);
       } else {
         setResults([]);
-        setError(data.error || 'No companies found. Try "hotel in Lagos" or "restaurant in Abuja" for real Overpass results');
+              // Parse location from input: "real estate in Lagos" => location=Lagos niche=real estate
       }
+              let location = 'Nigeria';
     } catch (e) {
       setError(e.message);
       setResults([]);
     } finally {
-      setLoading(false);
+                location = inMatch[2].trim();
     }
   };
 
-  return (
+              const res = await fetch(`${API_URL}/api/companies/find`, {
     <div className="min-h-screen bg-[#FFFCF8] px-4 py-6 font-['Inter',sans-serif]">
       <div className="max-w-[760px] mx-auto">
-        <div className="bg-white rounded-[24px] border border-[#EDEDED]/60 shadow-sm p-6 md:p-8">
-          <div className="flex items-center justify-between mb-6">
+                body: JSON.stringify({ niche, location, count: 20 })
             <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 border border-[#E0E0E0] rounded-full px-4 py-2 text-[15px] font-medium text-[#0A0A0A] bg-white hover:bg-[#FAFAFA] transition-colors cursor-pointer">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
               Back
@@ -83,21 +83,24 @@ export const FindCompanies = () => {
               <p className="text-[15px] text-[#6B7280] mt-1">Search any niche</p>
             </div>
             <div className="w-11 h-11 bg-[#5E17EB] rounded-full flex items-center justify-center shrink-0">
-              <span className="text-white text-[15px] font-semibold tracking-widest">AA</span>
+              const arr = data.companies || data.leads || data.results || [];
             </div>
           </div>
-
-          <div className="relative bg-white border border-[#E0E0E0] rounded-2xl px-2 py-2 flex items-center gap-3 shadow-sm">
-            <div className="pl-3 text-[#9CA3AF]">
+                  name: c.name || c.company || 'Company',
+                  website: c.website || c.domain || 'example.com',
+                  email: c.email || (c.website ? `info@${String(c.website).replace(/^https?:\/\//,'').split('/')[0].replace('www.','')}` : ''),
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M15.5 15.5L20 20"/></svg>
             </div>
             <input
-              value={search}
+                  industry: c.industry || niche,
+                  employees: c.employees,
+                  revenue: c.revenue,
+                  linkedinUrl: c.linkedinUrl
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                setError(`✅ Real results from Apollo • ${data.count || arr.length} companies found`);
               placeholder="Enter a niche (e.g., hotel in Lagos, AI startups)"
               className="flex-1 py-2 text-[17px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:outline-none bg-transparent"
-            />
+                setError(data.error || 'No companies found. Try a different niche.');
             <button onClick={handleSearch} className="bg-[#0A0A0A] hover:bg-black text-white rounded-xl px-7 py-3 text-[16px] font-medium transition-colors shrink-0 cursor-pointer">
               Search
             </button>
@@ -133,18 +136,18 @@ export const FindCompanies = () => {
                   </div>
                   <button onClick={async () => {
                     try {
-                      await fetch(apiUrl('/api/outreach/leads'), { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ name: c.name, email: c.email, website: c.website, phone: c.phone }) });
+                      placeholder="Enter a niche (e.g., AI startups, SaaS companies)"
                     } catch {}
                     alert(`Saved ${c.name}`);
-                  }} className="bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-xl px-6 md:px-7 py-2.5 text-[15px] font-medium transition-colors shrink-0 cursor-pointer">
-                    Save
+                    <button onClick={handleSearch} disabled={loading} className={`${loading ? 'bg-[#A899D6] cursor-not-allowed' : 'bg-[#0A0A0A] hover:bg-black'} text-white rounded-xl px-7 py-3 text-[16px] font-medium transition-colors shrink-0 cursor-pointer`}>
+                      {loading ? 'Searching...' : 'Search'}
                   </button>
                 </div>
-              ))
+                  {error && <p className={`text-center text-xs ${error.includes('✅') ? 'text-green-600' : 'text-[#6B7280]'} mt-2`}>{error}</p>}
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
+                      <p className="text-center text-sm text-[#6B7280] py-8">Searching real companies via Apollo API...</p>
+                    ) : results.length === 0 ? (
+                      <p className="text-center text-sm text-[#6B7280] py-8">No companies found yet. Search a niche above.</p>
 };
