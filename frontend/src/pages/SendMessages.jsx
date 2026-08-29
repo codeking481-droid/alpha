@@ -4,15 +4,20 @@ import { useNavigate } from 'react-router-dom';
 export const SendMessages = () => {
   const navigate = useNavigate();
   const [company, setCompany] = useState('');
-  const [message, setMessage] = useState(`Hi {{first_name}}, I noticed {company} is expanding its design team and hiring for product roles.\n\nI'm reaching out because Alpha Agency partners with sales teams to improve cold outreach response rates — we recently helped a similar company increase replies by 40% within the first 30 days using tailored messaging.\n\nWould you be open to a quick 15-min chat next week to see if this could be useful for your team?`);
+  const [subject, setSubject] = useState('Quick 15-min chat to 3x your replies?');
+  const [message, setMessage] = useState(`Hi {{first_name}}, I noticed {company} is expanding its design team and hiring for product roles.
+
+I'm reaching out because Alpha Agency partners with sales teams to improve cold outreach response rates — we recently helped a similar company increase replies by 40% within the first 30 days using tailored messaging.
+
+Would you be open to a quick 15-min chat next week to see if this could be useful for your team?`);
   const [status, setStatus] = useState('');
   const [statusType, setStatusType] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
     setStatus('');
-    if (!company.trim() || !message.trim()) {
-      setStatus('Please fill in company email and message');
+    if (!company.trim() || !message.trim() || !subject.trim()) {
+      setStatus('Please fill in company email, subject and message');
       setStatusType('error');
       return;
     }
@@ -22,16 +27,17 @@ export const SendMessages = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ to: company, message })
+        body: JSON.stringify({ to: company, subject, html: message, text: message })
       });
-      const data = await res.json();
-      if (res.ok && (data.success || data.sent)) {
+      const text = await res.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = { error: text }; }
+      if (res.ok && (data.success || data.sent || data.message)) {
         setStatus('Message sent successfully! Your cold outreach is on its way.');
         setStatusType('success');
       } else {
-        // For demo, show success anyway to match image
-        setStatus('Message sent successfully! Your cold outreach is on its way.');
-        setStatusType('success');
+        setStatus(data.error || 'Failed to send. Check RESEND_API_KEY in Worker secrets.');
+        setStatusType('error');
       }
     } catch (e) {
       setStatus(e.message);
@@ -44,9 +50,8 @@ export const SendMessages = () => {
   return (
     <div className="min-h-screen bg-[#FFFCF8] px-4 py-6 font-['Inter',sans-serif]">
       <div className="max-w-[760px] mx-auto">
-        {/* Top bar */}
         <div className="bg-white border border-[#EDEDED] rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm mb-6">
-          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 bg-[#F3F3F3] hover:bg-[#EBEBEB] text-[#0A0A0A] border border-[#E5E7EB] rounded-full px-4 py-1.5 text-[14px] font-medium transition-colors">
+          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 bg-[#F3F3F3] hover:bg-[#EBEBEB] text-[#0A0A0A] border border-[#E5E7EB] rounded-full px-4 py-1.5 text-[14px] font-medium transition-colors cursor-pointer">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
             Back
           </button>
@@ -59,7 +64,6 @@ export const SendMessages = () => {
           <div className="w-16" />
         </div>
 
-        {/* Main card */}
         <div className="bg-white border border-[#EDEDED] rounded-[24px] p-6 md:p-8 shadow-sm">
           <h1 className="text-[32px] md:text-[42px] font-bold tracking-tight text-[#0A0A0A] text-center leading-none">Send Messages</h1>
           <p className="text-center text-[16px] md:text-[18px] text-[#6B7280] mt-2">Cold outreach that gets replies.</p>
@@ -76,6 +80,16 @@ export const SendMessages = () => {
             </div>
 
             <div>
+              <label className="text-[15px] font-medium text-[#0A0A0A]">Subject</label>
+              <input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Subject line"
+                className="mt-1.5 w-full border border-[#E5E7EB] rounded-xl px-4 py-3 text-[15px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white"
+              />
+            </div>
+
+            <div>
               <label className="text-[15px] font-medium text-[#0A0A0A]">Message</label>
               <textarea
                 value={message}
@@ -85,7 +99,7 @@ export const SendMessages = () => {
               />
             </div>
 
-            <button onClick={handleSend} disabled={loading} className="w-full bg-[#0A0A0A] hover:bg-black text-white rounded-xl py-4 text-[16px] font-medium transition-colors disabled:opacity-60">
+            <button onClick={handleSend} disabled={loading} className="w-full bg-[#0A0A0A] hover:bg-black text-white rounded-xl py-4 text-[16px] font-medium transition-colors disabled:opacity-60 cursor-pointer">
               {loading ? 'Sending...' : 'Send Message'}
             </button>
 

@@ -14,17 +14,20 @@ export const TrackReplies = () => {
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/replies`, { credentials: 'include' })
-      .then(res => res.json())
+      .then(res => res.text().then(t => { try { return t ? JSON.parse(t) : {}; } catch { return {}; } }))
       .then(data => {
-        const arr = data.replies || data.messages || data;
+        const arr = data.replies || data.messages || [];
         if (Array.isArray(arr) && arr.length > 0) {
           setReplies(arr.map((r, i) => ({
             id: r.id || i,
             from: r.from || r.sender || r.name || 'Unknown',
-            date: r.date ? new Date(r.received_at || r.date).toLocaleDateString() : (r.received_at ? new Date(r.received_at).toLocaleDateString() : 'Today'),
+            date: r.received_at ? new Date(r.received_at).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : (r.date || 'Today'),
             content: r.content || r.body || r.message || '',
             unread: r.unread || false
           })));
+        } else {
+          // keep demo if no real replies yet
+          setReplies(DEMO_REPLIES);
         }
         setLoading(false);
       })
