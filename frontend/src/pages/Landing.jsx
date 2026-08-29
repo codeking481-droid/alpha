@@ -37,19 +37,43 @@ export const Landing = () => {
     });
   }, [navigate]);
 
+  const isDemoMode = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder') || import.meta.env.VITE_SUPABASE_URL === 'your_supabase_url_here';
+
   const handleGoogleSignup = async () => {
+    // Demo fallback: if Supabase not configured, simulate login so flow works
+    if (isDemoMode) {
+      setLoading(true);
+      localStorage.setItem('demo_user', JSON.stringify({ email: 'demo@alpha.agency', name: 'Demo User' }));
+      localStorage.setItem('demo_hasAccess', 'false');
+      setTimeout(() => {
+        setLoading(false);
+        navigate('/access');
+      }, 400);
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin + "/access",
-      },
-    });
-    if (error) {
-      console.error(error);
-      alert("Signup failed: " + error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/access",
+        },
+      });
+      if (error) {
+        console.error(error);
+        alert("Signup failed: " + error.message);
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Signup failed: " + e.message);
       setLoading(false);
     }
+  };
+
+  const handleLogin = () => {
+    // Log in goes to same Google flow
+    handleGoogleSignup();
   };
 
   const handleDownloadApp = async () => {
@@ -82,17 +106,17 @@ export const Landing = () => {
 
           {/* Links */}
           <div className="hidden md:flex items-center gap-7">
-            <a href="#" className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity">Product</a>
-            <a href="#" className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity">How it works</a>
-            <a href="#" className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity">Pricing</a>
-            <a href="#" className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity">Platforms</a>
-            <button className="ml-2 bg-white border border-[#0A0A0A]/15 rounded-lg px-4 py-[6px] text-[14px] font-medium text-[#0A0A0A] hover:bg-[#FAFAFA] transition-colors">
+            <a href="#how-it-works" onClick={(e)=>{e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity cursor-pointer">Product</a>
+            <a href="#how-it-works" onClick={(e)=>{e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity cursor-pointer">How it works</a>
+            <a href="#pricing" onClick={(e)=>{e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity cursor-pointer">Pricing</a>
+            <a href="#platforms" onClick={(e)=>{e.preventDefault(); document.getElementById('platforms')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-medium text-[#0A0A0A] hover:opacity-70 transition-opacity cursor-pointer">Platforms</a>
+            <button onClick={handleLogin} className="ml-2 bg-white border border-[#0A0A0A]/15 rounded-lg px-4 py-[6px] text-[14px] font-medium text-[#0A0A0A] hover:bg-[#FAFAFA] transition-colors cursor-pointer">
               Log in
             </button>
           </div>
 
           {/* Mobile Log in */}
-          <button className="md:hidden bg-white border border-[#0A0A0A]/15 rounded-lg px-4 py-[6px] text-[14px] font-medium text-[#0A0A0A]">Log in</button>
+          <button onClick={handleLogin} className="md:hidden bg-white border border-[#0A0A0A]/15 rounded-lg px-4 py-[6px] text-[14px] font-medium text-[#0A0A0A] cursor-pointer">Log in</button>
         </nav>
       </div>
 
@@ -135,7 +159,7 @@ export const Landing = () => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="max-w-[1120px] mx-auto px-4 pt-8 pb-6">
+      <section id="how-it-works" className="max-w-[1120px] mx-auto px-4 pt-8 pb-6">
         <div className="text-center">
           <p className="text-[#5E17EB] text-[13px] font-semibold tracking-[0.14em] uppercase">HOW IT WORKS</p>
           <h2 className="mt-1.5 text-[22px] md:text-[22px] font-bold tracking-tight text-[#0A0A0A]">Three steps to automate your marketing</h2>
@@ -183,7 +207,7 @@ export const Landing = () => {
       </section>
 
       {/* BOTTOM 2 COLS */}
-      <section className="max-w-[1120px] mx-auto px-4 pb-8">
+      <section id="pricing" className="max-w-[1120px] mx-auto px-4 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-[1.75fr_0.95fr] gap-5 items-start">
           {/* Left - 10 Posts System */}
           <div className="bg-white border border-[#EDEDED] rounded-xl p-4 md:p-5">
@@ -296,7 +320,7 @@ export const Landing = () => {
               </li>
             </ul>
 
-            <button className="mt-5 w-full bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-lg py-[11px] text-[14px] font-semibold transition-colors">
+            <button onClick={handleLogin} className="mt-5 w-full bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-lg py-[11px] text-[14px] font-semibold transition-colors cursor-pointer">
               Start now — $500
             </button>
             <p className="mt-3 text-center text-[12px] text-[#6B7280]">Cancel anytime. No hidden fees.</p>

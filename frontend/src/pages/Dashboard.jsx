@@ -7,7 +7,9 @@ export const Dashboard = () => {
   const { user } = useAuth();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem('demo_user');
+    localStorage.removeItem('demo_hasAccess');
+    try { await supabase.auth.signOut(); } catch {}
     navigate('/');
   };
 
