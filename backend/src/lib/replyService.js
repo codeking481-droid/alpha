@@ -3,7 +3,10 @@
 import { sendHotLeadAlert } from '../services/hotLeadAlert.js'
 
 export async function syncGmailReplies(env) {
-  if (!env.GMAIL_REFRESH_TOKEN || !env.GMAIL_CLIENT_ID || !env.GMAIL_CLIENT_SECRET) {
+  const gmailClientId = env.GMAIL_CLIENT_ID || env.GOOGLE_CLIENT_ID
+  const gmailClientSecret = env.GMAIL_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET
+  const gmailRefreshToken = env.GMAIL_REFRESH_TOKEN || env.GOOGLE_REFRESH_TOKEN
+  if (!gmailRefreshToken || !gmailClientId || !gmailClientSecret) {
     throw new Error('Gmail credentials not configured')
   }
 
@@ -11,7 +14,7 @@ export async function syncGmailReplies(env) {
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `client_id=${env.GMAIL_CLIENT_ID}&client_secret=${env.GMAIL_CLIENT_SECRET}&refresh_token=${env.GMAIL_REFRESH_TOKEN}&grant_type=refresh_token`
+    body: `client_id=${gmailClientId}&client_secret=${gmailClientSecret}&refresh_token=${gmailRefreshToken}&grant_type=refresh_token`
   })
 
   if (!tokenRes.ok) throw new Error('Failed to refresh Gmail token')
