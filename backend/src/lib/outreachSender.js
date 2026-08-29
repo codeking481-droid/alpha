@@ -3,27 +3,27 @@ import { groqGenerate } from './groq.js'
 import { COMMUNITY, PRICING, TRUTH_CLAUSE } from './community.js'
 
 export const OFFER_TEMPLATE = {
-  subject: 'Quick win for {{company}} — 1-week campaign to your real audience?',
+  subject: 'We can advertise {{company}} to 4,400+ real people this week — $500',
   body: `Hi {{name}},
 
-Saw {{company}} in {{industry}} — love what you're doing in {{city}}.
+Saw {{company}} in {{industry}} — great product.
 
-We run a 1-week Ad Campaign that puts you in front of a real, engaged audience (no fake followers):
+We help brands like yours get seen by real people — not bots. For {{price}} we advertise your product for 7 days across OUR communities:
 
-• LinkedIn — {{linkedinReach}} followers/connections → 10 posts
+• LinkedIn — {{linkedinReach}} → 10 posts about {{company}}
 • WhatsApp — {{whatsappReach}} members (2 groups) → 10 posts
 • Telegram — {{telegramReach}} members → 10 posts
-• YouTube — {{youtubeReach}}+ subscribers → 2 videos
+• YouTube — {{youtubeReach}}+ subscribers → 2 dedicated videos
 
-That's 32 pieces in 7 days — announcement → problem/solution → social proof → educational → insight → CTA → recap/final push.
+That's 32 pieces — we create everything, you approve, we post to our audiences.
 
-Flat {{price}} for the full week. We create everything, you approve, we deliver. You pay only when you say Yes.
+Flat {{price}} for the full 7-day campaign. No hidden fees.
 
 🔒 ${TRUTH_CLAUSE}
 
-Want the 1-week plan for {{company}}? Reply YES and I'll send calendar + samples in 10 mins.
+Want us to feature {{company}} this week? Reply YES and I'll send the calendar + samples in 10 mins.
 
-— AlphaTekX Agency
+— AlphaTekX
 alphatekxcompany@gmail.com
 `,
 }
@@ -66,7 +66,7 @@ export async function personalizeWithGroq(env, lead, opts = {}) {
   const base = personalizeOffer(lead, { ...opts, includeTruth: false })
   if (!env.GROQ_API_KEY) return personalizeOffer(lead, opts)
   try {
-    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: 1-week campaign 32 posts $500 across LinkedIn/WhatsApp/Telegram/YouTube with real audiences. Tone friendly expert. Keep subject + body. No fake numbers beyond given. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
+    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: we advertise their product on OUR communities for $500: 10 LinkedIn posts (700+500), 10 WhatsApp posts (215), 10 Telegram posts (113), 2 YouTube videos (3k subs) = 32 pieces in 7 days. Tone friendly expert, concise. No fake numbers beyond given. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
     const { text } = await groqGenerate(env, { prompt })
     const lines = text.split('\n').filter(Boolean)
     const subj = lines.find(l=>l.toLowerCase().includes('subject'))?.replace(/.*subject\s*:\s*/i,'') || base.subject

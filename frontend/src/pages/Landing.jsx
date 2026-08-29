@@ -244,20 +244,20 @@ export const Landing = () => {
         <div className="grid lg:grid-cols-[1.65fr_0.95fr] gap-6 items-start">
           <div className="bg-white border border-[#EDEDED] rounded-2xl md:rounded-[24px] p-5 md:p-8">
             <div className="flex flex-wrap items-center gap-3">
-              <h3 className="text-[22px] md:text-[26px] font-black tracking-tight">10 Posts System + CRM</h3>
-              <span className="bg-[#5E17EB] text-white rounded-full px-3 py-1 text-[11px] font-black">LIVE</span>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1 text-[11px] font-bold">● Auto-poll 2m</span>
+              <h3 className="text-[22px] md:text-[26px] font-black tracking-tight">32 Pieces — Your Ad, Our Audiences</h3>
+              <span className="bg-[#5E17EB] text-white rounded-full px-3 py-1 text-[11px] font-black">LIVE 113</span>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1 text-[11px] font-bold">● 7 Days</span>
             </div>
-            <p className="mt-2 text-[13px] md:text-[14px] text-[#6B7280]">Kanban: New → Contacted → Replied → Call Scheduled → Closed Won $500. Team 113 assigned, revenue tracked.</p>
+            <p className="mt-2 text-[13px] md:text-[14px] text-[#6B7280]">We advertise YOUR product on OUR communities — you approve, we post. No bots, real reach.</p>
             <div className="mt-6 border border-[#EDEDED] rounded-2xl overflow-hidden">
               <div className="grid grid-cols-[1.3fr_0.7fr_1.4fr_0.95fr] gap-2 px-4 py-3 bg-[#FFFCF8] border-b border-[#EDEDED] text-[11px] font-black uppercase tracking-wide">
                 <span>Platform</span><span>Count</span><span>Format</span><span className="text-right">Status</span>
               </div>
               {[
-                {p:"LinkedIn", c:"4 posts", f:"Thought leadership + Case study", s:"Scheduled", sC:"bg-emerald-100 text-emerald-800 border-emerald-200"},
-                {p:"WhatsApp", c:"3 posts", f:"Direct message + Offer", s:"In progress", sC:"bg-[#5E17EB] text-white border-[#5E17EB]"},
-                {p:"Telegram", c:"3 posts", f:"Broadcast + Poll to 113", s:"Queued", sC:"bg-gray-100 text-gray-700 border-gray-200"},
-                {p:"Gmail Outreach", c:"20 / day", f:"30s delay + Day 3/7", s:"Sending", sC:"bg-blue-100 text-blue-800 border-blue-200"},
+                {p:"LinkedIn", c:"10 posts", f:"700 followers + 500 conn.", s:"Scheduled", sC:"bg-emerald-100 text-emerald-800 border-emerald-200"},
+                {p:"WhatsApp", c:"10 posts", f:"215 members • 2 groups", s:"In progress", sC:"bg-[#5E17EB] text-white border-[#5E17EB]"},
+                {p:"Telegram", c:"10 posts", f:"113 members • broadcast", s:"Queued", sC:"bg-gray-100 text-gray-700 border-gray-200"},
+                {p:"YouTube", c:"2 videos", f:"3,000+ subscribers", s:"Produced", sC:"bg-red-100 text-red-700 border-red-200"},
               ].map(r=>(
                 <div key={r.p} className="grid grid-cols-[1.3fr_0.7fr_1.4fr_0.95fr] gap-2 items-center px-4 py-4 border-b last:border-0 border-[#F3F4F6] text-[13px]">
                   <span className="font-black flex items-center gap-2"><span className="w-2 h-2 bg-[#5E17EB] rounded-full"/>{r.p}</span>
@@ -282,7 +282,7 @@ export const Landing = () => {
               <p className="mt-3 text-[48px] md:text-[54px] font-black leading-none">$500<span className="text-[15px] font-bold text-white/50"> / week</span></p>
               <p className="text-white/60 text-[12px]">Cancel anytime. Paystack • No hidden fees.</p>
               <ul className="mt-7 space-y-3.5">
-                {["10 posts across LinkedIn/WhatsApp/Telegram","Apollo + Hunter verified emails (real)","Gmail outreach 20/day + 30s delay + sequences","Inbox sentiment (OpenAI) + Telegram hot-lead 2 min","CRM Kanban + revenue + reply % + CSV import","Team 113 roles + Templates + Analytics"].map(li=>(
+                {["10 LinkedIn + 10 WhatsApp + 10 Telegram + 2 YouTube = 32","Apollo + Hunter verified real companies","Gmail outreach to brands (you approve)","Inbox 2-min poll + Telegram hot-lead","Pipeline: Replied → Closed $500","We create & post, you get seen"].map(li=>(
                   <li key={li} className="flex gap-3 text-[13px] font-semibold leading-[1.4]"><span className="w-5 h-5 rounded-full bg-[#5E17EB] flex items-center justify-center shrink-0 mt-0.5 text-[11px]">✓</span><span>{li}</span></li>
                 ))}
               </ul>

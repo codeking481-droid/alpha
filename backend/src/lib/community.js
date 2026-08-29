@@ -13,7 +13,7 @@ export const COMMUNITY = {
     postsPerCampaign: 10
   },
   telegram: {
-    members: 54,
+    members: 113,
     postsPerCampaign: 10
   },
   youtube: {
@@ -26,11 +26,11 @@ export const TRUTH_CLAUSE =
   "We have real communities, not bots. " +
   "LinkedIn (700 followers, 500+ connections): 10 posts. " +
   "WhatsApp (215+ members across 2 groups): 10 posts. " +
-  "Telegram (54 members): 10 posts. " +
+  "Telegram (113 members): 10 posts. " +
   "YouTube (3,000+ subscribers): 2 videos. " +
   "We do not guarantee views, likes, or conversions. " +
   "We guarantee we will deliver the content to real people who have chosen to follow us. " +
-  "The rest is organic.";
+  "The rest is organic. Total: 32 pieces in 7 days for $500.";
 
 // Helpers — not required by prompt but used by engine
 export const PRICING = {
