@@ -1,6 +1,6 @@
 // Reply tracking service for email replies
 // Uses Gmail API polling to sync replies
-import { sendWhatsAppAlert } from '../services/whatsappAlert.js'
+import { sendHotLeadAlert } from '../services/hotLeadAlert.js'
 
 export async function syncGmailReplies(env) {
   if (!env.GMAIL_REFRESH_TOKEN || !env.GMAIL_CLIENT_ID || !env.GMAIL_CLIENT_SECRET) {
@@ -139,7 +139,7 @@ export async function saveReply(env, replyData) {
 
   if (saved && (sentiment === 'positive' || sentiment === 'question')) {
     try {
-        const alert = await sendWhatsAppAlert(env, {
+        const alert = await sendHotLeadAlert(env, {
         fromEmail: replyData.from_email,
         companyName: replyData.company_name || 'Unknown Company',
         replyBody: replyData.body,
@@ -156,11 +156,11 @@ export async function saveReply(env, replyData) {
           },
           body: JSON.stringify({ whatsapp_alerted: true, whatsapp_alerted_at: new Date().toISOString() })
         })
-        if (!alertRes.ok) console.error('Failed to mark WhatsApp alert:', await alertRes.text())
+        if (!alertRes.ok) console.error('Failed to mark hot-lead alert:', await alertRes.text())
         saved.whatsapp_alerted = true
       }
     } catch (error) {
-      console.error('WhatsApp alert failed:', error)
+      console.error('Hot-lead alert failed:', error)
     }
   }
 

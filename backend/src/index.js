@@ -20,7 +20,7 @@ import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.j
 import { sendEmail, trackSentEmail, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
 import { findCompaniesApollo, getCachedLeads, cacheLeads } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
-import { sendWhatsAppAlert } from './services/whatsappAlert.js'
+import { sendHotLeadAlert } from './services/hotLeadAlert.js'
 
 const app = new Hono()
 app.use('*', cors({
@@ -901,11 +901,11 @@ app.post('/api/webhooks/email-reply', async (c) => {
   }
 })
 
-app.post('/api/test/whatsapp-alert', async (c) => {
+app.post('/api/test/hot-lead-alert', async (c) => {
   try {
     const admin = await requireAdmin(c, c.env)
     if (!admin) return c.json({ error: 'Unauthorized' }, 401)
-    const result = await sendWhatsAppAlert(c.env, {
+    const result = await sendHotLeadAlert(c.env, {
       fromEmail: 'ceo@testcompany.com',
       companyName: 'Test Company Ltd',
       replyBody: 'This looks very interesting! Can we schedule a call tomorrow to discuss the $500 package?',
