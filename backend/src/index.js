@@ -77,6 +77,14 @@ app.get('/api/health', (c) => c.json({ status: 'ok', message: 'Alpha Agency API 
 app.get('/api/healthz', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live' }))
 
 // â”€â”€ Companies (also /api/companies)
+app.get('/api/companies/my-companies', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const arr = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}&order=created_at.desc`)
+    return c.json({ companies: arr || [], total: (arr || []).length, note: 'Real saved companies' })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
 app.get('/api/companies', async (c) => c.json(await list(c.env, 'companies')))
 app.post('/api/companies', async (c) => {
   const body = await c.req.json().catch(() => ({}))
