@@ -1,4 +1,4 @@
-// Alpha Community Database — real audiences for One-Week Campaigns
+// Alpha Community Database — real audiences for Outbound Campaigns
 export const COMMUNITY = {
   linkedin: {
     followers: 700,
@@ -33,7 +33,7 @@ export const COMMUNITIES = {
 };
 
 export const TRUTH_CLAUSE =
-  "4,500+ audience across 5 communities: 3K+ YouTube, 700+ LinkedIn followers, 500+ connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity. Never 32-piece.";
+  "We own 4,500+ audience: 3K+ YouTube, 700+ LinkedIn followers, 500+ connections, 130 WhatsApp channel, 113 Telegram channel, 85 cybersecurity. We reach out to brands and manage everything done-for-you for $500. $50 is tool-only DIY access, no community posting.";
 
 export const PRICING = {
   oneWeekCampaign: {
@@ -41,7 +41,7 @@ export const PRICING = {
     price: 500,
     currency: 'USD',
     deliverables: { linkedin: 10, whatsapp: 10, telegram: 10, youtube: 2 },
-    totalPosts: 40,  // updated from 32 to reflect real deliverables
+    totalPosts: 40,
     billingCycle: 'per campaign (7 days)'
   }
 };

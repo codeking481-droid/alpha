@@ -2,29 +2,21 @@ import { sendEmailResend } from './email.js'
 import { groqGenerate } from './groq.js'
 import { COMMUNITY, COMMUNITIES, TRUTH_CLAUSE } from './community.js'
 
-export const OFFER_TEMPLATE = {
-  subject: 'We can advertise {{company}} to 4,500+ real audience this week — $500',
-  body: `Hi {{name}},
+export const OUTREACH_TEMPLATE = {
+  subject: 'Quick win for {{companyName}} - 4,500+ audience',
+  body: `Hi {{ownerName}},
 
-Saw {{company}} in {{industry}} — great product.
+I manage 4,500+ audience across 5 communities (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp channel, 113 Telegram channel, 85 cybersecurity). 
 
-We help brands like yours get seen by real people — not bots. For {{price}} we advertise your product for 7 days across OUR communities:
+I will handle everything and post {{companyName}} on all my communities done-for-you for $500. No work for you whatsoever.
 
-• LinkedIn — {{linkedinReach}} → 10 posts about {{company}}
-• WhatsApp — {{whatsappReach}} members (2 groups) → 10 posts
-• Telegram — {{telegramReach}} members → 10 posts
-• YouTube — {{youtubeReach}}+ subscribers → 2 dedicated videos
+If $500 is an issue, we can negotiate down to $300 for 3 channels (YouTube + LinkedIn + WhatsApp, or any 3 you choose).
 
-That's 4,500+ targeted audience across 5 communities — we create everything, you approve, we post to our audiences.
+Reply YES and I will start immediately.
 
-Flat {{price}} for the full 7-day campaign. No hidden fees.
-
-🔒 ${TRUTH_CLAUSE}
-
-Want us to feature {{company}} this week? Reply YES and I'll send the calendar + samples in 10 mins.
+Dashboard: {{dashboardLink}}
 
 — AlphaTekX
-
 alphatekxcompany@gmail.com
 `,
 }
@@ -41,21 +33,17 @@ export function personalizeOffer(lead, opts = {}) {
   const totalWhatsapp = COMMUNITY.whatsapp.groups.reduce((s,g)=>s+g.members,0)
   const vars = {
     name: lead.name || lead.contact || 'there',
-    company: lead.company || lead.name || 'your company',
-    industry: lead.industry || lead.niche || 'your industry',
-    city: lead.location || lead.city || 'your city',
-    linkedinReach: `${COMMUNITY.linkedin.followers} followers, ${COMMUNITY.linkedin.connections}+ connections`,
-    whatsappReach: String(totalWhatsapp),
-    telegramReach: String(COMMUNITY.telegram.members),
-    youtubeReach: String(COMMUNITY.youtube.subscribers),
-    price: `$${PRICING.oneWeekCampaign.price}`,
+    companyName: lead.company || lead.name || 'your company',
+    ownerName: lead.owner || lead.name || 'the owner',
+    dashboardLink: 'https://alpha-agency-api.alphatekxcompany.workers.dev/dashboard',
+    price: '$500',
     ...opts.vars,
   }
   const includeTruth = opts.includeTruth !== false
-  const bodySrc = opts.body || OFFER_TEMPLATE.body
+  const bodySrc = opts.body || OUTREACH_TEMPLATE.body
   const finalBody = includeTruth && !bodySrc.includes(TRUTH_CLAUSE) ? bodySrc : bodySrc
   return {
-    subject: renderTemplate(opts.subject || OFFER_TEMPLATE.subject, vars),
+    subject: renderTemplate(opts.subject || OUTREACH_TEMPLATE.subject, vars),
     text: renderTemplate(finalBody, vars),
     html: `<pre style="font-family:system-ui;white-space:pre-wrap">${renderTemplate(finalBody, vars)}</pre>`,
     vars,
@@ -67,7 +55,7 @@ export async function personalizeWithGroq(env, lead, opts = {}) {
   const base = personalizeOffer(lead, { ...opts, includeTruth: false })
   if (!env.GROQ_API_KEY) return personalizeOffer(lead, opts)
   try {
-    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: we advertise their product on OUR communities - 3K+ YouTube subscribers, 700+ LinkedIn followers, 500+ LinkedIn connections, 130 WhatsApp channel members, 113 Telegram channel, 85 cybersecurity community = 4,500+ targeted audience for $500: 10 LinkedIn posts, 10 WhatsApp posts, 10 Telegram posts, 2 YouTube videos. Tone friendly expert, concise. No fake numbers beyond given. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
+    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: I manage 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity) and will handle everything done-for-you for $500. If price issue we can do $300 for 3 channels. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
     const { text } = await groqGenerate(env, { prompt })
     const lines = text.split('\n').filter(Boolean)
     const subj = lines.find(l=>l.toLowerCase().includes('subject'))?.replace(/.*subject\s*:\s*/i,'') || base.subject

@@ -69,12 +69,11 @@ export const Landing = () => {
               10,420+ REAL COMPANIES FOUND • VERIFIED VIA APOLLO + HUNTER
             </div>
             <h1 className="mt-6 text-[42px] md:text-[62px] lg:text-[74px] font-black tracking-[-0.045em] leading-[0.85] text-[#0A0A0A]">
-              Find Real<br />
-              <span className="bg-gradient-to-r from-[#5E17EB] via-[#7C3AED] to-[#A78BFA] bg-clip-text text-transparent">Companies.</span><br />
-              <span className="text-[28px] md:text-[36px] font-bold tracking-tight text-[#0A0A0A]/60">Get their verified emails.</span>
+              <span className="text-[#0A0A0A]">Alpha Agency</span><br />
+              <span className="bg-gradient-to-r from-[#5E17EB] via-[#7C3AED] to-[#A78BFA] bg-clip-text text-transparent">Outbound Model</span>
             </h1>
             <p className="mt-5 text-[17px] md:text-[19px] leading-[1.5] text-[#4B5563] max-w-[620px] font-medium">
-              AlphaTekX finds <b className="text-[#0A0A0A]">real brands</b> with Apollo + Hunter verified emails. You get company, website, owner, email, product — and create what they ask for. <b className="text-[#0A0A0A]">No guesswork, no fake lists.</b>
+              <b>Outbound:</b> We search companies, find owner emails, and send cold emails pitching our 4,500+ audience done-for-you for $500. <b>Inbound $50:</b> Public tool for DIY company search + verified emails + AI content generator — you post yourself, no community access.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
               <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">113 TELEGRAM</span>
@@ -82,7 +81,7 @@ export const Landing = () => {
               <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">130 WHATSAPP</span>
               <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">85 CYBER</span>
               <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">700+ LINKEDIN</span>
-              <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">LIVE</span>
+              <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">OUTBOUND LIVE</span>
             </div>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <button onClick={handleGoogleSignup} disabled={loading} className="bg-[#0A0A0A] hover:bg-black text-white rounded-2xl px-8 py-4 text-[16px] font-black flex items-center justify-center gap-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] disabled:opacity-60">
@@ -185,7 +184,7 @@ export const Landing = () => {
             <div>
               <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.16em] uppercase">4,500+ Audience Across 5 Communities</p>
               <h2 className="mt-2 text-[28px] md:text-[40px] font-black leading-[0.95] tracking-tight">We Reach Brands<br/>on Our Communities</h2>
-              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">For selected brands we feature their product across our LinkedIn, WhatsApp, Telegram and YouTube — 4,500+ targeted audience across 5 communities. Private, not public. Ask for invite.</p>
+              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">We reach out to brands and manage everything done-for-you on our 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity) for $500. If price is an issue we can negotiate to $300 for 3 channels. $50 tool access is DIY only — no community posting.</p>
               <div className="mt-6 grid grid-cols-2 gap-3">
                 {[
                   {p:"LinkedIn Followers", v:"700+", s:"700 followers"},
@@ -262,7 +261,7 @@ export const Landing = () => {
             <p className="mt-2 text-center text-[11px] text-white/40">For heavy users • Private invite on request</p>
           </div>
         </div>
-        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">Messaging & private 4,500+ audience feature is <b className="text-[#0A0A0A]">team only</b> — not included in $50 public access.</p>
+        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">$50 = DIY tool: search companies + verified emails + AI content generator (you post yourself). $500 = DFY done-for-you: we reach out to brands, manage everything, post on 4,500+ audience. Messaging & private audience feature is <b className="text-[#0A0A0A]">team only</b> — not included in $50 public access.</p>
       </section>
 
       {/* TESTIMONIALS */}
@@ -272,7 +271,7 @@ export const Landing = () => {
           <div className="mt-4 grid md:grid-cols-3 gap-6 text-[13.5px] leading-[1.6] text-[#4B5563]">
             <div><b className="text-[#0A0A0A]">Real, not mock.</b> Apollo + Hunter + Places. No info@ guess. Every email verified.</div>
             <div><b className="text-[#0A0A0A]">You control outreach.</b> 100 emails show on your site, you track YES, generate content for them, post manually.</div>
-            <div><b className="text-[#0A0A0A]">Private engine.</b> For selected brands we feature on 4,500+ audience across 5 communities. Invite only.</div>
+            <div><b className="text-[#0A0A0A]">Private engine.</b> We reach out to brands done-for-you on 4,500+ audience for $500. Invite only.</div>
           </div>
         </div>
       </section>
@@ -287,9 +286,9 @@ export const Landing = () => {
           </div>
           <div className="bg-white border border-[#EDEDED] rounded-2xl overflow-hidden">
             {[
-              {q:"What does $50 give me?", a:"Access to find real companies: niche + location + limit, with company, website, owner, verified email, product. Export CSV, dedupe. You create what companies ask for. One-time, not monthly."},
-              {q:"Can I send emails from the site?", a:"No — messaging is team-only for now. We use it to contact brands about our private 4,500+ audience feature. Your dashboard after $50 is for finding & tracking companies you contacted externally."},
-              {q:"Is the 4,500+ audience across 5 communities public?", a:"No. It's invite-only for brands we choose. Public sees 'Private Engine — Invite Only' without price. We pitch it one-to-one via Gmail when a brand is a good fit."},
+              {q:"What does $50 give me?", a:"Access to find real companies: niche + location + limit, with company, website, owner, verified email, product. Export CSV, dedupe. DIY AI content generator included. You post yourself — no community publishing. One-time, not monthly."},
+              {q:"Can I send emails from the site?", a:"No — the $50 tool is DIY for company search + emails. Outbound cold email (we reach out to brands for $500 DFY) is managed by our team via Gmail OAuth. Your dashboard tracks who you email externally."},
+              {q:"Is the 4,500+ audience across 5 communities public?", a:"No. It's invite-only for brands we choose. Public sees '$50 DIY tool' without community posting. We pitch it one-to-one via Gmail when a brand is a good fit for $500 DFY."},
               {q:"How do you find companies?", a:"Apollo mixed_companies + Hunter domain-search, plus Tavily/Serply/Overpass fallback, cached 24h in leads_cache. All real, no mock lists. You can also CSV import."},
             ].map((f,i)=>(
               <div key={f.q} className="border-b last:border-0 border-[#F3F4F6]">
