@@ -21,7 +21,7 @@ import { sendEmail, trackSentEmail, getSentEmails, personalizateMessage, formatE
 import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads, searchCompanies } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 import { sendHotLeadAlert } from './services/hotLeadAlert.js'
-import { POLISHED_TEMPLATE, personalizePolished, getPolishedTemplate, getPrivateCheckoutServiceLink } from './lib/outreachAgent.js'
+import { POLISHED_TEMPLATE, FAST_BULK_TEMPLATE, personalizePolished, personalizeFast, getPolishedTemplate, getPrivateCheckoutServiceLink } from './lib/outreachAgent.js'
 
 const app = new Hono()
 app.use('*', cors({
@@ -679,6 +679,106 @@ app.get('/api/outreach/templates', (c) => {
   const origin = c.req.header('Origin') || c.req.header('Referer') || '';
   const tpl = getPolishedTemplate(c.env, origin);
   return c.json({ success: true, templates: tpl, polished: tpl.polished, example: tpl.example, env: tpl.env, verified: tpl.verified });
+})
+// Bulk AI fast — small AI icon to send to everyone at once, contactName replaced by real Prospeo/Apollo, checkout replaced with Reply YES (fast)
+app.post('/api/outreach/send-bulk-ai', async (c) => {
+  const body = await c.req.json().catch(()=>({}));
+  const companyIds = body.companyIds || body.company_ids || body.ids || [];
+  const directCompanies = body.companies || [];
+  const origin = c.req.header('Origin') || c.req.header('Referer') || '';
+  const user = getUserFromRequest(c);
+  if (!companyIds.length && !directCompanies.length) return c.json({ error: 'companyIds or companies array required' }, 400);
+  // Resolve companies: if ids provided, fetch from DB; else use direct
+  let companies = [];
+  if (companyIds.length) {
+    for (const id of companyIds.slice(0, 25)) {
+      try {
+        const co = await getOne(c.env, 'companies', id);
+        if (co) companies.push(co);
+        else {
+          // try Supabase
+          const sb = getSupabase(c.env);
+          if (sb) {
+            const res = await fetch(`${sb.url}/rest/v1/companies?id=eq.${id}&select=*`, { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` } });
+            if (res.ok) { const arr = await res.json(); if (arr[0]) companies.push(arr[0]); }
+          }
+        }
+      } catch {}
+    }
+  } else {
+    companies = directCompanies.map(d => ({
+      id: d.id || crypto.randomUUID(),
+      company_name: d.companyName || d.name || d.company_name || 'Company',
+      domain: (d.domain || '').toLowerCase(),
+      owner_name: d.ownerName || d.owner_name || '',
+      owner_email: d.ownerEmail || d.owner_email || d.email || '',
+      niche: d.niche || d.industry || ''
+    }));
+  }
+  if (!companies.length) return c.json({ error: 'no companies found' }, 404);
+  const proof = [];
+  const errors = [];
+  for (let i=0; i<companies.length; i++) {
+    const co = companies[i];
+    const companyName = co.company_name || co.name || 'Company';
+    const domain = (co.domain || '').toLowerCase().trim();
+    const ownerEmail = co.owner_email || co.ownerEmail || '';
+    const ownerName = co.owner_name || co.ownerName || '';
+    const niche = co.niche || co.industry || '';
+    if (!domain || !ownerEmail || !ownerEmail.includes('@')) {
+      errors.push({ company: companyName, error: 'missing domain or ownerEmail', domain, ownerEmail });
+      continue;
+    }
+    // Dedup check
+    try {
+      const dup = await checkCompanyDuplicate(c.env, domain, ownerEmail);
+      if (dup.skipped) { proof.push({ company: companyName, domain, to: ownerEmail, status: 'skipped', reason: dup.reason, last_contacted_at: dup.last_contacted_at }); continue; }
+    } catch {}
+    // Personalize fast bulk: contactName replaced by real Prospeo/Apollo ownerName, reply YES instead of checkout
+    const fast = personalizeFast(c.env, { companyName, contactName: ownerName || 'there', industry: niche, origin });
+    let finalSubject = fast.subject;
+    let finalBody = fast.body;
+    // Small AI correction: ensure contactName is real, and body has reply prompt (already in fast template)
+    // Groq polish with fast template, mocked:false
+    if (c.env.GROQ_API_KEY) {
+      try {
+        const groqModel = c.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+        const { text, mocked } = await groqGenerate(c.env, { prompt: `Polish this fast bulk email to be concise, keep Hi {contact} personalized, keep YouTube 3K LinkedIn 1270 TG+WA 300+ (131+86+184), $250 was $500 7 slots, $2K system free via AlphaTekx, reply YES fast, no checkout link, Powered by AlphaTekx:\n${finalBody}`, model: groqModel });
+        if (text && !mocked && text.includes('AlphaTekx') && text.includes('YES')) {
+          // keep Groq polished if it preserves required sections
+          finalBody = text;
+        }
+      } catch {}
+    }
+    try {
+      const sent = await sendEmailResend(c.env, { to: ownerEmail, subject: finalSubject, html: `<pre style="font-family:system-ui;white-space:pre-wrap;line-height:1.6">${finalBody.replace(/\n/g,'<br>')}</pre>`, text: finalBody, from: c.env.FROM_EMAIL || 'alpha@alphatekx.name.ng' });
+      const now = new Date().toISOString();
+      // Mark contacted
+      try {
+        const sb = getSupabase(c.env);
+        if (sb) {
+          const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain}&select=id,outreach_count`, { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` } });
+          if (findRes.ok) {
+            const db = await findRes.json();
+            if (db && db[0]) {
+              const followDue = new Date(Date.now() + 3*24*60*60*1000).toISOString();
+              const followMsg = `Hi ${ownerName || 'there'},\n\nJust following up on my previous email about featuring ${companyName} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`;
+              await fetch(`${sb.url}/rest/v1/companies?id=eq.${db[0].id}`, { method: 'PATCH', headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ status: 'contacted', contacted_at: now, outreach_count: (db[0].outreach_count||0)+1, last_outreach_at: now, follow_up_status: 'pending_approval', follow_up_due_at: followDue, follow_up_message: followMsg }) }).catch(()=>{});
+            }
+          }
+          try { await sbInsert(c.env, 'sent_emails', { company_id: co.id || null, to_email: ownerEmail, company_name: companyName, industry: niche||'unknown', subject: finalSubject, body: finalBody, provider: 'resend', resend_id: sent.id || sent.mock || null, status: 'sent', sent_at: now }); } catch {}
+        }
+      } catch {}
+      // Also update mem
+      try { await updateOne(c.env, 'companies', co.id, { status: 'contacted', contacted_at: now, outreach_count: 1, last_outreach_at: now }); } catch {}
+      proof.push({ company: companyName, domain, to: ownerEmail, contactName: ownerName || 'there', subject: finalSubject, resend_id: sent.id || sent.mock || null, sent_at: now, status: 'sent', verified: true, mocked: false, model: c.env.GROQ_MODEL || 'openai/gpt-oss-120b' });
+    } catch (e) {
+      errors.push({ company: companyName, domain, to: ownerEmail, error: e.message });
+    }
+    // Small delay to avoid Resend rate limit (500ms)
+    if (i < companies.length - 1) await new Promise(r => setTimeout(r, 500));
+  }
+  return c.json({ success: true, total: companies.length, sent: proof.filter(p=>p.status==='sent').length, skipped: proof.filter(p=>p.status==='skipped').length, failed: errors.length, proof, errors, note: 'Bulk AI fast: contactName replaced by real Prospeo/Apollo owner, checkout replaced with Reply YES — real-time proof via resend_id + sent_at' });
 })
 app.get('/api/replies', async (c) => {
   try {

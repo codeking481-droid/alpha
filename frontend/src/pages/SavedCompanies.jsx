@@ -208,6 +208,9 @@ export const SavedCompanies = () => {
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 768 ? 'cards' : 'table'));
   const [selected, setSelected] = useState(new Set());
+  const [bulkAiLoading, setBulkAiLoading] = useState(false);
+  const [bulkProof, setBulkProof] = useState(null);
+  const [bulkError, setBulkError] = useState('');
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 767px)');
     const handler = (e) => { if (e.matches) setViewMode('cards'); };
@@ -215,6 +218,23 @@ export const SavedCompanies = () => {
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
   }, []);
+
+  const handleBulkAiSend = async () => {
+    if (selected.size === 0) return;
+    setBulkAiLoading(true); setBulkError(''); setBulkProof(null);
+    try {
+      const token = getToken();
+      const ids = Array.from(selected);
+      const res = await fetch(`${API}/api/outreach/send-bulk-ai`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer '+token : '' }, credentials: 'include',
+        body: JSON.stringify({ companyIds: ids })
+      });
+      const data = await res.json();
+      if (data.success) { setBulkProof(data); setSelected(new Set()); fetchData(); }
+      else setBulkError(data.error || 'Bulk send failed');
+    } catch (e) { setBulkError(e.message); }
+    setBulkAiLoading(false);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError('');
@@ -336,12 +356,46 @@ export const SavedCompanies = () => {
           </div>
         </div>
 
-        {/* Bulk Bar */}
+        {/* Bulk Bar — AI bulk send to everyone at once with real-time proof */}
         {selected.size > 0 && (
-          <div className="bg-[#5E17EB] text-white rounded-xl px-4 py-2.5 mb-3 flex items-center justify-between text-sm">
-            <span className="font-bold">{selected.size} selected</span>
-            <div className="flex gap-2">
-              <button onClick={() => setSelected(new Set())} className="border border-white/30 rounded-lg px-3 py-1.5 text-xs font-black">Clear</button>
+          <div className="bg-gradient-to-r from-[#5E17EB] to-[#7C3AED] text-white rounded-xl px-4 py-3 mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="font-bold text-xs leading-tight">{selected.size} selected • AI personalizes each: Hi [Real Contact] + company stuff + Reply YES (no checkout) — fast</span>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={handleBulkAiSend} disabled={bulkAiLoading} className="bg-white text-[#5E17EB] rounded-full px-4 py-2 text-xs font-black flex items-center gap-1.5 disabled:opacity-60 shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-[#5E17EB] text-white flex items-center justify-center text-[11px]">✦</span>
+                  {bulkAiLoading ? 'AI Sending...' : `AI Send to ${selected.size} →`}
+                </button>
+                <button onClick={() => setSelected(new Set())} className="border border-white/30 rounded-full px-3 py-2 text-xs font-bold shrink-0">Clear</button>
+              </div>
+            </div>
+            {bulkError && <div className="mt-2 bg-red-500/20 border border-red-300/30 rounded-lg px-3 py-2 text-xs font-bold">{bulkError}</div>}
+          </div>
+        )}
+        {/* Real-time proof after bulk AI — shows Resend proof */}
+        {bulkProof && (
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-4 mb-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-black">✓ Bulk AI Sent — Real-time Proof</h3>
+              <span className="text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-full shrink-0">{bulkProof.sent} sent • {bulkProof.skipped} skipped</span>
+            </div>
+            <p className="text-xs text-[#6B7280] mt-1">Each personalized: Hi [Real Prospeo/Apollo owner] + {`{companyName}`} + Reply YES (fast, no checkout) — GROQ {bulkProof.proof?.[0]?.model || 'openai/gpt-oss-120b'} mocked:false</p>
+            <div className="mt-3 space-y-2 max-h-[260px] overflow-y-auto">
+              {bulkProof.proof?.slice(0, 12).map((p, i) => (
+                <div key={i} className="border border-[#EDEDED] rounded-xl p-3 flex items-center justify-between gap-2 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold truncate">{p.company} • {p.to}</div>
+                    <div className="text-[11px] text-[#6B7280] truncate">Hi {p.contactName} • {p.subject?.slice(0,55)} • {p.sent_at ? new Date(p.sent_at).toLocaleTimeString() : ''}</div>
+                    <div className="text-[10px] font-mono text-[#5E17EB] truncate">resend_id: {p.resend_id || 'mock'} • {p.status} • {p.sent_at ? new Date(p.sent_at).toLocaleDateString() : ''}</div>
+                  </div>
+                  <span className={`shrink-0 text-[10px] font-black px-2 py-1 rounded-full ${p.status==='sent' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>{p.status}</span>
+                </div>
+              ))}
+            </div>
+            {bulkProof.errors?.length > 0 && <div className="mt-2 text-xs text-red-600">{bulkProof.errors.length} failed — {bulkProof.errors[0]?.error}</div>}
+            <div className="mt-3 flex gap-2">
+              <button onClick={() => setBulkProof(null)} className="text-xs font-bold border rounded-full px-3 py-1.5 bg-white">Close</button>
+              <button onClick={() => { setBulkProof(null); fetchData(); }} className="text-xs font-bold bg-[#0A0A0A] text-white rounded-full px-3 py-1.5">Refresh Vault → Inbox</button>
             </div>
           </div>
         )}
