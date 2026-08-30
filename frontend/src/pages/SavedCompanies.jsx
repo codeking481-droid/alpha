@@ -289,8 +289,26 @@ export const SavedCompanies = () => {
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BackBtn onClick={() => navigate('/dashboard')} />
             <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">Vault</h1>
+            <span className="hidden sm:inline-flex items-center gap-1.5 bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] px-2 py-1 rounded-full text-[10px] font-black"><span className="w-4 h-4 rounded-full bg-[#5E17EB] text-white flex items-center justify-center text-[10px]">✦</span> AI Agent Ready</span>
           </div>
-          <button onClick={() => navigate('/find-companies')} className="bg-[#0A0A0A] text-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black active:scale-95 transition-all shrink-0">Search →</button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button onClick={() => {
+              const newIds = items.filter(i=>i.status==='new').map(i=>i.id);
+              if (newIds.length===0 && items.length>0) {
+                // if no new, select all
+                setSelected(new Set(items.map(i=>i.id)));
+              } else if (newIds.length>0) {
+                setSelected(new Set(newIds));
+              }
+              // scroll to bulk bar
+              setTimeout(()=> document.getElementById('bulk-ai-bar')?.scrollIntoView({behavior:'smooth', block:'center'}), 100);
+            }} className="bg-[#5E17EB] hover:bg-[#4E0FD1] text-white rounded-full px-3 sm:px-4 py-2 text-xs font-black flex items-center gap-1.5 shadow-[0_4px_12px_rgba(94,23,235,0.25)]">
+              <span className="w-5 h-5 rounded-full bg-white text-[#5E17EB] flex items-center justify-center text-[12px]">🤖</span>
+              <span className="hidden sm:inline">AI Agent</span>
+              <span className="sm:hidden">AI</span>
+            </button>
+            <button onClick={() => navigate('/find-companies')} className="bg-[#0A0A0A] text-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black active:scale-95 transition-all shrink-0">Search →</button>
+          </div>
         </div>
 
         {/* Stats */}
