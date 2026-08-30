@@ -23,6 +23,15 @@ export const Landing = () => {
     <div className="min-h-screen bg-[#FFFCF8] font-['Inter',sans-serif] antialiased selection:bg-[#5E17EB] selection:text-white">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'); html{scroll-behavior:smooth}`}</style>
 
+      {/* FOUNDING ANNOUNCEMENT — addition, not rebuild */}
+      <div className="bg-[#0A0A0A] text-white text-center py-2 px-4 text-[11px] md:text-[12px] font-bold tracking-wide">
+        <span className="inline-flex items-center gap-2">
+          <span className="bg-[#5E17EB] text-white px-2 py-0.5 rounded-full text-[10px] font-black">NEW</span>
+          Founding Partner slots: <span className="text-[#A78BFA]">only 7 left</span> — $250 (was $500) + Free $2K+ Custom System
+          <span className="hidden sm:inline"> — via AlphaTekx automation</span>
+        </span>
+      </div>
+
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#E8E8E8]">
         <div className="max-w-[1240px] mx-auto px-4 md:px-6 h-[64px] flex items-center justify-between gap-4">
@@ -302,6 +311,35 @@ export const Landing = () => {
             </ul>
             <button onClick={handleGetAccess} className="mt-6 w-full bg-[#5E17EB] hover:bg-[#4E0FD1] text-white rounded-full py-3.5 text-[14px] font-bold">Get Access for $50</button>
             <p className="mt-3 text-center text-[11px] text-[#9CA3AF]">Paystack • Instant access • Same tool we use</p>
+          </div>
+        </div>
+      </section>
+
+      {/* FOUNDING BONUS — addition: $2K system via AlphaTekx loss-leader */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-6">
+        <div className="bg-[#0A0A0A] rounded-[20px] p-[1px]">
+          <div className="bg-gradient-to-br from-[#0A0A0A] to-[#1A1033] rounded-[19px] p-6 md:p-8">
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 bg-[#5E17EB] text-white text-[11px] font-black px-3 py-1 rounded-full">FOUNDING BONUS — $2,000+ VALUE FREE</div>
+                <h3 className="mt-3 text-[20px] md:text-[26px] font-black leading-[0.95] text-white">Free Custom System via AlphaTekx Automation</h3>
+                <p className="mt-2 text-[13px] leading-[1.6] text-white/60">Not a static website — a live, working system built on our automated enterprise platform (templates + Groq 120B, not 3 weeks coding). We offer this loss-leader to our first 7 founding partners to build case studies.</p>
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {['CRM','Booking System','Inventory Tracker','Payment Gateway','E-commerce Store','Business Dashboard'].map(s=>(
+                    <span key={s} className="bg-white/10 border border-white/10 text-white text-[11px] font-bold px-3 py-2 rounded-full text-center">{s}</span>
+                  ))}
+                </div>
+                <p className="mt-3 text-[11px] text-white/50">(Note: Bonus strictly tied to founding partnership slots)</p>
+              </div>
+              <div className="lg:w-[340px] w-full bg-white rounded-2xl p-5 shrink-0">
+                <div className="text-[11px] font-black tracking-widest text-[#5E17EB]">FOUNDING PARTNER — $250</div>
+                <div className="mt-1 flex items-baseline gap-2"><span className="text-[28px] font-black">$250</span><span className="text-[12px] line-through text-[#9CA3AF]">$500</span><span className="text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">7 left</span></div>
+                <p className="mt-1 text-[12px] text-[#6B7280]">Ads across YouTube 3K + LinkedIn 1270 + Telegram & WhatsApp 300+ (131+86+184)</p>
+                <ul className="mt-3 space-y-1.5 text-[12px]"><li className="flex gap-2"><span className="text-emerald-500">✓</span> Live system, not static</li><li className="flex gap-2"><span className="text-emerald-500">✓</span> Groq 120B automation</li><li className="flex gap-2"><span className="text-emerald-500">✓</span> Private checkout POST /api/checkout/service 25000</li></ul>
+                <button onClick={handleGetAccess} className="mt-4 w-full bg-[#5E17EB] hover:bg-[#4E0FD1] text-white rounded-full py-3 text-[13px] font-bold">Lock Founding Slot — $250</button>
+                <p className="mt-2 text-center text-[10px] text-[#9CA3AF]">Powered by AlphaTekx</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
