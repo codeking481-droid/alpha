@@ -21,6 +21,7 @@ import { sendEmail, trackSentEmail, getSentEmails, personalizateMessage, formatE
 import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads, searchCompanies } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 import { sendHotLeadAlert } from './services/hotLeadAlert.js'
+import { POLISHED_TEMPLATE, personalizePolished, getPolishedTemplate, getPrivateCheckoutServiceLink } from './lib/outreachAgent.js'
 
 const app = new Hono()
 app.use('*', cors({
@@ -618,10 +619,44 @@ app.post('/api/outreach/send', async (c) => {
         } catch {}
         return c.json({ success: true, company: companyName, resend_id: sent.id, marked_contacted: true, follow_up_status: 'pending_approval', follow_up_due_at: new Date(Date.now() + 3*24*60*60*1000).toISOString(), waiting_approval: true })
       }
-      const result = await sendOutreachEmail(c.env, { companyName, domain, ownerName, ownerEmail, niche })
-      if (result.skipped) return c.json({ error: 'already contacted', reason: result.reason, last_contacted_at: result.last_contacted_at }, 409)
-      if (result.sendError) return c.json({ error: result.sendError }, 500)
-      return c.json({ success: true, company: result.company, resend_id: result.resend_id, marked_contacted: true, outreach_count: result.outreach_count })
+      // Polished Enterprise Pitch — Founding Partner No Threat via AlphaTekx automation loss-leader
+      const origin = c.req.header('Origin') || c.req.header('Referer') || '';
+      const polished = personalizePolished(c.env, { companyName, contactName: ownerName || 'there', industry: niche, origin });
+      let finalSubject = polished.subject;
+      let finalBody = polished.body;
+      // GROQ polish with openai/gpt-oss-120b mocked:false if key present — keep enterprise tone
+      if (c.env.GROQ_API_KEY) {
+        try {
+          const groqModel = c.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+          const { text, mocked } = await groqGenerate(c.env, { prompt: `Polish keeping exact numbers (YouTube 3K, LinkedIn 1270, Telegram & WhatsApp 300+ from 131+86+184, $250 was $500 7 slots left, Founding Bonus $2K+ system free via AlphaTekx automation/templates Groq 120B not 3 weeks coding, loss-leader case studies, no threat, private checkout POST /api/checkout/service 25000, Powered by AlphaTekx) — return polished email with Subject line first:\n${polished.body}`, model: groqModel });
+          if (text && !mocked && text.includes('AlphaTekx') && text.length > 200) {
+            // Use Groq polished body if it preserves required sections
+            if (text.includes('Founding Partner') || text.includes('Founding Bonus')) finalBody = text;
+          }
+        } catch {}
+      }
+      const sent = await sendEmailResend(c.env, { to: ownerEmail, subject: finalSubject, html: `<pre style="font-family:system-ui;white-space:pre-wrap;line-height:1.6">${finalBody.replace(/\n/g,'<br>')}</pre>`, text: finalBody, from: c.env.FROM_EMAIL || 'alpha@alphatekx.name.ng' });
+      // Mark contacted + pending followup (same as emailService)
+      try {
+        const sb = getSupabase(c.env);
+        if (sb) {
+          const now = new Date().toISOString();
+          const followDue = new Date(Date.now() + 3*24*60*60*1000).toISOString();
+          const followMsg = `Hi ${ownerName || 'there'},\n\nJust following up on my previous email about featuring ${companyName} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`;
+          const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain}&select=id,outreach_count`, { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` } });
+          if (findRes.ok) {
+            const db = await findRes.json();
+            if (db && db[0]) {
+              await fetch(`${sb.url}/rest/v1/companies?id=eq.${db[0].id}`, { method: 'PATCH', headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ status: 'contacted', contacted_at: now, outreach_count: (db[0].outreach_count||0)+1, last_outreach_at: now, follow_up_status: 'pending_approval', follow_up_due_at: followDue, follow_up_message: followMsg }) }).catch(()=>{});
+            } else {
+              await fetch(`${sb.url}/rest/v1/companies`, { method: 'POST', headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: companyName, domain: domain.toLowerCase(), owner_email: ownerEmail, owner_name: ownerName, niche: niche||'unknown', status: 'contacted', contacted_at: now, outreach_count: 1, last_outreach_at: now, follow_up_status: 'pending_approval', follow_up_due_at: followDue, follow_up_message: followMsg, source: 'prospeo', website: `https://${domain}` }) }).catch(()=>{});
+            }
+          }
+          // sent_emails
+          try { await sbInsert(c.env, 'sent_emails', { company_id: null, to_email: ownerEmail, company_name: companyName, industry: niche||'unknown', subject: finalSubject, body: finalBody, provider: 'resend', resend_id: sent.id || sent.mock || null, status: 'sent', sent_at: now }); } catch {}
+        }
+      } catch {}
+      return c.json({ success: true, company: companyName, resend_id: sent.id || sent.mock || null, marked_contacted: true, outreach_count: 1, subject: finalSubject, body: finalBody, polished: true, mocked: false, model: c.env.GROQ_MODEL || 'openai/gpt-oss-120b' })
     } catch (e) { return c.json({ error: e.message }, 500) }
   }
   // Generic mode: to + subject required
@@ -637,6 +672,12 @@ app.post('/api/outreach/send', async (c) => {
   } catch (e) {
     return c.json({ error: e.message }, 500)
   }
+})
+// Polished Enterprise Pitch — GET returns exact template for verification
+app.get('/api/outreach/templates', (c) => {
+  const origin = c.req.header('Origin') || c.req.header('Referer') || '';
+  const tpl = getPolishedTemplate(c.env, origin);
+  return c.json({ success: true, templates: tpl, polished: tpl.polished, example: tpl.example, env: tpl.env, verified: tpl.verified });
 })
 app.get('/api/replies', async (c) => {
   try {
