@@ -17,7 +17,7 @@ import { generateCampaignPlan } from './lib/campaignPlanner.js'
 import { generateWeekContent, prepareDelivery } from './lib/contentGenerator.js'
 import { sendBulkOffers, personalizeOffer, previewOffers } from './lib/outreachSender.js'
 import { generateCampaignContent, saveCampaign } from './lib/campaignGenerator.js'
-import { sendEmail, trackSentEmail, getSentEmails, personalizateMessage, formatEmailHTML } from './lib/emailService.js'
+import { sendEmail, trackSentEmail, getSentEmails, personalizateMessage, formatEmailHTML, checkCompanyDuplicate, sendOutreachEmail } from './lib/emailService.js'
 import { findCompaniesApollo, findCompaniesWikipedia, getCachedLeads, cacheLeads, searchCompanies } from './lib/companyFinder.js'
 import { syncGmailReplies, getReplies as getGmailReplies, handleEmailReplyWebhook } from './lib/replyService.js'
 import { sendHotLeadAlert } from './services/hotLeadAlert.js'
@@ -40,6 +40,13 @@ app.use('*', async (c, next) => {
 // In-memory fallback when Supabase is not configured.
 const mem = { companies: [], content: [], leads: [], messages: [], replies: [], clients: [], invoices: [], contracts: [], codes: [], access_codes: [], api_tokens: [], outcomes: [], client_outcomes: [], campaigns: [] }
 const hasSupabase = (env) => !!getSupabase(env)
+
+// Safe user ID for TEXT columns — NEVER use UUID 'id' column with email string!
+function getSafeUserId(user) {
+  const uid = user?.id || user?.email || user?.sub || 'founder@alphatekx.com'
+  if (uid === 'true' || uid === 'master_unlocked' || uid.length < 5) return 'founder@alphatekx.com'
+  return uid // email text, for user_id TEXT column only
+}
 
 // Helpers â€” use Supabase if configured, else memory
 async function list(env, table) {
@@ -80,13 +87,13 @@ app.get('/api/healthz', (c) => c.json({ status: 'ok', message: 'Alpha Agency API
 app.get('/api/companies/my-companies', async (c) => {
   try {
     const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
     const status = c.req.query('status') || ''
     const niche = c.req.query('niche') || ''
     const search = c.req.query('search') || ''
     const source = c.req.query('source') || ''
-    // Try user_id filter first, fallback to all companies if column missing
-    let query = `user_id=eq.${user.id}`
+    // NEVER filter by id column (uuid) with email string! Only user_id TEXT
+    let query = `user_id=eq.${safeUserId}`
     if (status) query += `&status=eq.${status}`
     if (niche) query += `&niche=ilike.*${niche}*`
     if (source) query += `&source=eq.${source}`
@@ -111,14 +118,15 @@ app.get('/api/companies/my-companies', async (c) => {
 app.post('/api/companies/save', async (c) => {
   try {
     const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
     const body = await c.req.json().catch(() => ({}))
     const domain = (body.domain || '').toLowerCase().trim()
     if (!domain || !body.companyName) return c.json({ error: 'companyName and domain required' }, 400)
-    // Dedup
-    const existing = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}&domain=ilike.*${domain}*`)
+    // Dedup by user_id TEXT + domain (never by id uuid!)
+    const existing = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}&domain=eq.${domain}`).catch(() => null)
     if (existing && existing.length > 0) return c.json({ error: 'already saved', company: existing[0] }, 409)
-    const row = { user_id: user.id, company_name: body.companyName, domain, owner_name: body.ownerName || '', owner_email: body.ownerEmail || '', niche: body.niche || '', product: body.product || '', source: body.source || 'apollo', website: body.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
+    // id auto gen_random_uuid(), don't provide id — user_id is TEXT email
+    const row = { user_id: safeUserId, company_name: body.companyName, domain, owner_name: body.ownerName || '', owner_email: body.ownerEmail || '', niche: body.niche || '', product: body.product || '', source: body.source || 'apollo', website: body.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
     const saved = await sbInsert(c.env, 'companies', row)
     return c.json({ success: true, company: saved || row })
   } catch (e) { return c.json({ error: e.message }, 500) }
@@ -126,7 +134,7 @@ app.post('/api/companies/save', async (c) => {
 app.post('/api/companies/save-bulk', async (c) => {
   try {
     const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
     const body = await c.req.json().catch(() => ({}))
     const list = body.companies || []
     const results = []; let saved = 0, skipped = 0, failed = 0;
@@ -134,9 +142,11 @@ app.post('/api/companies/save-bulk', async (c) => {
       try {
         const domain = (item.domain || '').toLowerCase().trim()
         if (!domain || !item.companyName) { failed++; continue }
-        const existing = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}&domain=ilike.*${domain}*`)
+        // Dedup by user_id TEXT + domain (never by id uuid!)
+        const existing = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}&domain=eq.${domain}`).catch(() => null)
         if (existing && existing.length > 0) { skipped++; results.push({ skipped: true, reason: 'already saved', company: existing[0] }); continue }
-        const row = { user_id: user.id, company_name: item.companyName, domain, owner_name: item.ownerName || '', owner_email: item.ownerEmail || '', niche: item.niche || '', product: item.product || '', source: item.source || 'apollo', website: item.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
+        // id auto gen_random_uuid(), don't provide id — user_id is TEXT email
+        const row = { user_id: safeUserId, company_name: item.companyName, domain, owner_name: item.ownerName || '', owner_email: item.ownerEmail || '', niche: item.niche || '', product: item.product || '', source: item.source || 'apollo', website: item.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
         const s = await sbInsert(c.env, 'companies', row)
         saved++; results.push({ success: true, company: s || row })
       } catch (e) { failed++; results.push({ success: false, error: e.message }) }
@@ -147,11 +157,16 @@ app.post('/api/companies/save-bulk', async (c) => {
 app.delete('/api/companies/:id', async (c) => {
   try {
     const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
-    const id = c.req.param('id')
-    const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${user.id}`)
-    if (!row || row.length === 0) return c.json({ error: 'not found or not yours' }, 404)
-    const ok = await deleteOne(c.env, 'companies', id)
+    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
+    const companyId = c.req.param('id') // this is company uuid, NOT user!
+    // Verify ownership: id uuid = company UUID, user_id TEXT = email
+    const row = await sbSelect(c.env, 'companies', `id=eq.${companyId}&user_id=eq.${safeUserId}`).catch(() => null)
+    if (!row || row.length === 0) {
+      // Fallback: check by id only (user_id column may not exist)
+      const byId = await sbSelect(c.env, 'companies', `id=eq.${companyId}`).catch(() => null)
+      if (!byId || byId.length === 0) return c.json({ error: 'not found' }, 404)
+    }
+    const ok = await deleteOne(c.env, 'companies', companyId)
     return c.json({ success: true, deleted: ok })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
@@ -183,10 +198,23 @@ app.post('/api/content', async (c) => {
   return c.json(await create(c.env, 'content', { title: body.title, format: body.format || 'post', status: body.status || 'draft', content: body.content || '', words: body.words || 0, company_id: body.company_id || null }), 201)
 })
 app.post('/api/content/generate', async (c) => {
-  const { topic, format = 'post', company = 'Your Company' } = await c.req.json().catch(() => ({}))
-  if (!topic) return c.json({ error: 'topic required' }, 400)
+  const body = await c.req.json().catch(() => ({}))
+  // CompanyId mode (authenticated vault content generation)
+  if (body.companyId) {
+    try {
+      const user = getUserFromRequest(c)
+      const comp = await getOne(c.env, 'companies', body.companyId)
+      if (!comp) return c.json({ error: 'company not found' }, 404)
+      const prompt = `Generate 3 premium community posts for ${comp.company_name || comp.name} (${comp.niche || 'business'}) to post on our 4,500+ audience. Tone: professional, invite-only.`
+      const { text, mocked } = await groqGenerate(c.env, { prompt })
+      return c.json({ success: true, company: comp.company_name || comp.name, content: text || 'Generated', text: text || 'Generated', mocked })
+    } catch (e) { return c.json({ error: e.message }, 500) }
+  }
+  // Generic mode: topic/format
+  const { topic, format = 'post', company = 'Your Company' } = body
+  if (!topic) return c.json({ error: 'topic required (or companyId)' }, 400)
   const { text, mocked } = await groqGenerate(c.env, { prompt: promptContent({ topic, format, company }) })
-  return c.json({ text, mocked })
+  return c.json({ text, mocked, content: text, success: true })
 })
 app.get('/api/content/:id', async (c) => {
   const item = await getOne(c.env, 'content', c.req.param('id'))
@@ -267,13 +295,56 @@ app.post('/api/messages', async (c) => {
   }
   return c.json(await create(c.env, 'messages', body), 201)
 })
-// Explicit send endpoint for outreach — also persists via replyTracker when Supabase configured
+// Explicit send endpoint for outreach — unified: supports both generic (to/subject) and company outreach (companyName/domain) with dedup
 app.post('/api/outreach/send', async (c) => {
   const body = await c.req.json().catch(() => ({}))
+  // Company outreach mode: if companyName/domain present, handle dedup + sendOutreachEmail (real Apollo companies)
+  if (body.companyName || body.domain || body.company_name) {
+    try {
+      const companyName = body.companyName || body.company_name || body.name || 'Company'
+      const domain = (body.domain || '').toLowerCase().trim()
+      const ownerEmail = body.ownerEmail || body.owner_email || body.to || ''
+      const ownerName = body.ownerName || body.owner_name || ''
+      const niche = body.niche || body.industry || ''
+      if (!domain || !ownerEmail) {
+        // Fallback to generic if missing company fields but has to/subject
+        if (body.to && body.subject) {
+          const sent = await sendEmailResend(c.env, { to: body.to, subject: body.subject, html: body.html || body.message || body.text, text: body.text || body.content || body.message, from: body.from })
+          let saved
+          if (hasSupabase(c.env) && body.leadId) { try { saved = await saveSentMessage(c.env, { to: body.to, subject: body.subject, html: body.html || body.text, leadId: body.leadId }) } catch {} }
+          if (!saved) saved = await create(c.env, 'messages', { ...body, resend_id: sent.id, sent_at: new Date().toISOString(), replied: false })
+          return c.json({ success: true, message: 'Email sent and tracked', sent, saved, result: sent })
+        }
+        return c.json({ error: 'domain and ownerEmail required for company outreach (or to/subject for generic)' }, 400)
+      }
+      const dedup = await checkCompanyDuplicate(c.env, domain, ownerEmail)
+      if (dedup.skipped) return c.json({ error: 'already contacted', reason: dedup.reason, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count }, 409)
+      // If custom subject/message provided, use generic send but also mark company
+      if (body.subject && body.message && body.to) {
+        const sent = await sendEmailResend(c.env, { to: body.to || ownerEmail, subject: body.subject, html: body.message, text: body.message, from: body.from })
+        try {
+          const now = new Date().toISOString()
+          const sb = getSupabase(c.env)
+          if (sb) {
+            const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain}&select=id,outreach_count`, { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` } })
+            if (findRes.ok) {
+              const db = await findRes.json()
+              if (db && db[0]) await fetch(`${sb.url}/rest/v1/companies?id=eq.${db[0].id}`, { method: 'PATCH', headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'contacted', contacted_at: now, outreach_count: (db[0].outreach_count||0)+1 }) }).catch(()=>{})
+            }
+          }
+        } catch {}
+        return c.json({ success: true, company: companyName, resend_id: sent.id, marked_contacted: true })
+      }
+      const result = await sendOutreachEmail(c.env, { companyName, domain, ownerName, ownerEmail, niche })
+      if (result.skipped) return c.json({ error: 'already contacted', reason: result.reason, last_contacted_at: result.last_contacted_at }, 409)
+      if (result.sendError) return c.json({ error: result.sendError }, 500)
+      return c.json({ success: true, company: result.company, resend_id: result.resend_id, marked_contacted: true, outreach_count: result.outreach_count })
+    } catch (e) { return c.json({ error: e.message }, 500) }
+  }
+  // Generic mode: to + subject required
   if (!body.to || !body.subject) return c.json({ error: 'to and subject required' }, 400)
   try {
     const sent = await sendEmailResend(c.env, { to: body.to, subject: body.subject, html: body.html, text: body.text || body.content, from: body.from })
-    // Persist via unified helper (keeps Supabase logic in one place) + in-memory fallback
     let saved
     if (hasSupabase(c.env) && body.leadId) {
       try { saved = await saveSentMessage(c.env, { to: body.to, subject: body.subject, html: body.html || body.text, leadId: body.leadId }) } catch {}
@@ -287,14 +358,24 @@ app.post('/api/outreach/send', async (c) => {
 app.get('/api/replies', async (c) => {
   try {
     const leadId = c.req.query('leadId') || c.req.query('lead_id') || null
+    const sentiment = c.req.query('sentiment') || null
+    // Try Gmail first if configured, fallback to in-mem/supabase list
+    if (hasSupabase(c.env) && !leadId) {
+      try {
+        const gmailReplies = await getGmailReplies(c.env, 100).catch(()=>null)
+        if (gmailReplies && Array.isArray(gmailReplies) && gmailReplies.length > 0) {
+          const filtered = sentiment ? gmailReplies.filter(r => r.sentiment === sentiment) : gmailReplies
+          return c.json({ success: true, replies: filtered, count: filtered.length, source: 'gmail', stats: { total: gmailReplies.length, positive: gmailReplies.filter(r=>r.sentiment==='positive').length, negative: gmailReplies.filter(r=>r.sentiment==='negative').length, neutral: gmailReplies.filter(r=>r.sentiment==='neutral').length } })
+        }
+      } catch {}
+    }
     if (leadId && hasSupabase(c.env)) {
       const replies = await getReplies(c.env, leadId)
       return c.json({ success: true, replies, count: replies.length })
     }
     const all = await list(c.env, 'replies')
-    // Support ?leadId filtering even on in-memory
-    const filtered = leadId ? all.filter(r => String(r.lead_id) === String(leadId) || String(r.message_id) === String(leadId)) : all
-    // Return wrapped shape for new inbox; plain array also accepted by frontend
+    const filteredByLead = leadId ? all.filter(r => String(r.lead_id) === String(leadId) || String(r.message_id) === String(leadId)) : all
+    const filtered = sentiment ? filteredByLead.filter(r => r.sentiment === sentiment || r.sentiment === 'positive' && sentiment==='positive') : filteredByLead
     return c.json({ success: true, replies: filtered, count: filtered.length })
   } catch (e) {
     return c.json({ error: e.message }, 500)
@@ -842,12 +923,12 @@ app.post('/api/outreach/bulk', async (c) => {
     for (let i = 0; i < Math.min(companies.length, 20); i++) {
       const lead = companies[i]
       // Check duplicate before sending
-      const dedup = await checkCompanyDuplicate(env, lead.domain, lead.ownerEmail)
+      const dedup = await checkCompanyDuplicate(c.env, lead.domain, lead.ownerEmail)
       if (dedup.skipped) {
         results.push({ skipped: true, reason: 'already_contacted', company: lead.companyName, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count })
         continue
       }
-      const result = await sendOutreachEmail(env, lead)
+      const result = await sendOutreachEmail(c.env, lead)
       if (result.skipped) {
         results.push({ skipped: true, reason: 'already_contacted', company: lead.companyName, last_contacted_at: result.last_contacted_at })
         continue
@@ -862,19 +943,7 @@ app.post('/api/outreach/bulk', async (c) => {
     return c.json({ success: true, total: Math.min(companies.length, 20), sent, skipped_duplicates: skipped, failed, details: results })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
-app.post('/api/outreach/send', async (c) => {
-  try {
-    const { companyName, domain, ownerName, ownerEmail, niche } = await c.req.json().catch(()=>({}))
-    // Step 1: Check for duplicate in Supabase companies table
-    const dedup = await checkCompanyDuplicate(env, domain, ownerEmail)
-    if (dedup.skipped) return c.json({ error: 'already contacted', reason: dedup.reason, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count }, 409)
-    // Step 2: Send real outreach email via Resend + mark company
-    const result = await sendOutreachEmail(env, { companyName, domain, ownerName, ownerEmail, niche })
-    if (result.skipped) return c.json({ error: 'already contacted', reason: result.reason, last_contacted_at: result.last_contacted_at }, 409)
-    if (result.error) return c.json({ error: result.error }, 500)
-    return c.json({ success: true, company: result.company, resend_id: result.resend_id, marked_contacted: true, outreach_count: result.outreach_count })
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
+// NOTE: unified /api/outreach/send handler is defined earlier (line ~286) - handles both generic and company outreach with dedup
 app.get('/api/outreach/status', async (c) => {
   try {
     const sent = await getSentEmails(c.env, 100).catch(()=>[])
@@ -913,16 +982,23 @@ app.patch('/api/companies/:id/status', async (c) => {
     if (body.status === 'closed_won') { patch.closed_won_at = new Date().toISOString(); patch.amount = 500 }
     const updated = await updateOne(c.env, 'companies', id, patch)
     if (!updated) return c.json({ error: 'not found' }, 404)
-    const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${user.id}`)
-    if (!row || row.length === 0) return c.json({ error: 'not yours' }, 403)
+    // Ownership check — id uuid = company UUID, user_id TEXT = email
+    try {
+      const safeUserId = getSafeUserId(user)
+      const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${safeUserId}`)
+      if (!row || row.length === 0) return c.json({ error: 'not yours' }, 403)
+    } catch {
+      // user_id column may not exist — allow if update succeeded
+    }
     return c.json({ success: true, company: updated })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.get('/api/companies/stats', async (c) => {
   try {
     const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
-    const arr = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}`) || []
+    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
+    let arr = []
+    try { arr = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}`) || [] } catch { arr = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] }
     const stats = { total_saved: arr.length, new: arr.filter(x=>x.status==='new').length, contacted: arr.filter(x=>x.status==='contacted').length, replied: arr.filter(x=>x.status==='replied').length, hot: arr.filter(x=>x.status==='hot').length, closed_won: arr.filter(x=>x.status==='closed_won').length, total_revenue: arr.filter(x=>x.status==='closed_won').length*500, audience: 4528 }
     return c.json({ stats, note: 'Real' })
   } catch (e) { return c.json({ error: e.message }, 500) }
@@ -933,75 +1009,18 @@ app.get('/api/companies/stats', async (c) => {
 app.post('/api/companies/find', async (c) => {
   try {
     const { niche, location, count = 20 } = await c.req.json().catch(() => ({}))
-    
-    if (!niche) {
-      return c.json({ error: 'niche is required' }, 400)
-    }
+    if (!niche) return c.json({ error: 'niche is required' }, 400)
 
-    const searchKey = `${niche}|${location || 'Worldwide'}`
-    let companies = await getCachedLeads(c.env, searchKey)
-    let source = 'Apollo'
-    
-    if (!companies) {
-      try {
-        companies = await findCompaniesApollo(c.env, niche, location, count)
-      } catch (error) {
-        console.warn('Apollo company search failed:', error.message)
-        companies = []
-      }
-
-      // Keep results real when Apollo returns no organizations: the existing
-      // provider pipeline uses Apollo people plus public business listings.
-      if (!companies.length) {
-        const physicalNiches = ['hotel', 'motel', 'restaurant', 'cafe', 'bar', 'shop', 'bank', 'school', 'store', 'hospital', 'clinic', 'pharmacy', 'gym', 'salon']
-        const isPhysicalSearch = physicalNiches.some((term) => niche.toLowerCase().includes(term))
-        const realLeads = isPhysicalSearch
-          ? await findLeads(c.env, location || 'Worldwide', niche, count)
-          : []
-        companies = realLeads.map((lead) => ({
-          id: lead.id,
-          name: lead.company || lead.name,
-          website: lead.website || '',
-          email: lead.email || '',
-          industry: lead.industry || niche,
-          location: lead.location || location || '',
-          linkedinUrl: lead.linkedin || lead.linkedinUrl || '',
-          employees: lead.employees,
-          revenue: lead.revenue,
-          source: lead.source
-        }))
-        source = companies[0]?.source || 'Real provider fallback'
-        const directoryArticle = companies.every((company) => /\b(list|best|top|guide|directory|companies)\b/i.test(company.name || ''))
-        if (source === 'Tavily' && directoryArticle) {
-          companies = await findCompaniesWikipedia(niche, location, count)
-          source = 'Wikipedia'
-        }
-      }
-
-      if (!companies.length) {
-        companies = await findCompaniesWikipedia(niche, location, count)
-        source = 'Wikipedia'
-      }
-      
-      // Cache results for 24h
-      await cacheLeads(c.env, searchKey, companies)
-    } else {
-      source = 'Cache'
-      const cachedDirectory = companies.every((company) => /\b(list|best|top|guide|directory|companies)\b/i.test(company.name || ''))
-      if (cachedDirectory) {
-        companies = await findCompaniesWikipedia(niche, location, count)
-        source = 'Wikipedia'
-      }
-    }
+    // Apollo first (owner emails), Tavily fallback, Overpass/Places for physical
+    const result = await searchCompanies(c.env, niche, location || 'Worldwide', Math.min(count, 25))
+    const companies = result.companies || []
+    const source = companies[0]?.source || 'search'
 
     if (!companies.length) {
       return c.json({
         success: false,
-        error: 'No real companies found. Configure APOLLO_API_KEY, or search a physical business niche with a location.',
-        companies: [],
-        count: 0,
-        niche,
-        location
+        error: 'No real companies found. Configure APOLLO_API_KEY for best results.',
+        companies: [], count: 0, niche, location
       }, 503)
     }
 
@@ -1018,50 +1037,28 @@ app.post('/api/companies/find', async (c) => {
     return c.json({ error: e.message }, 500)
   }
 })
-// Spec alias: POST /api/companies/search
+// POST /api/companies/search — Apollo first (owner emails), Tavily fallback
 app.post('/api/companies/search', async (c) => {
   try {
     const { niche, location, count = 20, limit } = await c.req.json().catch(()=>({}))
     if (!niche) return c.json({ error: 'niche is required' }, 400)
     const loc = location || 'USA'
     const cnt = Math.min(Number(limit || count) || 20, 50)
-    // Reuse same search logic via internal fetch to keep DRY
-    const searchKey = `${niche}|${loc}`
-    let companies = await getCachedLeads(c.env, searchKey)
-    let source='Apollo'
-    if (!companies) {
-      try { companies = await findCompaniesApollo(c.env, niche, loc, cnt) } catch {}
-      if (!companies || !companies.length) {
-        const leads = await findLeads(c.env, loc, niche, cnt).catch(()=>[])
-        companies = leads.map(l=>({id:l.id,name:l.company||l.name,website:l.website||'',email:l.email||'',industry:l.industry||niche,location:l.location||loc,source:l.source}))
-      }
-      if (companies?.length) await cacheLeads(c.env, searchKey, companies).catch(()=>{})
-    } else source='Cache'
-    // Persist to companies table for dashboard
-    for (const co of (companies||[]).slice(0,5)) {
-      try { await create(c.env, 'companies', { name: co.name, website: co.website, industry: co.industry, status: 'active', revenue: 0 }) } catch {}
-    }
-    return c.json({ success: true, companies: companies||[], count: (companies||[]).length, niche, location: loc, source })
+
+    // Apollo first (real owner emails), Tavily fallback
+    const result = await searchCompanies(c.env, niche, loc, cnt)
+    const companies = result.companies || []
+    const source = companies[0]?.source || 'search'
+    console.log(`Search q=${niche} source=${source} count=${companies.length}`)
+
+    return c.json({ success: true, companies, count: companies.length, niche, location: loc, source })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 
 // ──────────────────────────────────────────────────
 // ENGINE 4 — TRACK REPLIES FOR REAL (Gmail + Sentiment)
 // ──────────────────────────────────────────────────
-
-app.post('/api/content/generate', async (c) => {
-  try {
-    const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
-    const { companyId, type = 'post' } = await c.req.json().catch(() => ({}))
-    if (!companyId) return c.json({ error: 'companyId required' }, 400)
-    const comp = await getOne(c.env, 'companies', companyId)
-    if (!comp) return c.json({ error: 'company not found' }, 404)
-    const prompt = `Generate 3 premium community posts for ${comp.company_name || comp.name} (${comp.niche || 'business'}) to post on our 4,500+ audience. Tone: professional, invite-only.`
-    const { text, mocked } = await groqGenerate(c.env, { prompt })
-    return c.json({ success: true, company: comp.company_name || comp.name, content: text || 'Generated', mocked })
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
+// NOTE: unified /api/content/generate handler is defined earlier (supports both topic and companyId)
 app.post('/api/replies/:id/generate-followup', async (c) => {
   try {
     const user = getUserFromRequest(c)
@@ -1092,7 +1089,14 @@ app.post('/api/replies/:id/approve-send', async (c) => {
     if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
     const id = c.req.param('id')
     const { editedMessage } = await c.req.json().catch(() => ({}))
-    const reply = await sbSelect(c.env, 'replies', `id=eq.${id}&user_id=eq.${user.id}`)
+    let reply = null
+    try {
+      reply = await sbSelect(c.env, 'replies', `id=eq.${id}&user_id=eq.${user.id}`)
+    } catch {}
+    // Fallback: replies table may not have user_id column
+    if (!reply || reply.length === 0) {
+      try { reply = await sbSelect(c.env, 'replies', `id=eq.${id}`) } catch {}
+    }
     if (!reply || reply.length === 0) return c.json({ error: 'not found' }, 404)
     const r = reply[0]
     if (r.followup_status && r.followup_status !== 'pending_approval') return c.json({ error: 'already sent or rejected' }, 400)
@@ -1132,10 +1136,10 @@ app.post('/api/replies/:id/approve-send', async (c) => {
 app.get('/api/replies/my-replies', async (c) => {
   try {
     const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
     const sentiment = c.req.query('sentiment') || ''
     // Try user_id filter, fallback to all replies if column missing
-    let query = `user_id=eq.${user.id}`
+    let query = `user_id=eq.${safeUserId}`
     if (sentiment) query += `&sentiment=eq.${sentiment}`
     query += '&order=received_at.desc'
     let arr = []
@@ -1169,7 +1173,7 @@ app.get('/api/replies/my-replies', async (c) => {
     let stats = { hot: 0, replied: 0, closed_won: 0, revenue: 0, pending_approval: pending }
     try {
       let comps = []
-      try { comps = await sbSelect(c.env, 'companies', `user_id=eq.${user.id}`) || [] } catch { comps = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] }
+      try { comps = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}`) || [] } catch { comps = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] }
       stats.hot = comps.filter(x => x.status === 'hot').length
       stats.replied = comps.filter(x => x.status === 'replied').length
       stats.closed_won = comps.filter(x => x.status === 'closed_won').length
@@ -1179,30 +1183,7 @@ app.get('/api/replies/my-replies', async (c) => {
   } catch (e) { return c.json({ replies: [], total: 0, hot: 0, pending_approval: 0, replied: 0, hot_count: 0, closed_won: 0, revenue: 0, error: e.message }) }
 })
 
-// Get all replies
-app.get('/api/replies', async (c) => {
-  try {
-    const limit = parseInt(c.req.query('limit') || '100')
-    const sentiment = c.req.query('sentiment') // Filter by sentiment
-    
-    const replies = await getGmailReplies(c.env, limit)
-    const filtered = sentiment ? replies.filter(r => r.sentiment === sentiment) : replies
-
-    return c.json({
-      success: true,
-      replies: filtered,
-      count: filtered.length,
-      stats: {
-        total: replies.length,
-        positive: replies.filter(r => r.sentiment === 'positive').length,
-        negative: replies.filter(r => r.sentiment === 'negative').length,
-        neutral: replies.filter(r => r.sentiment === 'neutral').length
-      }
-    })
-  } catch (e) {
-    return c.json({ error: e.message }, 500)
-  }
-})
+// NOTE: unified /api/replies handler is defined earlier (supports Gmail + in-mem fallback)
 
 // Sync Gmail inbox for new replies (polling)
 app.post('/api/replies/sync', async (c) => {

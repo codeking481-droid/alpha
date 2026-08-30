@@ -78,7 +78,7 @@ export async function sendOutreachEmail(env, lead) {
     const resendKey = env.RESEND_API_KEY
     if (!resendKey) throw new Error('RESEND_API_KEY missing')
 
-    const resendRes = await fetch('https://api.resend.com emails', {
+    const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendKey}`,
@@ -112,16 +112,16 @@ export async function sendOutreachEmail(env, lead) {
     if (sb) {
       const now = new Date().toISOString()
       // First try to find the company by domain and update it
-      const findRes = await fetch(`${sb}/rest/v1/companies?domain=eq.${domain.toLowerCase()}&select=id,outreach_count`, {
-        headers: { apikey: sb, Authorization: `Bearer ${sb}` }
+      const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain.toLowerCase()}&select=id,outreach_count`, {
+        headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }
       })
       if (findRes.ok) {
         const dbCompanies = await findRes.json()
         if (dbCompanies && dbCompanies.length > 0) {
           const co = dbCompanies[0]
-          await fetch(`${sb}/rest/v1/companies?id=eq.${co.id}`, {
+          await fetch(`${sb.url}/rest/v1/companies?id=eq.${co.id}`, {
             method: 'PATCH',
-            headers: { apikey: sb, Authorization: `Bearer ${sb}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+            headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
             body: JSON.stringify({
               status: 'contacted',
               contacted_at: now,
@@ -131,9 +131,9 @@ export async function sendOutreachEmail(env, lead) {
           }).catch(() => {})
         } else {
           // Company not in DB yet - insert it
-          await fetch(`${sb}/rest/v1/companies`, {
+          await fetch(`${sb.url}/rest/v1/companies`, {
             method: 'POST',
-            headers: { apikey: sb, Authorization: `Bearer ${sb}`, 'Content-Type': 'application/json' },
+            headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name: companyName,
               domain: domain.toLowerCase(),
@@ -143,8 +143,8 @@ export async function sendOutreachEmail(env, lead) {
               contacted_at: now,
               outreach_count: 1,
               last_outreach_at: now
-            }).catch(() => {})
-          })
+            })
+          }).catch(() => {})
         }
       }
     }

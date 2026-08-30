@@ -216,11 +216,8 @@ export async function findLeads(env, city, niche, limit = 100) {
   const results = []
   const errors = []
 
-  // Try Apollo first for professional niches
-  const n = String(niche).toLowerCase()
-  const isBusinessNiche = ['hotel','motel','restaurant','cafe','bar','shop','bank','school','doctors','store','hospital','clinic','pharmacy','gym','salon'].includes(n)
-
-  if (env.APOLLO_API_KEY && !isBusinessNiche) {
+  // Try Apollo FIRST for ALL niches — real verified owner emails, not small Tavily scraps
+  if (env.APOLLO_API_KEY) {
     try {
       const apollo = await findLeadsApollo(env, { city, niche, limit: Math.min(25, target) })
       results.push(...apollo)

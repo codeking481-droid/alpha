@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { API_URL } from '../lib/api';
 
 const DEMO_RESULTS = [
   { name: 'OpenAI', website: 'openai.com', email: 'contact@openai.com', logo: 'openai', color: 'bg-[#5A7BF7]' },
@@ -16,7 +17,7 @@ function SaveCompanyBtn({ company, getToken }) {
     setSaving(true); setMsg('');
     try {
       const token = getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/companies/save`, {
+      const res = await fetch(`${API_URL}/api/companies/save`, {
         method: 'POST', headers: { 'Content-Type':'application/json', Authorization: token ? 'Bearer '+token : '' }, credentials: 'include',
         body: JSON.stringify({ companyName: company.name, domain: company.website ? company.website.replace(/^https?:\/\//,'').split('/')[0].replace('www.','') : '', ownerName: '', ownerEmail: company.email || '', niche: '', product: '', source: company.source || 'apollo', website: company.website })
       });
@@ -61,11 +62,11 @@ export const FindCompanies = () => {
       } else if (search.toLowerCase().includes('lagos') || search.toLowerCase().includes('abuja') || search.toLowerCase().includes('port harcourt')) {
         // keep city Lagos, niche as is
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/leads/find`, {
+      const res = await fetch(`${API_URL}/api/companies/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ city, niche, limit: 20, query: search, industry: niche })
+        body: JSON.stringify({ niche, location: city, count: 20 })
       });
       const text = await res.text();
       let data = {};
@@ -81,15 +82,20 @@ export const FindCompanies = () => {
           name: c.name || c.company || c.title || 'Company',
           website: c.website || c.domain || c.link || c.url || 'example.com',
           email: c.email || (c.website ? `info@${String(c.website).replace(/^https?:\/\//,'').split('/')[0].replace('www.','')}` : `contact@${(c.company||'company').toLowerCase().replace(/\s+/g,'')}.com`),
+          ownerName: c.ownerName || '',
+          ownerEmail: c.ownerEmail || c.email || '',
           color: 'bg-[#5E17EB]',
           logo: 'generic',
           phone: c.phone || '',
-          source: c.source || 'OpenStreetMap'
+          source: c.source || 'search',
+          verified: c.verified || false,
+          employeeCount: c.employeeCount || 0
         })));
-        if (data.source) setError(`Real results from ${data.source} • ${data.count || arr.length} found`);
+        const srcLabel = data.source === 'apollo' ? 'Apollo ✓ (verified emails)' : data.source === 'tavily' ? 'Tavily' : data.source || 'search';
+        if (data.source) setError(`Source: ${srcLabel} • ${data.count || arr.length} found`);
       } else {
         setResults([]);
-        setError(data.error || 'No companies found. Try "hotel in Lagos" or "restaurant in Abuja" for real Overpass results');
+        setError(data.error || 'No companies found — Apollo returned 0. Try broader niche like "tech" or "software"');
       }
     } catch (e) {
       setError(e.message);
@@ -136,9 +142,9 @@ export const FindCompanies = () => {
 
           <div className="mt-6 space-y-4">
             {loading ? (
-              <p className="text-center text-sm text-[#6B7280] py-8">Searching real companies via OpenStreetMap...</p>
+              <p className="text-center text-sm text-[#6B7280] py-8">Searching real companies via Apollo (verified owner emails)...</p>
             ) : results.length === 0 ? (
-              <p className="text-center text-sm text-[#6B7280] py-8">No companies found. Try "hotel in Lagos" or "pharmacy in Abuja"</p>
+              <p className="text-center text-sm text-[#6B7280] py-8">No companies found. Try broader niche like "tech" or "saas"</p>
             ) : (
               results.map((c) => (
                 <div key={c.name + c.website} className="bg-white border border-[#E5E7EB] rounded-2xl p-4 md:p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow">
@@ -155,9 +161,13 @@ export const FindCompanies = () => {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18M3 12h18"/><path d="M12 7a5 15 0 0 0 0 10M12 7a5 15 0 0 1 0 10"/></svg>
                         {c.website}
                       </div>
+                      {c.ownerName && <div className="flex items-center gap-1.5 mt-1 text-[13px] md:text-[14px] text-[#0A0A0A] font-medium">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        {c.ownerName}{c.verified && <span className="text-emerald-500 text-xs font-bold">Apollo ✓</span>}
+                      </div>}
                       <div className="flex items-center gap-1.5 mt-1 text-[13px] md:text-[14px] text-[#6B7280]">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.6"><path d="M4 4h16v16H4z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        {c.email}
+                        {c.email}{c.source === 'apollo' && <span className="text-emerald-500 text-xs font-bold">✓</span>}
                       </div>
                     </div>
                   </div>

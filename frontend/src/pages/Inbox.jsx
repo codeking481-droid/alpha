@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { API_URL } from '../lib/api';
 
-const API = import.meta.env.VITE_API_URL;
+const API = API_URL;
 const timeAgo = (d) => { const m = Math.floor((Date.now() - new Date(d)) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return `${Math.floor(h / 24)}d ago`; };
 
 function BackBtn({ onClick }) {
@@ -153,17 +154,34 @@ export const Inbox = () => {
     setLoading(true); setError('');
     try {
       const token = getToken();
-      const res = await fetch(`${API}/api/replies/my-replies`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
-      const data = await res.json();
-      if (data.error) setError(data.error); else {
+      let data = null;
+      // Primary: my-replies (user-scoped with company joins)
+      try {
+        const res = await fetch(`${API}/api/replies/my-replies`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
+        data = await res.json();
+      } catch {}
+      // Fallback: generic replies if my-replies empty or failed
+      if (!data || !data.replies || data.replies.length === 0) {
+        try {
+          const res2 = await fetch(`${API}/api/replies`, { headers: { Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include' });
+          const data2 = await res2.json();
+          if (data2 && data2.replies && data2.replies.length > 0) {
+            data = { replies: data2.replies, hot: 0, replied: data2.count || 0, closed_won: 0, revenue: 0 };
+          }
+        } catch {}
+      }
+      if (data && data.error) setError(data.error);
+      else if (data && data.replies) {
         setReplies(data.replies || []);
         setStats({ hot: data.hot || 0, replied: data.replied || 0, closed_won: data.closed_won || 0, revenue: data.revenue || 0, pending_approval: (data.replies || []).filter(r => r.followup_status === 'pending_approval').length });
+      } else {
+        setReplies([]);
       }
     } catch (e) { setError('Failed to load inbox'); }
     setLoading(false);
   }, [user, getToken]);
 
-  useEffect(() => { if (user) fetchData(); else setLoading(false); }, [user, fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { if (replyIdParam) { const el = document.getElementById(replyIdParam); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, [replyIdParam, replies]);
 
   const markHot = async (companyId) => {
@@ -180,19 +198,23 @@ export const Inbox = () => {
   const generateContent = async (companyId, companyName) => {
     try {
       const t = getToken();
-      const res = await fetch(`${API}/api/content/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: t ? 'Bearer ' + t : '' }, credentials: 'include', body: JSON.stringify({ companyId, type: 'post' }) });
+      const res = await fetch(`${API}/api/content/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: t ? 'Bearer ' + t : '' }, credentials: 'include', body: JSON.stringify(companyId ? { companyId } : { topic: companyName || 'company update', format: 'post', company: companyName }) });
       const d = await res.json();
-      if (d.content) alert(`Content for ${companyName}:\n\n${d.content.slice(0, 500)}`);
+      const text = d.text || d.content || '';
+      if (text) alert(`Content for ${companyName}:\n\n${text.slice(0, 600)}`);
+      else alert(d.error || 'Generation returned no content');
     } catch { alert('Generation failed'); }
   };
 
   const filtered = replies.filter(r => {
+    // Company filter: if companyIdParam is set, always apply it
+    if (companyIdParam && String(r.company_id) !== String(companyIdParam)) return false;
+    // Sentiment / status filters
     if (filter === 'all') return true;
     if (filter === 'pending') return r.followup_status === 'pending_approval';
     if (filter === 'sent') return r.followup_status === 'sent';
     if (filter === 'interested') return r.sentiment === 'interested' || r.sentiment === 'positive';
     if (filter === 'questions') return r.sentiment === 'question';
-    if (companyIdParam) return String(r.company_id) === String(companyIdParam);
     return true;
   });
 

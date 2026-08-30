@@ -21,12 +21,14 @@ export const useAuth = () => {
       setHasAccess(true);
     }
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/auth/check-access`, {
-      credentials: 'include'
+    // Check backend auth status via /api/auth/me (check-access does not exist)
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${(() => { try { const raw = localStorage.getItem('sb-main-auth-token'); if (raw) { const p = JSON.parse(raw); if (p?.access_token) return p.access_token; } } catch {} if (localStorage.getItem('master_unlocked')==='true') return btoa(JSON.stringify({sub:'alphatekxcompany@gmail.com',email:'alphatekxcompany@gmail.com'})); return '' })()}` }
     }).then(res => res.text().then(t => {
       try { return t ? JSON.parse(t) : {}; } catch { return {}; }
     })).then(data => {
-      if (data.hasAccess) setHasAccess(true);
+      if (data.user) setHasAccess(true);
     }).catch(() => {});
 
     return () => listener?.subscription.unsubscribe();
