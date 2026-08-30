@@ -149,12 +149,29 @@ app.get('/api/debug/apollo', async (c) => {
   try {
     const niche = c.req.query('niche') || 'software';
     const location = c.req.query('location') || 'USA';
-    const { findCompaniesApollo } = await import('./lib/companyFinder.js');
+    const apiKey = c.env.APOLLO_API_KEY || '';
+    // Raw test: try mixed_people with api_key in body + header
+    let raw = null;
     try {
-      const r = await findCompaniesApollo(c.env, niche, location, 5);
-      return c.json({ success: true, count: r.length, sample: r[0] || null, niche, location, source: 'apollo' });
-    } catch (e) {
-      return c.json({ success: false, error: String(e.message).slice(0,500), niche, location }, 500);
+      const r = await fetch('https://api.apollo.io/v1/mixed_people/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey },
+        body: JSON.stringify({ api_key: apiKey, q_organization_keyword_tags: [niche], person_titles: ['Founder'], per_page: 5, page: 1 })
+      });
+      const t = await r.text();
+      raw = { status: r.status, body: t.slice(0,1200), hasKey: !!apiKey, keyPrefix: apiKey ? apiKey.slice(0,8)+'...' : 'none' };
+      if (r.ok) {
+        const j = JSON.parse(t);
+        return c.json({ success: true, raw, count: (j.people||j.contacts||[]).length, sample: (j.people||[])[0] || null, niche, location });
+      }
+    } catch (e) { raw = { error: e.message }; }
+    // Fallback to findCompaniesApollo for detailed
+    try {
+      const { findCompaniesApollo } = await import('./lib/companyFinder.js');
+      const r2 = await findCompaniesApollo(c.env, niche, location, 5);
+      return c.json({ success: true, count: r2.length, sample: r2[0] || null, niche, location, source: 'apollo', raw });
+    } catch (e2) {
+      return c.json({ success: false, error: String(e2.message).slice(0,800), raw, niche, location }, 500);
     }
   } catch (e) { return c.json({ error: e.message }, 500); }
 })
