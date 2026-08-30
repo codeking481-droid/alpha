@@ -1,11 +1,11 @@
-﻿// Groq client â€” uses env.GROQ_API_KEY and env.GROQ_MODEL (120B own), falls back to llama3-70b-8192
+﻿// Groq client â€” uses env.GROQ_API_KEY and env.GROQ_MODEL (120B own), falls back to openai/gpt-oss-20b
 export async function groqGenerate(env, { prompt, model }) {
   const key = env.GROQ_API_KEY
   if (!key) {
     return { text: `Real draft (mock until GROQ_API_KEY set) â€” ${prompt.slice(0, 120)}...\n\nâ€” Set GROQ_API_KEY in Workers secrets for real Groq.`, mocked: false }
   }
   // Use 120B own model via env GROQ_MODEL, not hardcoded
-  const groqModel = model || env.GROQ_MODEL || "llama-3.1-70b-versatile"
+  const groqModel = model || env.GROQ_MODEL || "openai/gpt-oss-120b"
   console.log(`Content generate using model: ${groqModel}, prompt: ${prompt.slice(0,60)}...`)
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -24,14 +24,14 @@ export async function groqGenerate(env, { prompt, model }) {
     if (!text) throw new Error(`Groq ${groqModel} returned empty`)
     return { text, model: groqModel, mocked: false }
   } catch (e) {
-    console.log(`Groq 120B ${groqModel} failed: ${e.message}, trying llama3-70b-8192`)
+    console.log(`Groq 120B ${groqModel} failed: ${e.message}, trying openai/gpt-oss-20b`)
     // Fallback to guaranteed working model
     try {
       const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: "llama3-70b-8192",
+          model: "openai/gpt-oss-20b",
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
           max_tokens: 800,
@@ -41,8 +41,8 @@ export async function groqGenerate(env, { prompt, model }) {
       const data2 = await res2.json()
       const text2 = data2.choices?.[0]?.message?.content || ''
       if (!text2) throw new Error('Groq fallback empty')
-      console.log(`Groq fallback llama3-70b-8192 succeeded`)
-      return { text: text2, model: "llama3-70b-8192", mocked: false }
+      console.log(`Groq fallback openai/gpt-oss-20b succeeded`)
+      return { text: text2, model: "openai/gpt-oss-20b", mocked: false }
     } catch (e2) {
       console.log(`Groq fallback also failed: ${e2.message}, returning real content without mock`)
       // Always return real content, not mocked, per prompt â€” use prompt as base

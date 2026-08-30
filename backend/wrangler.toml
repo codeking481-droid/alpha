@@ -9,7 +9,7 @@ crons = ["*/2 * * * *"]
 
 [vars]
 ENV = "production"
-GROQ_MODEL = "llama-3.1-70b-versatile"
+GROQ_MODEL = "openai/gpt-oss-120b"
 # This Paystack merchant does not have USD enabled. Prices are entered in USD
 # equivalents ($50 Lifetime public / $250 private Founding was $500) and converted to NGN by payment.js before checkout.
 PAYSTACK_CURRENCY = "NGN"
@@ -42,7 +42,7 @@ PRICE_TOOL_LABEL = "$50 Lifetime"
 
 # Groq - https://console.groq.com/keys
 # npx wrangler secret put GROQ_API_KEY
-# npx wrangler secret put GROQ_MODEL  # e.g., llama-3.1-70b-versatile, llama3-70b-8192, or your 120b own id (user 120B)
+# npx wrangler secret put GROQ_MODEL  # e.g., openai/gpt-oss-120b, llama3-70b-8192, or your 120b own id (user 120B)
 # npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
 
 # Telegram hot lead alerts

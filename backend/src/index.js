@@ -424,7 +424,7 @@ app.post('/api/content', async (c) => {
 })
 app.post('/api/content/generate', async (c) => {
   const body = await c.req.json().catch(() => ({}))
-  const groqModel = c.env.GROQ_MODEL || "llama-3.1-70b-versatile"
+  const groqModel = c.env.GROQ_MODEL || "openai/gpt-oss-120b"
   console.log(`Content generate using model: ${groqModel}, body: ${JSON.stringify(body).slice(0,120)}`)
   // CompanyId mode (authenticated vault content generation)
   if (body.companyId) {
