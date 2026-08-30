@@ -17,22 +17,22 @@ export const Dashboard = () => {
   const isAdmin = user?.email?.toLowerCase() === 'alphatekxcompany@gmail.com';
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-4 py-4 font-['Inter',sans-serif]">
-      <div className="max-w-[1120px] mx-auto">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-3 sm:py-4 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+      <div className="max-w-[1120px] mx-auto w-full max-w-full">
         {/* TOP NAV - Alpha OS */}
-        <div className="bg-[#FFFCF8] md:bg-white border border-[#EDEDED]/60 md:border-[#EDEDED] rounded-2xl px-5 md:px-6 py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-[#5E17EB] rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-white text-[26px] font-medium leading-none -mt-1">α</span>
+        <div className="bg-white border border-[#EDEDED] rounded-2xl px-3 sm:px-5 md:px-6 py-3 sm:py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 bg-[#5E17EB] rounded-xl flex items-center justify-center shrink-0">
+              <span className="text-white text-[22px] sm:text-[26px] font-medium leading-none -mt-1">α</span>
             </div>
-            <span className="text-[28px] md:text-[30px] font-bold tracking-tight text-[#0A0A0A]">Alpha OS</span>
+            <span className="text-[20px] sm:text-[28px] md:text-[30px] font-bold tracking-tight text-[#0A0A0A] truncate">Alpha OS</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-[15px] text-[#0A0A0A] font-normal">Welcome back, {displayName}</span>
-            <span className="sm:hidden text-[14px] text-[#0A0A0A]">Welcome, {displayName}</span>
-            <button onClick={handleLogout} className="inline-flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-[#0A0A0A] border border-[#EDEDED] px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FAFAFA] transition-colors">
-              Logout
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span className="hidden sm:inline text-[13px] md:text-[15px] text-[#0A0A0A] font-normal truncate max-w-[140px]">Welcome back, {displayName}</span>
+            <span className="sm:hidden text-[12px] text-[#0A0A0A] truncate max-w-[80px]">Hi, {displayName}</span>
+            <button onClick={handleLogout} className="inline-flex items-center gap-1 text-xs sm:text-sm text-[#6B7280] hover:text-[#0A0A0A] border border-[#EDEDED] px-2.5 sm:px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FAFAFA] transition-colors shrink-0">
+              <span className="hidden sm:inline">Logout</span><span className="sm:hidden">Out</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="hidden sm:block">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
@@ -42,13 +42,13 @@ export const Dashboard = () => {
         </div>
 
         {/* DASHBOARD HEADER */}
-        <div className="mt-7 md:mt-8 mb-5">
-          <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight text-[#0A0A0A] leading-none">Dashboard</h1>
-          <p className="text-[14px] md:text-[15px] text-[#6B7280] mt-1.5">Advertisement & Marketing Platform — manage outreach and track performance</p>
+        <div className="mt-5 sm:mt-7 md:mt-8 mb-4 sm:mb-5 px-1">
+          <h1 className="text-[24px] sm:text-[28px] md:text-[36px] font-bold tracking-tight text-[#0A0A0A] leading-none break-words">Dashboard</h1>
+          <p className="text-[13px] sm:text-[14px] md:text-[15px] text-[#6B7280] mt-1.5 leading-snug break-words">Advertisement & Marketing Platform — manage outreach and track performance</p>
         </div>
 
         {/* 4 CARDS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
           {/* Find Companies - Lavender */}
           <button
             onClick={() => navigate('/find-companies')}
@@ -166,34 +166,34 @@ export const Dashboard = () => {
         </div>
 
         {/* TODAY'S GOAL */}
-        <div className="mt-4 bg-white border border-[#EDEDED] rounded-2xl p-5 md:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-            <h3 className="font-bold text-[18px] md:text-[20px] text-[#0A0A0A] tracking-tight">Today's Goal</h3>
-            <span className="text-[12px] md:text-[13px] text-[#6B7280]">Updated 10 min ago • Oct 5, 2024</span>
+        <div className="mt-4 bg-white border border-[#EDEDED] rounded-2xl p-4 sm:p-5 md:p-6 w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
+            <h3 className="font-bold text-[16px] sm:text-[18px] md:text-[20px] text-[#0A0A0A] tracking-tight">Today's Goal</h3>
+            <span className="text-[11px] sm:text-[12px] md:text-[13px] text-[#6B7280]">Updated 10 min ago • Oct 5, 2024</span>
           </div>
           <div className="grid grid-cols-3 divide-x divide-[#EDEDED]">
-            <div className="text-center px-2 md:px-4">
-              <div className="text-[12px] md:text-[13px] text-[#6B7280] font-medium">Companies Found</div>
-              <div className="text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1">24</div>
-              <div className="inline-flex items-center gap-1 text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
-                +6 from yesterday
+            <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
+              <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Companies Found</div>
+              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">24</div>
+              <div className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5 leading-none">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="hidden sm:block"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+                <span className="hidden sm:inline">+6 from yesterday</span><span className="sm:hidden">+6</span>
               </div>
             </div>
-            <div className="text-center px-2 md:px-4">
-              <div className="text-[12px] md:text-[13px] text-[#6B7280] font-medium">Messages Sent</div>
-              <div className="text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1">128</div>
-              <div className="inline-flex items-center gap-1 text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
-                +32 from yesterday
+            <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
+              <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Messages Sent</div>
+              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">128</div>
+              <div className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5 leading-none">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="hidden sm:block"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+                <span className="hidden sm:inline">+32 from yesterday</span><span className="sm:hidden">+32</span>
               </div>
             </div>
-            <div className="text-center px-2 md:px-4">
-              <div className="text-[12px] md:text-[13px] text-[#6B7280] font-medium">Earned</div>
-              <div className="text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1">$4,280</div>
-              <div className="inline-flex items-center gap-1 text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
-                +$720 from yesterday
+            <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
+              <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Earned</div>
+              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">$4,280</div>
+              <div className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5 leading-none">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="hidden sm:block"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
+                <span className="hidden sm:inline">+$720 from yesterday</span><span className="sm:hidden">+$720</span>
               </div>
             </div>
           </div>

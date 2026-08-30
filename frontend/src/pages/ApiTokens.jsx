@@ -158,57 +158,53 @@ export const ApiTokens = () => {
   const displayName = user?.email?.split('@')[0] ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1) : 'Alex';
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-4 py-4 font-['Inter',sans-serif]">
-      <div className="max-w-[1120px] mx-auto">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-3 sm:py-4 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+      <div className="max-w-[1120px] mx-auto w-full max-w-full">
         {/* UNAUTHORIZED MESSAGE */}
         {unauthorized && (
-          <div className="mb-4 p-4 bg-[#FEE2E2] border border-[#FECACA] rounded-lg text-[#DC2626] text-center">
-            <p className="font-medium">Access Denied</p>
-            <p className="text-[14px] mt-1">This page is only accessible to admin users. Redirecting to dashboard...</p>
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-[#FEE2E2] border border-[#FECACA] rounded-lg text-[#DC2626] text-center">
+            <p className="font-medium text-sm sm:text-base">Access Denied</p>
+            <p className="text-[13px] sm:text-[14px] mt-1">This page is only accessible to admin users. Redirecting to dashboard...</p>
           </div>
         )}
 
         {/* TOP NAV */}
-        <div className="bg-[#FFFCF8] md:bg-white border border-[#EDEDED]/60 md:border-[#EDEDED] rounded-2xl px-5 md:px-6 py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
+        <div className="bg-white border border-[#EDEDED] rounded-2xl px-3 sm:px-5 md:px-6 py-3 sm:py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] gap-2 w-full max-w-full overflow-hidden">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-3 hover:opacity-70 transition-opacity"
+            className="flex items-center gap-2 sm:gap-3 hover:opacity-70 transition-opacity min-w-0"
           >
-            <div className="w-11 h-11 bg-[#5E17EB] rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-white text-[26px] font-medium leading-none -mt-1">α</span>
+            <div className="w-9 h-9 sm:w-11 sm:h-11 bg-[#5E17EB] rounded-xl flex items-center justify-center shrink-0">
+              <span className="text-white text-[22px] sm:text-[26px] font-medium leading-none -mt-1">α</span>
             </div>
-            <span className="text-[28px] md:text-[30px] font-bold tracking-tight text-[#0A0A0A]">Alpha OS</span>
+            <span className="text-[20px] sm:text-[28px] md:text-[30px] font-bold tracking-tight text-[#0A0A0A] truncate">Alpha OS</span>
           </button>
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-[15px] text-[#0A0A0A] font-normal">Welcome back, {displayName}</span>
-            <span className="sm:hidden text-[14px] text-[#0A0A0A]">Welcome, {displayName}</span>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span className="hidden sm:inline text-[13px] md:text-[15px] text-[#0A0A0A] font-normal truncate max-w-[140px]">Welcome back, {displayName}</span>
+            <span className="sm:hidden text-[12px] text-[#0A0A0A] truncate max-w-[80px]">Hi, {displayName}</span>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-[#0A0A0A] border border-[#EDEDED] px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FAFAFA] transition-colors"
+              className="inline-flex items-center gap-1 text-xs sm:text-sm text-[#6B7280] hover:text-[#0A0A0A] border border-[#EDEDED] px-2.5 sm:px-3.5 py-1.5 rounded-full bg-white hover:bg-[#FAFAFA] transition-colors shrink-0"
             >
-              Logout
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <span className="hidden sm:inline">Logout</span><span className="sm:hidden">Out</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="hidden sm:block"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
             </button>
           </div>
         </div>
 
         {/* HEADER */}
-        <div className="mt-7 md:mt-8 mb-6">
+        <div className="mt-5 sm:mt-7 md:mt-8 mb-4 sm:mb-6 px-1">
           <button
             onClick={() => navigate('/dashboard')}
-            className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] mb-2 flex items-center gap-1"
+            className="text-[13px] sm:text-[14px] text-[#6B7280] hover:text-[#0A0A0A] mb-2 flex items-center gap-1"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back to Dashboard
           </button>
-          <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight text-[#0A0A0A] leading-none">API Tokens</h1>
-          <p className="text-[14px] md:text-[15px] text-[#6B7280] mt-1.5">Create and manage API tokens for team members to access the platform programmatically</p>
+          <h1 className="text-[24px] sm:text-[28px] md:text-[36px] font-bold tracking-tight text-[#0A0A0A] leading-none break-words">API Tokens</h1>
+          <p className="text-[13px] sm:text-[14px] md:text-[15px] text-[#6B7280] mt-1.5 leading-snug break-words">Create and manage API tokens for team members to access the platform programmatically</p>
         </div>
 
         {/* CREATE TOKEN SECTION */}

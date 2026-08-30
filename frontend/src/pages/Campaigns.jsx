@@ -99,29 +99,29 @@ export const Campaigns = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF7F0] md:bg-[#FFFCF8] font-['Inter',sans-serif] pb-20">
+    <div className="min-h-screen bg-[#FFF7F0] md:bg-[#FFFCF8] font-['Inter',sans-serif] pb-20 overflow-x-hidden w-full max-w-[100vw]">
       {/* Top nav */}
-      <div className="bg-[#FFFDF9] md:bg-white border-b border-[#EDEDED] px-4 py-3 sticky top-0 z-10">
-        <div className="max-w-[1120px] mx-auto flex items-center justify-between">
-          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 border border-[#0A0A0A] rounded-lg px-3 py-1.5 text-[13px] font-medium text-[#0A0A0A] bg-white hover:bg-[#FAFAFA]">
+      <div className="bg-[#FFFDF9] md:bg-white border-b border-[#EDEDED] px-3 sm:px-4 py-3 sticky top-0 z-10 w-full max-w-full">
+        <div className="max-w-[1120px] mx-auto flex items-center justify-between gap-2 w-full">
+          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1 sm:gap-1.5 border border-[#0A0A0A] rounded-lg px-2.5 sm:px-3 py-1.5 text-[12px] sm:text-[13px] font-medium text-[#0A0A0A] bg-white hover:bg-[#FAFAFA] shrink-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#5E17EB] rounded-lg flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#5E17EB] rounded-lg flex items-center justify-center shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white" className="sm:w-4 sm:h-4"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
             </div>
-            <span className="text-[18px] font-bold tracking-tight text-[#0A0A0A]">Alpha Agency</span>
-            <span className="hidden sm:inline bg-[#EDE9FF] text-[#5E17EB] text-[12px] font-medium px-3 py-1 rounded-full">the money maker</span>
+            <span className="text-[15px] sm:text-[18px] font-bold tracking-tight text-[#0A0A0A] truncate">Alpha Agency</span>
+            <span className="hidden sm:inline bg-[#EDE9FF] text-[#5E17EB] text-[11px] sm:text-[12px] font-medium px-2 sm:px-3 py-1 rounded-full truncate">the money maker</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button className="text-[#0A0A0A]"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M18 8A6 6 0 0 0 6 8c0 7-6 9-6 9h16s-6-2-6-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-            <div className="w-8 h-8 bg-[#EDE9FF] rounded-full flex items-center justify-center text-[#5E17EB] text-[12px] font-bold">AA</div>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button className="text-[#0A0A0A] hidden sm:block"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M18 8A6 6 0 0 0 6 8c0 7-6 9-6 9h16s-6-2-6-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#EDE9FF] rounded-full flex items-center justify-center text-[#5E17EB] text-[11px] sm:text-[12px] font-bold shrink-0">AA</div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1120px] mx-auto px-4">
+      <div className="max-w-[1120px] mx-auto px-3 sm:px-4 w-full max-w-full overflow-hidden">
         {/* Title */}
         <div className="text-center md:text-left mt-6">
           <h1 className="text-[28px] md:text-[40px] font-bold tracking-tight text-[#0A0A0A] leading-tight">Campaigns - 10 Posts System</h1>
@@ -170,8 +170,8 @@ export const Campaigns = () => {
           </div>
           <p className="text-[13px] text-[#6B7280] mt-1">Review and manage the 10 posts generated for this campaign</p>
 
-          {/* Table */}
-          <div className="mt-3 bg-white border border-[#EDEDED] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+          {/* Table - desktop, cards on mobile for 100% fit */}
+          <div className="hidden md:block mt-3 bg-white border border-[#EDEDED] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
             <table className="w-full min-w-[760px]">
               <thead>
                 <tr className="bg-[#F9FAFB] border-b border-[#EDEDED] text-[12px] font-semibold text-[#6B7280]">
@@ -223,9 +223,29 @@ export const Campaigns = () => {
               </tbody>
             </table>
           </div>
+          {/* Mobile cards fallback */}
+          <div className="md:hidden mt-3 space-y-3">
+            {posts.map((post) => (
+              <div key={`m-${post.id}`} className="bg-white border border-[#EDEDED] rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {platformIcon(post.platform)}
+                    <span className="text-xs font-bold">{post.platform}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${post.typeColor}`}>{post.type}</span>
+                  </div>
+                  <span className="text-[11px] text-[#6B7280]">#{post.id}</span>
+                </div>
+                <p className="text-[13px] leading-snug text-[#0A0A0A] break-words mb-3">{post.content}</p>
+                <div className="flex gap-2">
+                  <button onClick={()=>copyToClipboard(post.content)} className="flex-1 border rounded-lg py-2 text-xs font-medium">Copy</button>
+                  <button onClick={()=>startEdit(post)} className="flex-1 bg-[#5E17EB] text-white rounded-lg py-2 text-xs font-medium">Edit</button>
+                </div>
+              </div>
+            ))}
+          </div>
 
           {/* Bottom bar */}
-          <div className="mt-4 bg-[#FFFCF8] border-t border-[#EDEDED] -mx-4 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="mt-4 bg-[#FFFCF8] border-t border-[#EDEDED] -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 flex flex-col gap-3">
             <span className="text-[13px] text-[#0A0A0A] font-medium">10 of 10 posts ready • Estimated reach: 12.5k across platforms <span className="inline-flex items-center justify-center w-4 h-4 border border-[#6B7280] rounded-full text-[10px]">i</span></span>
             <div className="flex gap-2">
               <button onClick={exportCSV} className="inline-flex items-center gap-1.5 bg-white border border-[#0A0A0A] text-[#0A0A0A] rounded-lg px-4 py-2 text-[13px] font-medium hover:bg-[#FAFAFA]">

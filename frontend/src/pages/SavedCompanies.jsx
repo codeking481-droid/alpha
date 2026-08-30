@@ -129,8 +129,15 @@ export const SavedCompanies = () => {
   const [nicheFilter, setNicheFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState('table');
+  const [viewMode, setViewMode] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 768 ? 'cards' : 'table'));
   const [selected, setSelected] = useState(new Set());
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => { if (e.matches) setViewMode('cards'); };
+    if (mql.matches) setViewMode('cards');
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError('');
@@ -167,19 +174,19 @@ export const SavedCompanies = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-4 py-6 font-['Inter',sans-serif]">
-      <div className="max-w-[1100px] mx-auto">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+      <div className="max-w-[1100px] mx-auto w-full max-w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2 mb-4 sm:mb-5">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BackBtn onClick={() => navigate('/dashboard')} />
-            <h1 className="text-2xl font-black tracking-tight">Vault</h1>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">Vault</h1>
           </div>
-          <button onClick={() => navigate('/find-companies')} className="bg-[#0A0A0A] text-white rounded-xl px-4 py-2 text-sm font-black active:scale-95 transition-all">Search →</button>
+          <button onClick={() => navigate('/find-companies')} className="bg-[#0A0A0A] text-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black active:scale-95 transition-all shrink-0">Search →</button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-5">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2 mb-4 sm:mb-5 w-full">
           {[
             { label: 'Total', v: stats.total, bg: 'bg-[#5E17EB]', tc: 'text-white' },
             { label: 'New', v: stats.new, bg: 'bg-[#F0EFFF]', tc: 'text-[#5E17EB]' },
@@ -188,9 +195,9 @@ export const SavedCompanies = () => {
             { label: 'Hot', v: stats.hot, bg: 'bg-emerald-50', tc: 'text-emerald-700' },
             { label: 'Won', v: stats.closed_won || 0, bg: 'bg-purple-50', tc: 'text-purple-700' },
           ].map(s => (
-            <div key={s.label} className={`${s.bg} rounded-xl p-3 border border-[#EDEDED]/60`}>
-              <div className={`text-[10px] font-bold ${s.tc} opacity-70`}>{s.label}</div>
-              <div className={`text-xl font-black ${s.tc}`}>{s.v}</div>
+            <div key={s.label} className={`${s.bg} rounded-lg sm:rounded-xl p-2 sm:p-3 border border-[#EDEDED]/60 min-w-0 overflow-hidden`}>
+              <div className={`text-[9px] sm:text-[10px] font-bold ${s.tc} opacity-70 leading-none truncate`}>{s.label}</div>
+              <div className={`text-base sm:text-xl font-black ${s.tc} leading-none mt-1 truncate`}>{s.v}</div>
             </div>
           ))}
         </div>
@@ -204,24 +211,24 @@ export const SavedCompanies = () => {
         )}
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-4 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name/domain..." className="w-full rounded-xl border pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-[#5E17EB] outline-none" />
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4 items-center w-full overflow-hidden">
+          <div className="relative flex-1 min-w-[140px] sm:min-w-[200px]">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name/domain..." className="w-full rounded-lg sm:rounded-xl border pl-8 sm:pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:ring-2 focus:ring-[#5E17EB] outline-none truncate" />
           </div>
-          <select value={nicheFilter} onChange={e => setNicheFilter(e.target.value)} className="rounded-xl border px-3 py-2 text-sm bg-white">
+          <select value={nicheFilter} onChange={e => setNicheFilter(e.target.value)} className="rounded-lg sm:rounded-xl border px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white max-w-[110px] sm:max-w-none truncate">
             <option value="">All Niches</option><option>skincare</option><option>fitness</option><option>beauty</option><option>shopify</option><option>saas</option><option>real estate</option>
           </select>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-xl border px-3 py-2 text-sm bg-white">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg sm:rounded-xl border px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white max-w-[110px] sm:max-w-none truncate">
             <option value="">All Status</option><option>new</option><option>contacted</option><option>replied</option><option>hot</option><option>closed_won</option>
           </select>
-          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} className="rounded-xl border px-3 py-2 text-sm bg-white">
+          <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} className="rounded-lg sm:rounded-xl border px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-white max-w-[100px] sm:max-w-none truncate hidden sm:block">
             <option value="">All Sources</option><option>apollo</option><option>tavily</option>
           </select>
-          {hasFilters && <button onClick={clearFilters} className="text-xs font-bold text-red-500 hover:text-red-700 px-2 whitespace-nowrap">✕ Clear</button>}
-          <div className="ml-auto flex gap-1">
-            <button onClick={() => setViewMode('table')} className={`rounded-lg px-3 py-1.5 text-xs font-black transition-all ${viewMode === 'table' ? 'bg-[#0A0A0A] text-white' : 'border bg-white'}`}>☰</button>
-            <button onClick={() => setViewMode('cards')} className={`rounded-lg px-3 py-1.5 text-xs font-black transition-all ${viewMode === 'cards' ? 'bg-[#0A0A0A] text-white' : 'border bg-white'}`}>▦</button>
+          {hasFilters && <button onClick={clearFilters} className="text-xs font-bold text-red-500 hover:text-red-700 px-2 whitespace-nowrap shrink-0">✕ Clear</button>}
+          <div className="ml-auto flex gap-1 shrink-0">
+            <button onClick={() => setViewMode('table')} className={`rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-black transition-all ${viewMode === 'table' ? 'bg-[#0A0A0A] text-white' : 'border bg-white'}`}>☰</button>
+            <button onClick={() => setViewMode('cards')} className={`rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-black transition-all ${viewMode === 'cards' ? 'bg-[#0A0A0A] text-white' : 'border bg-white'}`}>▦</button>
           </div>
         </div>
 
@@ -246,10 +253,11 @@ export const SavedCompanies = () => {
             <button onClick={() => navigate('/find-companies')} className="bg-[#5E17EB] text-white rounded-xl px-6 py-3 font-black text-sm active:scale-95 transition-all">Search Companies →</button>
           </div>
         ) : viewMode === 'table' ? (
-          /* TABLE */
-          <div className="bg-white border rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[600px]">
+          /* TABLE - hidden on mobile, cards shown instead for 100% fit */
+          <>
+            <div className="hidden md:block bg-white border rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-[#F9FAFB] border-b text-left text-[11px] font-black text-[#6B7280] uppercase tracking-wider">
                   <tr>
                     <th className="px-3 py-2.5 w-8"><input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleAll} className="rounded" /></th>
@@ -290,8 +298,33 @@ export const SavedCompanies = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
-          </div>
+            {/* Mobile fallback - cards when table mode on small screen */}
+            <div className="md:hidden grid grid-cols-1 gap-3">
+              {items.map(i => (
+                <div key={`m-${i.id}`} className="bg-white border rounded-2xl p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-black truncate">{i.company_name || i.name || '—'}</h3>
+                      <p className="text-xs text-[#6B7280] truncate break-all">{i.domain || '—'}</p>
+                    </div>
+                    <StatusBadge status={i.status} />
+                  </div>
+                  <div className="space-y-1 text-xs mb-3">
+                    <div className="flex justify-between gap-2"><span className="text-[#6B7280]">Owner</span><span className="font-bold truncate ml-2">{i.owner_name || '—'}</span></div>
+                    <div className="flex justify-between gap-2"><span className="text-[#6B7280]">Email</span><span className="truncate ml-2 break-all">{i.owner_email || '—'}</span></div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {i.status === 'new' && <button onClick={() => setModalCompany(i)} className="flex-1 bg-[#0A0A0A] text-white rounded-lg py-2 text-xs font-black">Send</button>}
+                    {i.status === 'contacted' && <button onClick={() => setModalCompany(i)} className="flex-1 border rounded-lg py-2 text-xs font-black">Resend</button>}
+                    {(i.status === 'replied' || i.status === 'hot') && <button onClick={() => navigate(`/inbox?companyId=${i.id}`)} className="flex-1 bg-emerald-500 text-white rounded-lg py-2 text-xs font-black">Inbox →</button>}
+                    <button onClick={() => setDeleteCompany(i)} className="px-3 py-2 text-xs text-red-400">✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           /* CARDS */
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

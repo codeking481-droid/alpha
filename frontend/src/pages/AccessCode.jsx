@@ -147,8 +147,8 @@ export const AccessCode = () => {
   const isError = message.startsWith('❌');
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] flex items-center justify-center px-4 font-['Inter',sans-serif]">
-      <div className="max-w-md w-full bg-white border border-[#EDEDED] rounded-xl p-8">
+    <div className="min-h-screen bg-[#FFFCF8] flex items-center justify-center px-3 sm:px-4 py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+      <div className="max-w-md w-full bg-white border border-[#EDEDED] rounded-xl p-6 sm:p-8 mx-3 sm:mx-0 overflow-hidden">
         <div className="text-4xl text-center mb-4">🔑</div>
         <h1 className="font-semibold text-2xl text-[#0A0A0A] text-center tracking-tight">Access Alpha Agency</h1>
         <p className="text-sm text-[#6B7280] text-center mt-2">Buy a token or enter one you already have.</p>

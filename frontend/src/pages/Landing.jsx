@@ -33,10 +33,10 @@ export const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] font-['Inter',sans-serif] antialiased overflow-x-hidden selection:bg-[#5E17EB] selection:text-white">
+    <div className="min-h-screen bg-[#FFFCF8] font-['Inter',sans-serif] antialiased overflow-x-hidden w-full max-w-[100vw] selection:bg-[#5E17EB] selection:text-white">
       {/* NAV */}
-      <div className="w-full px-3 md:px-6 pt-3 md:pt-4 sticky top-0 z-50 bg-[#FFFCF8]/85 backdrop-blur-xl">
-        <nav className="max-w-[1360px] mx-auto bg-white border border-[#EDEDED] rounded-2xl md:rounded-[20px] px-4 md:px-8 py-3.5 md:py-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+      <div className="w-full px-2 sm:px-3 md:px-6 pt-3 md:pt-4 sticky top-0 z-50 bg-[#FFFCF8]/85 backdrop-blur-xl">
+        <nav className="max-w-[1360px] mx-auto bg-white border border-[#EDEDED] rounded-xl sm:rounded-2xl md:rounded-[20px] px-3 sm:px-4 md:px-8 py-3 sm:py-3.5 md:py-4 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.06)] gap-2 w-full max-w-full overflow-hidden">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 md:w-12 md:h-12 bg-gradient-to-br from-[#5E17EB] to-[#7C3AED] rounded-xl md:rounded-2xl flex items-center justify-center shadow-[0_4px_12px_rgba(94,23,235,0.3)]">
               <span className="text-white text-[26px] md:text-[30px] font-black -mt-[2px]">α</span>
@@ -73,7 +73,7 @@ export const Landing = () => {
               <span className="bg-[#5E17EB] text-white rounded-full px-2.5 py-1 text-[10px] font-black">● LIVE</span>
               10,420+ REAL COMPANIES FOUND • VERIFIED VIA APOLLO + HUNTER
             </div>
-            <h1 className="mt-6 text-[48px] md:text-[72px] lg:text-[88px] font-black tracking-[-0.045em] leading-[0.85] text-[#0A0A0A]">
+            <h1 className="mt-6 text-[32px] xs:text-[36px] sm:text-[48px] md:text-[72px] lg:text-[88px] font-black tracking-[-0.045em] leading-[0.85] text-[#0A0A0A] break-words">
               <span className="text-[#0A0A0A]">Alpha Agency</span><br />
               <span className="bg-gradient-to-r from-[#5E17EB] via-[#7C3AED] to-[#A78BFA] bg-clip-text text-transparent">Outbound Model</span>
             </h1>

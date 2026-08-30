@@ -49,25 +49,25 @@ Would you be open to a quick 15-min chat next week to see if this could be usefu
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-4 py-6 font-['Inter',sans-serif]">
-      <div className="max-w-[760px] mx-auto">
-        <div className="bg-white border border-[#EDEDED] rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm mb-6">
-          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 bg-[#F3F3F3] hover:bg-[#EBEBEB] text-[#0A0A0A] border border-[#E5E7EB] rounded-full px-4 py-1.5 text-[14px] font-medium transition-colors cursor-pointer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-            Back
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+      <div className="max-w-[760px] mx-auto w-full max-w-full">
+        <div className="bg-white border border-[#EDEDED] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm mb-4 sm:mb-6 gap-2 w-full max-w-full overflow-hidden">
+          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1 sm:gap-1.5 bg-[#F3F3F3] hover:bg-[#EBEBEB] text-[#0A0A0A] border border-[#E5E7EB] rounded-full px-3 sm:px-4 py-1.5 text-[12px] sm:text-[14px] font-medium transition-colors cursor-pointer shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 border border-[#0A0A0A] rounded-lg flex items-center justify-center">
-              <div className="flex gap-1"><div className="w-1.5 h-1.5 bg-[#0A0A0A] rounded-full"></div><div className="w-1.5 h-1.5 bg-[#0A0A0A] rounded-full"></div></div>
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 border border-[#0A0A0A] rounded-lg flex items-center justify-center shrink-0">
+              <div className="flex gap-1"><div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-[#0A0A0A] rounded-full"></div><div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-[#0A0A0A] rounded-full"></div></div>
             </div>
-            <span className="text-[20px] font-bold tracking-tight text-[#0A0A0A]">Alpha</span><span className="text-[20px] font-normal text-[#0A0A0A]">Agency</span>
+            <span className="text-[16px] sm:text-[20px] font-bold tracking-tight text-[#0A0A0A] truncate">Alpha</span><span className="hidden sm:inline text-[16px] sm:text-[20px] font-normal text-[#0A0A0A]">Agency</span>
           </div>
-          <div className="w-16" />
+          <div className="w-10 sm:w-16 shrink-0" />
         </div>
 
-        <div className="bg-white border border-[#EDEDED] rounded-[24px] p-6 md:p-8 shadow-sm">
-          <h1 className="text-[32px] md:text-[42px] font-bold tracking-tight text-[#0A0A0A] text-center leading-none">Send Messages</h1>
-          <p className="text-center text-[16px] md:text-[18px] text-[#6B7280] mt-2">Cold outreach that gets replies.</p>
+        <div className="bg-white border border-[#EDEDED] rounded-[20px] sm:rounded-[24px] p-4 sm:p-6 md:p-8 shadow-sm w-full max-w-full overflow-hidden">
+          <h1 className="text-[24px] sm:text-[32px] md:text-[42px] font-bold tracking-tight text-[#0A0A0A] text-center leading-none break-words">Send Messages</h1>
+          <p className="text-center text-[14px] sm:text-[16px] md:text-[18px] text-[#6B7280] mt-2 px-2">Cold outreach that gets replies.</p>
 
           <div className="mt-8 space-y-5">
             <div>

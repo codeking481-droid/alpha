@@ -220,30 +220,30 @@ export const Inbox = () => {
 
   /* Loading */
   if (loading && replies.length === 0) return (
-    <div className="min-h-screen bg-[#FFFCF8] px-4 py-6 font-['Inter',sans-serif]">
-      <div className="max-w-[1100px] mx-auto">
-        <div className="flex items-center gap-3 mb-6"><BackBtn onClick={() => navigate('/dashboard')} /><h1 className="text-xl font-black">Inbox</h1></div>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-6">{[1,2,3,4,5].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+      <div className="max-w-[1100px] mx-auto w-full max-w-full">
+        <div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6"><BackBtn onClick={() => navigate('/dashboard')} /><h1 className="text-lg sm:text-xl font-black">Inbox</h1></div>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-5 sm:mb-6">{[1,2,3,4,5].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
         <div className="space-y-3">{[1,2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />)}</div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-4 py-6 font-['Inter',sans-serif]">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
       <Confetti show={showConfetti} />
-      <div className="max-w-[1100px] mx-auto">
+      <div className="max-w-[1100px] mx-auto w-full max-w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2 mb-4 sm:mb-5">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BackBtn onClick={() => navigate('/dashboard')} />
-            <h1 className="text-2xl font-black tracking-tight">Inbox</h1>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">Inbox</h1>
           </div>
-          <button onClick={() => navigate('/saved-companies')} className="bg-[#0A0A0A] text-white rounded-xl px-4 py-2 text-sm font-black active:scale-95 transition-all">Vault →</button>
+          <button onClick={() => navigate('/saved-companies')} className="bg-[#0A0A0A] text-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black active:scale-95 transition-all shrink-0">Vault →</button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-5">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-4 sm:mb-5 w-full">
           {[
             { label: 'Pending ⏳', v: stats.pending_approval, bg: 'bg-amber-50', tc: 'text-amber-700' },
             { label: 'Hot 🔥', v: stats.hot, bg: 'bg-orange-50', tc: 'text-orange-700' },
