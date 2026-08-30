@@ -119,6 +119,8 @@ export async function sendOutreachEmail(env, lead) {
         const dbCompanies = await findRes.json()
         if (dbCompanies && dbCompanies.length > 0) {
           const co = dbCompanies[0]
+          const followUpDue = new Date(Date.now() + 3*24*60*60*1000).toISOString()
+          const followUpMsg = `Hi ${ownerName || 'there'},\n\nJust following up on my previous email about featuring ${companyName} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`
           await fetch(`${sb.url}/rest/v1/companies?id=eq.${co.id}`, {
             method: 'PATCH',
             headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
@@ -126,11 +128,16 @@ export async function sendOutreachEmail(env, lead) {
               status: 'contacted',
               contacted_at: now,
               outreach_count: (co.outreach_count || 0) + 1,
-              last_outreach_at: now
+              last_outreach_at: now,
+              follow_up_status: 'pending_approval',
+              follow_up_due_at: followUpDue,
+              follow_up_message: followUpMsg
             })
           }).catch(() => {})
         } else {
           // Company not in DB yet - insert it
+          const followUpDue2 = new Date(Date.now() + 3*24*60*60*1000).toISOString()
+          const followUpMsg2 = `Hi ${ownerName || 'there'},\n\nJust following up on my previous email about featuring ${companyName} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`
           await fetch(`${sb.url}/rest/v1/companies`, {
             method: 'POST',
             headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json' },
@@ -142,7 +149,10 @@ export async function sendOutreachEmail(env, lead) {
               status: 'contacted',
               contacted_at: now,
               outreach_count: 1,
-              last_outreach_at: now
+              last_outreach_at: now,
+              follow_up_status: 'pending_approval',
+              follow_up_due_at: followUpDue2,
+              follow_up_message: followUpMsg2
             })
           }).catch(() => {})
         }

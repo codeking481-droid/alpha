@@ -102,7 +102,7 @@ function DeleteConfirm({ company, onClose, onDeleted, getToken }) {
 }
 
 /* ─── Status Badge ─── */
-function StatusBadge({ status }) {
+function StatusBadge({ status, followUpStatus }) {
   const s = {
     new: { bg: 'bg-[#F0EFFF]', text: 'text-[#5E17EB]', label: 'New' },
     contacted: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Contacted' },
@@ -111,7 +111,61 @@ function StatusBadge({ status }) {
     closed_won: { bg: 'bg-purple-50', text: 'text-purple-700', label: '$250 Won' },
   };
   const st = s[status] || s.new;
-  return <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${st.bg} ${st.text} whitespace-nowrap`}>{st.label}</span>;
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${st.bg} ${st.text} whitespace-nowrap`}>{st.label}</span>
+      {followUpStatus === 'pending_approval' && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Waiting approval</span>}
+      {followUpStatus === 'approved' && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Follow-up sent</span>}
+      {followUpStatus === 'rejected' && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">Follow-up rejected</span>}
+    </span>
+  );
+}
+
+/* ─── Follow-up Approval Card (Vault) ─── */
+function FollowUpApprovalCard({ company, getToken, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [msg, setMsg] = useState(company.follow_up_message || `Hi ${company.owner_name || 'there'},\n\nJust following up on my previous email about featuring ${company.company_name || company.name} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAction = async (action) => {
+    setLoading(true); setError('');
+    try {
+      const token = getToken();
+      const body = action === 'approve' ? { action, editedMessage: msg } : { action };
+      const res = await fetch(`${API}/api/companies/${company.id}/follow-up`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (data.success || data.approved || data.rejected) { onUpdate(); } else setError(data.error || 'Failed');
+    } catch (e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const dueText = company.follow_up_due_at ? new Date(company.follow_up_due_at).toLocaleDateString() : '3 days after first email';
+  return (
+    <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 sm:p-4 mb-3">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+        <span className="text-xs font-black text-amber-900">Follow-up ready for {company.company_name || company.name} - Send?</span>
+        <span className="ml-auto text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Due: {dueText} • Waiting approval</span>
+      </div>
+      {editing ? (
+        <textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={4} className="w-full text-xs border border-amber-300 rounded-lg p-2 bg-white focus:ring-2 focus:ring-amber-400 outline-none resize-none mb-2" />
+      ) : (
+        <div className="text-xs text-amber-900 bg-white/70 rounded-lg p-2 mb-2 whitespace-pre-wrap max-h-24 overflow-y-auto border border-amber-200">{msg}</div>
+      )}
+      {error && <div className="text-[11px] text-red-600 font-bold mb-2">{error}</div>}
+      <div className="flex flex-wrap gap-2">
+        <button onClick={()=>setEditing(!editing)} className="border border-amber-300 bg-white rounded-lg px-3 py-1.5 text-[11px] font-black">{editing ? 'Preview' : 'Edit'}</button>
+        <button onClick={()=>handleAction('approve')} disabled={loading} className="bg-[#0A0A0A] text-white rounded-lg px-4 py-1.5 text-[11px] font-black disabled:opacity-50">YES — Send follow-up</button>
+        <button onClick={()=>handleAction('reject')} disabled={loading} className="border border-red-300 text-red-600 rounded-lg px-3 py-1.5 text-[11px] font-black">NO — Reject</button>
+      </div>
+    </div>
+  );
 }
 
 /* ─── Main Component ─── */
@@ -155,7 +209,18 @@ export const SavedCompanies = () => {
     setLoading(false);
   }, [user, page, statusFilter, nicheFilter, search, sourceFilter, getToken]);
 
+  const [pendingFollowUps, setPendingFollowUps] = useState([]);
+  const fetchPending = useCallback(async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API}/api/companies/pending-followups`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
+      const data = await res.json();
+      setPendingFollowUps(data.pending || []);
+    } catch {}
+  }, [getToken]);
+
   useEffect(() => { if (user) fetchData(); else setLoading(false); }, [user, fetchData]);
+  useEffect(() => { if (user) fetchPending(); }, [user, fetchPending]);
 
   const toggleSelect = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleAll = () => setSelected(prev => prev.size === items.length ? new Set() : new Set(items.map(i => i.id)));
@@ -207,6 +272,22 @@ export const SavedCompanies = () => {
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl p-3 mb-4 flex items-center justify-between">
             <span className="text-sm font-bold">Revenue Collected</span>
             <div className="text-right"><span className="text-xl font-black">${(stats.closed_won || 0) * 250}</span> <span className="text-xs line-through opacity-70">${(stats.closed_won || 0) * 500}</span></div>
+          </div>
+        )}
+
+        {/* Follow-up Pending Approval (User control, no spam) */}
+        {pendingFollowUps.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+              <h3 className="text-sm font-black text-amber-900">Follow-ups Waiting Approval ({pendingFollowUps.length})</h3>
+              <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">User control — no auto-send</span>
+            </div>
+            <div className="space-y-2">
+              {pendingFollowUps.slice(0,5).map(co => (
+                <FollowUpApprovalCard key={co.id} company={co} getToken={getToken} onUpdate={()=>{fetchData(); fetchPending();}} />
+              ))}
+            </div>
           </div>
         )}
 
@@ -283,10 +364,11 @@ export const SavedCompanies = () => {
                         <span className="text-emerald-600 font-bold">✓</span> {i.owner_email || '—'}
                       </td>
                       <td className="px-3 py-3 text-[#6B7280] text-xs hidden md:table-cell">{i.niche || '—'}</td>
-                      <td className="px-3 py-3"><StatusBadge status={i.status} /></td>
+                      <td className="px-3 py-3"><StatusBadge status={i.status} followUpStatus={i.follow_up_status} /></td>
                       <td className="px-3 py-3 text-[#6B7280] text-xs hidden lg:table-cell">{i.saved_at ? timeAgo(i.saved_at) : '—'}</td>
                       <td className="px-3 py-3">
                         <div className="flex gap-1 flex-wrap">
+                          {i.follow_up_status === 'pending_approval' && i.status === 'contacted' && <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Waiting approval</span>}
                           {i.status === 'new' && <button onClick={() => setModalCompany(i)} className="bg-[#0A0A0A] text-white rounded-lg px-2.5 py-1 text-[11px] font-black active:scale-95">Send</button>}
                           {i.status === 'contacted' && <button onClick={() => setModalCompany(i)} className="border rounded-lg px-2.5 py-1 text-[11px] font-black">Resend</button>}
                           {(i.status === 'replied' || i.status === 'hot') && <button onClick={() => navigate(`/inbox?companyId=${i.id}`)} className="bg-emerald-500 text-white rounded-lg px-2.5 py-1 text-[11px] font-black">Inbox →</button>}
@@ -309,7 +391,7 @@ export const SavedCompanies = () => {
                       <h3 className="text-sm font-black truncate">{i.company_name || i.name || '—'}</h3>
                       <p className="text-xs text-[#6B7280] truncate break-all">{i.domain || '—'}</p>
                     </div>
-                    <StatusBadge status={i.status} />
+                    <StatusBadge status={i.status} followUpStatus={i.follow_up_status} />
                   </div>
                   <div className="space-y-1 text-xs mb-3">
                     <div className="flex justify-between gap-2"><span className="text-[#6B7280]">Owner</span><span className="font-bold truncate ml-2">{i.owner_name || '—'}</span></div>
@@ -343,11 +425,12 @@ export const SavedCompanies = () => {
                   <div className="flex justify-between"><span className="text-[#6B7280] text-xs">Niche</span><span className="text-xs">{i.niche || '—'}</span></div>
                   <div className="flex justify-between"><span className="text-[#6B7280] text-xs">Saved</span><span className="text-xs">{i.saved_at ? timeAgo(i.saved_at) : '—'}</span></div>
                 </div>
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <StatusBadge status={i.status} />
-                  <div className="flex gap-1">
+                <div className="flex items-center justify-between pt-2 border-t gap-2">
+                  <StatusBadge status={i.status} followUpStatus={i.follow_up_status} />
+                  <div className="flex gap-1 shrink-0">
+                    {i.follow_up_status === 'pending_approval' && i.status === 'contacted' && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Waiting approval</span>}
                     {i.status === 'new' && <button onClick={() => setModalCompany(i)} className="bg-[#0A0A0A] text-white rounded-lg px-3 py-1.5 text-[11px] font-black">Send Email</button>}
-                    {i.status === 'contacted' && <button onClick={() => setModalCompany(i)} className="border rounded-lg px-3 py-1.5 text-[11px] font-black">Resend</button>}
+                    {i.status === 'contacted' && i.follow_up_status !== 'pending_approval' && <button onClick={() => setModalCompany(i)} className="border rounded-lg px-3 py-1.5 text-[11px] font-black">Resend</button>}
                     {(i.status === 'replied' || i.status === 'hot') && <button onClick={() => navigate(`/inbox?companyId=${i.id}`)} className="bg-emerald-500 text-white rounded-lg px-3 py-1.5 text-[11px] font-black">Inbox →</button>}
                     <button onClick={() => setDeleteCompany(i)} className="text-red-400 px-2 text-[11px]">✕</button>
                   </div>

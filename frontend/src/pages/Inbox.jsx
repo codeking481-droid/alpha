@@ -136,6 +136,41 @@ function FollowupCard({ reply, getToken, onRefresh }) {
   );
 }
 
+/* ─── Pending Company Follow-up Card (Vault/Inbox) ─── */
+function PendingCompanyCard({ company, getToken, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [msg, setMsg] = useState(company.follow_up_message || `Hi ${company.owner_name || 'there'},\n\nJust following up on my previous email about featuring ${company.company_name || company.name} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const handle = async (action) => {
+    setLoading(true); setError('');
+    try {
+      const token = getToken();
+      const body = action === 'approve' ? { action, editedMessage: msg } : { action };
+      const res = await fetch(`${API}/api/companies/${company.id}/follow-up`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include', body: JSON.stringify(body) });
+      const data = await res.json();
+      if (data.success || data.approved || data.rejected) onUpdate(); else setError(data.error || 'Failed');
+    } catch (e) { setError(e.message); }
+    setLoading(false);
+  };
+  return (
+    <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+        <span className="text-xs font-black text-amber-900">Follow-up ready for {company.company_name || company.name} - Send?</span>
+        <span className="ml-auto text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">Waiting approval</span>
+      </div>
+      {editing ? <textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={4} className="w-full text-xs border border-amber-300 rounded-lg p-2 bg-white focus:ring-2 focus:ring-amber-400 outline-none resize-none mb-2" /> : <div className="text-xs text-amber-900 bg-white/70 rounded-lg p-2 mb-2 whitespace-pre-wrap max-h-24 overflow-y-auto border border-amber-200">{msg}</div>}
+      {error && <div className="text-[11px] text-red-600 font-bold mb-2">{error}</div>}
+      <div className="flex flex-wrap gap-2">
+        <button onClick={()=>setEditing(!editing)} className="border border-amber-300 bg-white rounded-lg px-3 py-1.5 text-[11px] font-black">{editing ? 'Preview' : 'Edit'}</button>
+        <button onClick={()=>handle('approve')} disabled={loading} className="bg-[#0A0A0A] text-white rounded-lg px-4 py-1.5 text-[11px] font-black disabled:opacity-50">YES — Approve & Send</button>
+        <button onClick={()=>handle('reject')} disabled={loading} className="border border-red-300 text-red-600 rounded-lg px-3 py-1.5 text-[11px] font-black">NO — Reject</button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main ─── */
 export const Inbox = () => {
   const navigate = useNavigate();
@@ -149,6 +184,16 @@ export const Inbox = () => {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [pendingCompanies, setPendingCompanies] = useState([]);
+
+  const fetchPendingFollowUps = useCallback(async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API}/api/companies/pending-followups`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
+      const data = await res.json();
+      setPendingCompanies(data.pending || []);
+    } catch { setPendingCompanies([]); }
+  }, [getToken]);
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError('');
@@ -181,7 +226,7 @@ export const Inbox = () => {
     setLoading(false);
   }, [user, getToken]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); fetchPendingFollowUps(); }, [fetchData, fetchPendingFollowUps]);
   useEffect(() => { if (replyIdParam) { const el = document.getElementById(replyIdParam); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, [replyIdParam, replies]);
 
   const markHot = async (companyId) => {
@@ -257,6 +302,22 @@ export const Inbox = () => {
             </div>
           ))}
         </div>
+
+        {/* Pending Company Follow-ups (User Approval) */}
+        {pendingCompanies.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+              <h3 className="text-sm font-black text-amber-900">Follow-ups Waiting Approval ({pendingCompanies.length})</h3>
+              <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">No auto-send</span>
+            </div>
+            <div className="space-y-2">
+              {pendingCompanies.slice(0,5).map(co => (
+                <PendingCompanyCard key={co.id} company={co} getToken={getToken} onUpdate={()=>{fetchData(); fetchPendingFollowUps();}} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 scrollbar-hide">

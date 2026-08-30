@@ -248,6 +248,14 @@ alter table messages add column if not exists resend_id text;
 alter table companies add column if not exists hot_lead_alerted boolean default false;
 alter table companies add column if not exists hot_lead_alerted_at timestamp;
 
+-- BIG UPDATE: Follow-up approval (user must approve YES before send)
+alter table companies add column if not exists follow_up_status text default 'pending_approval' check (follow_up_status in ('pending_approval','approved','rejected',null));
+alter table companies add column if not exists follow_up_due_at timestamp;
+alter table companies add column if not exists follow_up_message text;
+alter table companies add column if not exists follow_up_sent_at timestamp;
+alter table companies add column if not exists follow_up_approved_at timestamp;
+alter table companies add column if not exists follow_up_rejected_at timestamp;
+
 -- Indexes for Vault + Inbox
 create index if not exists idx_companies_user_id on companies(user_id);
 create index if not exists idx_replies_user_id on replies(user_id);

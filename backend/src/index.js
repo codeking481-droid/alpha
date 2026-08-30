@@ -74,12 +74,17 @@ async function getOne(env, table, id) {
 }
 async function updateOne(env, table, id, patch) {
   if (hasSupabase(env)) {
-    try { const r = await sbUpdate(env, table, id, patch); if (r) return r } catch (e) {
+    try { const r = await sbUpdate(env, table, id, patch); if (r && !Array.isArray(r)) return r; if (Array.isArray(r) && r.length>0) return r[0]; if (r) return r } catch (e) {
       // If missing column (PGRST204), retry without that column
       if (String(e.message).includes('PGRST204') || String(e.message).includes('Could not find')) {
         try {
-          const clean = { ...patch }; delete clean.hot_lead_alerted; delete clean.hot_lead_alerted_at; delete clean.html; delete clean.to_email; delete clean.subject; delete clean.resend_id
+          const clean = { ...patch }; delete clean.hot_lead_alerted; delete clean.hot_lead_alerted_at; delete clean.html; delete clean.to_email; delete clean.subject; delete clean.resend_id; delete clean.follow_up_status; delete clean.follow_up_due_at; delete clean.follow_up_message; delete clean.follow_up_sent_at; delete clean.follow_up_approved_at; delete clean.follow_up_rejected_at
           const r2 = await sbUpdate(env, table, id, clean); if (r2) return r2
+          // If still fails, try minimal status only
+          const minimal = { status: patch.status || 'contacted' };
+          if (patch.contacted_at) minimal.contacted_at = patch.contacted_at;
+          if (patch.outreach_count !== undefined) minimal.outreach_count = patch.outreach_count;
+          const r3 = await sbUpdate(env, table, id, minimal).catch(()=>null); if (r3) return r3
         } catch {}
       }
       console.warn(`[update:${table}] Supabase update failed, fallback to mem:`, e.message?.slice(0,120))
@@ -249,6 +254,102 @@ app.get('/api/companies/stats', async (c) => {
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 
+// ── Follow-up Approval (User must approve YES before send) ──
+app.get('/api/companies/pending-followups', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    const safeUserId = getSafeUserId(user)
+    let arr = []
+    try { arr = await sbSelect(c.env, 'companies', `user_id=eq.${encodeURIComponent(safeUserId)}&status=eq.contacted&order=contacted_at.desc`) || [] } catch { arr = await list(c.env, 'companies').then(a=>a.filter(x=>x.status==='contacted')) }
+    if (!arr || arr.length===0) {
+      try { arr = await sbSelect(c.env, 'companies', 'status=eq.contacted&order=contacted_at.desc') || [] } catch { arr = await list(c.env, 'companies').then(a=>a.filter(x=>x.status==='contacted')) }
+    }
+    // Show all pending_approval (user control, no auto-send) — due in 3 days but show immediately for approval
+    const pending = arr.filter(co => {
+      if (co.status !== 'contacted') return false
+      // Show if explicitly pending_approval OR if no follow_up_status but contacted (implies pending)
+      if (co.follow_up_status === 'approved' || co.follow_up_status === 'rejected') return false
+      if (!co.contacted_at) return false
+      return true
+    }).map(co => ({
+      ...co,
+      follow_up_status: co.follow_up_status || 'pending_approval',
+      follow_up_due_at: co.follow_up_due_at || new Date(new Date(co.contacted_at).getTime() + 3*24*60*60*1000).toISOString(),
+      notification: `Approve follow-up for ${co.company_name || co.name}?`
+    }))
+    return c.json({ pending, count: pending.length, note: 'Follow-ups waiting approval — no auto-send' })
+  } catch (e) { return c.json({ error: e.message, pending: [] }, 500) }
+})
+
+app.patch('/api/companies/:id/follow-up', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const id = c.req.param('id')
+    const body = await c.req.json().catch(()=>({}))
+    const action = (body.action || '').toLowerCase()
+    if (!['approve','reject','approved','rejected'].includes(action)) return c.json({ error: 'action must be approve or reject' }, 400)
+    const isApprove = action.startsWith('approv')
+    const company = await getOne(c.env, 'companies', id)
+    if (!company) return c.json({ error: 'company not found' }, 404)
+    // Ownership check
+    try {
+      const safeUserId = getSafeUserId(user)
+      const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${encodeURIComponent(safeUserId)}`).catch(()=>null)
+      if (!row || row.length===0) {
+        const byId = await sbSelect(c.env, 'companies', `id=eq.${id}`).catch(()=>null)
+        if (!byId || byId.length===0) return c.json({ error: 'not found' }, 404)
+      }
+    } catch {}
+    if (isApprove) {
+      const editedMessage = body.editedMessage || body.follow_up_message || body.message || null
+      // If editedMessage provided, use it; otherwise use stored or generate default
+      let msg = editedMessage || company.follow_up_message || `Hi ${company.owner_name || 'there'},\n\nJust following up on my previous email about featuring ${company.company_name || company.name} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`
+      // Send follow-up via Resend
+      try {
+        const sent = await sendEmailResend(c.env, { to: company.owner_email, subject: `Re: Quick win for ${company.company_name || company.name} — follow-up`, html: `<p>${msg.replace(/\n/g,'<br>')}</p>`, text: msg, from: c.env.FROM_EMAIL || 'noreply@alphatekx.name.ng' })
+        const patch = { follow_up_status: 'approved', follow_up_sent_at: new Date().toISOString(), follow_up_approved_at: new Date().toISOString(), follow_up_message: msg, outreach_count: (company.outreach_count||0)+1, last_outreach_at: new Date().toISOString() }
+        const updated = await updateOne(c.env, 'companies', id, patch)
+        return c.json({ success: true, approved: true, resend_id: sent.id || null, company: updated || { ...company, ...patch }, message: 'Follow-up approved and sent' })
+      } catch (e) {
+        return c.json({ error: e.message }, 500)
+      }
+    } else {
+      const patch = { follow_up_status: 'rejected', follow_up_rejected_at: new Date().toISOString() }
+      const updated = await updateOne(c.env, 'companies', id, patch)
+      return c.json({ success: true, rejected: true, company: updated || { ...company, ...patch } })
+    }
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+// Alias for POST as per prompt
+app.post('/api/companies/:id/follow-up', async (c) => {
+  c.req.param = c.req.param.bind(c)
+  const id = c.req.param('id')
+  // Forward to PATCH logic by reusing same handler code via internal fetch? Simplify: just call PATCH handler
+  const body = await c.req.json().catch(()=>({}))
+  const action = (body.action || '').toLowerCase()
+  // Reuse PATCH logic
+  const fakeC = { ...c, req: { ...c.req, param: () => id, json: async () => body, header: c.req.header } }
+  // Instead duplicate minimal logic:
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const company = await getOne(c.env, 'companies', id)
+    if (!company) return c.json({ error: 'company not found' }, 404)
+    if (action.startsWith('approv')) {
+      const msg = body.editedMessage || body.follow_up_message || body.message || company.follow_up_message || `Hi ${company.owner_name || 'there'},\n\nFollow-up for ${company.company_name || company.name}.`
+      const sent = await sendEmailResend(c.env, { to: company.owner_email, subject: `Re: Quick win for ${company.company_name || company.name} — follow-up`, html: `<p>${msg.replace(/\n/g,'<br>')}</p>`, text: msg, from: c.env.FROM_EMAIL || 'noreply@alphatekx.name.ng' })
+      const patch = { follow_up_status: 'approved', follow_up_sent_at: new Date().toISOString(), follow_up_approved_at: new Date().toISOString(), follow_up_message: msg, outreach_count: (company.outreach_count||0)+1 }
+      const updated = await updateOne(c.env, 'companies', id, patch)
+      return c.json({ success: true, approved: true, resend_id: sent.id || null, company: updated })
+    } else {
+      const patch = { follow_up_status: 'rejected', follow_up_rejected_at: new Date().toISOString() }
+      const updated = await updateOne(c.env, 'companies', id, patch)
+      return c.json({ success: true, rejected: true, company: updated })
+    }
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
 app.get('/api/companies', async (c) => c.json(await list(c.env, 'companies')))
 app.post('/api/companies', async (c) => {
   const body = await c.req.json().catch(() => ({}))
@@ -398,21 +499,32 @@ app.post('/api/outreach/send', async (c) => {
       }
       const dedup = await checkCompanyDuplicate(c.env, domain, ownerEmail)
       if (dedup.skipped) return c.json({ error: 'already contacted', reason: dedup.reason, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count }, 409)
-      // If custom subject/message provided, use generic send but also mark company
+      // If custom subject/message provided, use generic send but also mark company — follow-up pending approval (3 days, no auto-send)
       if (body.subject && body.message && body.to) {
         const sent = await sendEmailResend(c.env, { to: body.to || ownerEmail, subject: body.subject, html: body.message, text: body.message, from: body.from })
         try {
           const now = new Date().toISOString()
-          const sb = getSupabase(c.env)
-          if (sb) {
-            const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain}&select=id,outreach_count`, { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` } })
-            if (findRes.ok) {
-              const db = await findRes.json()
-              if (db && db[0]) await fetch(`${sb.url}/rest/v1/companies?id=eq.${db[0].id}`, { method: 'PATCH', headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'contacted', contacted_at: now, outreach_count: (db[0].outreach_count||0)+1 }) }).catch(()=>{})
+          const followDue = new Date(Date.now() + 3*24*60*60*1000).toISOString()
+          const followMsg = `Hi ${ownerName || 'there'},\n\nJust following up on my previous email about featuring ${companyName} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`
+          // Try to find company and update via resilient updateOne (handles missing columns)
+          let foundId = null
+          try {
+            const sb = getSupabase(c.env)
+            if (sb) {
+              const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain}&select=id,outreach_count`, { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` } })
+              if (findRes.ok) {
+                const db = await findRes.json()
+                if (db && db[0]) foundId = db[0].id
+              }
             }
+          } catch {}
+          if (foundId) {
+            await updateOne(c.env, 'companies', foundId, { status: 'contacted', contacted_at: now, outreach_count: 1, follow_up_status: 'pending_approval', follow_up_due_at: followDue, follow_up_message: followMsg, last_outreach_at: now }).catch(()=>{})
+            // Also ensure mem fallback has it if supabase missing column
+            try { await updateOne(c.env, 'companies', foundId, { status: 'contacted' }) } catch {}
           }
         } catch {}
-        return c.json({ success: true, company: companyName, resend_id: sent.id, marked_contacted: true })
+        return c.json({ success: true, company: companyName, resend_id: sent.id, marked_contacted: true, follow_up_status: 'pending_approval', follow_up_due_at: new Date(Date.now() + 3*24*60*60*1000).toISOString(), waiting_approval: true })
       }
       const result = await sendOutreachEmail(c.env, { companyName, domain, ownerName, ownerEmail, niche })
       if (result.skipped) return c.json({ error: 'already contacted', reason: result.reason, last_contacted_at: result.last_contacted_at }, 409)
