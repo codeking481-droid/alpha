@@ -51,7 +51,7 @@ export async function findCompaniesApollo(env, niche, location, limit) {
 
     const peopleRes = await fetch('https://api.apollo.io/v1/mixed_people/search', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey, 'Cache-Control': 'no-cache' },
       body: JSON.stringify(apolloBody)
     })
 
@@ -77,7 +77,7 @@ export async function findCompaniesApollo(env, niche, location, limit) {
         if (apolloLocation) orgBody.organization_locations = apolloLocation
         const orgRes = await fetch('https://api.apollo.io/v1/mixed_companies/search', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey, 'Cache-Control': 'no-cache' },
           body: JSON.stringify(orgBody)
         })
         if (orgRes.ok) {
@@ -179,6 +179,7 @@ export async function findLeadsTavily(env, location, niche, limit) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        api_key: apiKey,
         query: `${niche} companies ${location}`,
         search_depth: 'basic',
         include_domains: ['linkedin.com', 'crunchbase.com'],
