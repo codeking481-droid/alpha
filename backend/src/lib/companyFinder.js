@@ -606,18 +606,22 @@ export async function findCompaniesProspeo(env, niche, location, limit) {
             console.log(`Prospeo enrich key ${k.slice(0,6)}... failed ${enrichData.error_code}, trying next`);
             continue;
           } else {
-            if (person.email) verifiedEmail = person.email;
+            const fallbackEmail = typeof person.email === 'string' ? person.email : person.email?.email || '';
+            if (fallbackEmail) verifiedEmail = fallbackEmail;
             break;
           }
         } catch (e) { console.log('Prospeo enrich failed for', personId, e.message); }
       }
-      // Gmail sync: if enrich gave gmail, prefer it (user wants gmail)
-      if (!enriched && person.email && person.email.includes('@gmail.com')) verifiedEmail = person.email;
+      // Gmail sync: if search already has gmail, prefer it (user wants gmail)
+      const personEmailStr = typeof person.email === 'string' ? person.email : person.email?.email || '';
+      if (!enriched && personEmailStr && personEmailStr.includes('@gmail.com')) verifiedEmail = personEmailStr;
     }
     const domain = (company.domain || company.website || '').replace(/^https?:\/\//,'').split('/')[0].replace('www.','') || `${(company.name||'company').toLowerCase().replace(/[^a-z0-9]+/g,'')}.com`;
     const website = company.website || (company.domain ? `https://${company.domain}` : `https://${domain}`);
     // Only keep if we have verified email (user wants real customers)
-    const email = verifiedEmail || person.email || '';
+    const emailStr = typeof verifiedEmail === 'string' ? verifiedEmail : verifiedEmail?.email || '';
+    const personEmailFallback = typeof person.email === 'string' ? person.email : person.email?.email || '';
+    const email = emailStr || personEmailFallback || '';
     companies.push({
       id: `prospeo-${personId || Date.now()}-${Math.random().toString(36).slice(2,6)}`,
       name: company.name || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Unknown Company',
