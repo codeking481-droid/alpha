@@ -10,9 +10,20 @@ crons = ["*/2 * * * *"]
 [vars]
 ENV = "production"
 # This Paystack merchant does not have USD enabled. Prices are entered in USD
-# equivalents ($50/$99) and converted to NGN by payment.js before checkout.
+# equivalents ($250 Founding / $500 Regular) and converted to NGN by payment.js before checkout.
 PAYSTACK_CURRENCY = "NGN"
 PAYSTACK_NGN_RATE = "1500"
+# Real Audience We Own — exact numbers
+TOTAL_REACH = "4671"
+AUDIENCE_WHATSAPP = "131"
+AUDIENCE_CYBER = "86"
+AUDIENCE_TELEGRAM = "184"
+AUDIENCE_LINKEDIN = "1270"
+AUDIENCE_YOUTUBE = "3000"
+# Pricing — Founding Member
+PRICE = "250"
+ORIGINAL_PRICE = "500"
+STRIPE_AMOUNT = "25000"
 
 # Supabase — create project at https://supabase.com then set:
 # npx wrangler secret put SUPABASE_URL

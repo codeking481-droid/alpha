@@ -102,6 +102,16 @@ async function deleteOne(env, table, id) {
   return mem[table].length < before
 }
 
+async function enforceVaultLimit(env, table, limit=12) {
+  try {
+    const all = await list(env, table)
+    if (all.length >= limit) {
+      const oldest = all[all.length-1]
+      if (oldest && oldest.id) await deleteOne(env, table, oldest.id)
+    }
+  } catch {}
+}
+
 // Telegram hot lead helper — detects hot keywords and sends Telegram
 async function checkAndSendHotLeadTelegram(env, replies) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return
@@ -175,6 +185,9 @@ app.post('/api/companies/save', async (c) => {
     const user = getUserFromRequest(c)
     const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
     const body = await c.req.json().catch(() => ({}))
+    // Vault max 12 campaigns — validate
+    if (body.companies && Array.isArray(body.companies) && body.companies.length > 12) return c.json({ error: 'Max 12 campaigns' }, 400)
+    await enforceVaultLimit(c.env, 'companies', 12)
     const domain = (body.domain || '').toLowerCase().trim()
     if (!domain || !body.companyName) return c.json({ error: 'companyName and domain required' }, 400)
     // Dedup by user_id TEXT + domain (never by id uuid!) — fallback to domain-only if user_id is uuid column
@@ -205,8 +218,10 @@ app.post('/api/companies/save-bulk', async (c) => {
     const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
     const body = await c.req.json().catch(() => ({}))
     const list = body.companies || []
+    if (list.length > 12) return c.json({ error: 'Max 12 campaigns' }, 400)
     const results = []; let saved = 0, skipped = 0, failed = 0;
     for (const item of list) {
+      await enforceVaultLimit(c.env, 'companies', 12)
       try {
         const domain = (item.domain || '').toLowerCase().trim()
         if (!domain || !item.companyName) { failed++; continue }
@@ -742,6 +757,9 @@ app.get('/api/campaigns', async (c) => {
 app.post('/api/campaigns', async (c) => {
   try {
     const body = await c.req.json().catch(()=>({}));
+    // Vault max 12 campaigns — validate
+    if (body.campaigns && Array.isArray(body.campaigns) && body.campaigns.length > 12) return c.json({ error: 'Max 12 campaigns' }, 400)
+    await enforceVaultLimit(c.env, 'campaigns', 12)
     const user = await requireAuth(c, c.env);
     if (!hasSupabase(c.env)) {
       const tmp = await createCampaign(c.env, { ...body, created_by: user?.id || null });
@@ -1675,10 +1693,9 @@ app.get('/api/client/outcomes', async (c) => {
 
 // ── Alpha Ad Engine — One-Week Campaigns ──
 app.get('/api/community', (c) => c.json({ community: COMMUNITY, pricing: PRICING, reach: getTotalReach(), deliverables: getCampaignDeliverables(), truthClause: TRUTH_CLAUSE }))
-// ── Pricing — Founding Member $250 (regular $500) with global urgency
+// ── Pricing — Founding Member $250 (regular $500) with global urgency — Real Audience 4671
 app.get('/api/pricing', async (c) => {
   try {
-    // Count total customers from access_codes or companies to compute spots left
     let totalCustomers = 0
     try {
       const codes = await sbSelect(c.env, 'access_codes', 'used=eq.true') || []
@@ -1699,21 +1716,40 @@ app.get('/api/pricing', async (c) => {
       foundingLimit: 10,
       spotsLeft,
       totalCustomers,
+      totalReach: 4671,
+      audience: { whatsappChannel: 131, cybersecurityGroup: 86, telegram: 184, linkedin: 1270, youtube: 3000 },
+      bonus: 'One Free System Of Your Choice If You Accept',
+      condition: 'No system if reject offer',
+      foundingSpots: `${spotsLeft} spots left`,
       badge: `🔥 Founding Member - ${spotsLeft} spots left at $250`,
-      description: 'Founding Member: $250 - First 10 clients only! Regular $500 after.',
-      deliverables: ['✓ 50 Verified Owner Emails (Apollo ✓, not info@)', '✓ 50 Personalized Cold Emails (Resend)', '✓ 3 Follow-ups Included', '✓ Inbox Reply Tracking', '✓ Hot Lead Alerts'],
+      description: 'Founding Member: $250 - First 10 clients only! Regular $500 after. Bonus: One Free System Only If You Accept.',
+      deliverables: ['Advertisement to ALL our channels (131 WhatsApp, 86 Cybersecurity Group, 184 Telegram, 1,270 LinkedIn, 3K YouTube)', 'Post + Story + Video Shoutout across all channels', '1 Week Promotion Campaign', 'Campaign Report + Screenshots Proof', 'Priority Support'],
+      bonusDeliverables: ['One Free System Of Your Choice If You Accept - Booking, CRM, Inventory, Payment, Store, Dashboard, Any custom'],
       stripeAmount: 25000,
       paystackAmount: 25000,
-      pricing: PRICING
+      pricing: { ...PRICING, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 } }
     })
-  } catch (e) { return c.json({ price: 250, originalPrice: 500, discount: 50, spotsLeft: 7, badge: '🔥 Founding Member - 7 spots left at $250' }) }
+  } catch (e) { return c.json({ price: 250, originalPrice: 500, discount: 50, spotsLeft: 7, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 }, badge: '🔥 Founding Member - 7 spots left at $250' }) }
+})
+// Checkout — Founding $250 with bonus metadata
+app.post('/api/checkout/create', async (c) => {
+  try {
+    const { email, price, amount } = await c.req.json().catch(()=>({}))
+    const p = Number(price) || 250
+    const amt = p === 50 ? 5000 : p === 99 ? 9900 : p === 500 ? 50000 : 25000
+    const totalReach = 4671
+    // Reuse payment initialize logic
+    const init = await initializePayment(c.env, email || 'test@alpha.agency', amt, c.req.header('Origin') ? `${c.req.header('Origin').replace(/\/$/,'')}/access` : null, p)
+    const url = typeof init === 'string' ? init : init.url
+    return c.json({ success: true, checkoutUrl: url, price: p, originalPrice: 500, amount: amt, totalReach, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 }, bonus: 'One Free System If You Accept', condition: 'No system if reject', description: 'Advertise to 4,671+ audience + Free System Bonus - Founding $250', metadata: { bonus: 'free_system_if_accept', condition: 'no_system_if_reject', price: p } })
+  } catch (e) { return c.json({ error: e.message }, 500) }
 })
 
-// Ad Engine: find 100+ leads via Apollo/Serply/Tavily/Overpass
+// Ad Engine: find 100+ leads via Apollo/Serply/Tavily/Overpass — Global, no Lagos hardcode
 app.post('/api/ad-engine/find-leads', async (c) => {
   try {
     const { city, niche, limit, query, industry } = await c.req.json().catch(()=>({}))
-    const cityVal = city || query || 'Lagos'
+    const cityVal = city || query || '' // Global if empty
     const nicheVal = niche || industry || 'tech'
     const lim = Math.min(Number(limit)||100, 150)
     const leads = await findLeads(c.env, cityVal, nicheVal, lim)
@@ -1722,7 +1758,7 @@ app.post('/api/ad-engine/find-leads', async (c) => {
 })
 app.get('/api/ad-engine/find-leads', async (c) => {
   try {
-    const city = c.req.query('city') || c.req.query('query') || 'Lagos'
+    const city = c.req.query('city') || c.req.query('query') || '' // Global if empty
     const niche = c.req.query('niche') || c.req.query('industry') || 'tech'
     const limit = Math.min(Number(c.req.query('limit'))||100, 150)
     const leads = await findLeads(c.env, city, niche, limit)

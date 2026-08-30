@@ -7,6 +7,16 @@ GROQ_API_KEY="gsk_YOUR_GROQ_KEY_HERE"
 GROQ_MODEL="llama-3.1-70b-versatile"
 # 120B own model id - set via: npx wrangler secret put GROQ_MODEL
 # e.g., llama-3.3-70b-versatile, llama-3.1-405b, or your custom 120b id
+# Pricing — Founding Member $250 (was $500)
+PRICE="250"
+ORIGINAL_PRICE="500"
+STRIPE_AMOUNT="25000"
+TOTAL_REACH="4671"
+AUDIENCE_WHATSAPP="131"
+AUDIENCE_CYBER="86"
+AUDIENCE_TELEGRAM="184"
+AUDIENCE_LINKEDIN="1270"
+AUDIENCE_YOUTUBE="3000"
 # Paystack — https://dashboard.paystack.com/#/settings/developer  (USD $250 Founding / $500 Regular)
 # Test: sk_test_...  Live: sk_live_...
 PAYSTACK_SECRET_KEY="sk_test_YOUR_KEY_HERE"

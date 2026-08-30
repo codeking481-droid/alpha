@@ -49,9 +49,9 @@ export const Dashboard = () => {
 
         {/* 4 CARDS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-          {/* Find Companies - Lavender */}
+          {/* My Ad Campaigns - Lavender */}
           <button
-            onClick={() => navigate('/find-companies')}
+            onClick={() => navigate('/my-ad-campaigns')}
             className="relative bg-[#F0EFFF] border border-[#E0D9FF] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group"
           >
             <div className="w-10 h-10 bg-[#EDE8FF] rounded-xl flex items-center justify-center mb-4">
@@ -60,8 +60,8 @@ export const Dashboard = () => {
                 <path d="M15.3 15.3L20 20" />
               </svg>
             </div>
-            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Find Companies</h3>
-            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Discover and research new companies to target</p>
+            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">My Ad Campaigns</h3>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Client ad campaigns we ran on 4,671+ audience</p>
             <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#C4B5FD] bg-[#F0EFFF] flex items-center justify-center text-[#5E17EB] group-hover:bg-white transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 17L17 7" />

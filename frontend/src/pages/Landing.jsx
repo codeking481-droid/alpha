@@ -46,335 +46,192 @@ export const Landing = () => {
                 <span className="text-[22px] md:text-[28px] font-black tracking-[-0.02em] text-[#0A0A0A] leading-none">ALPHATEKX</span>
                 <span className="hidden sm:inline text-[10px] font-black tracking-[0.14em] text-white bg-[#0A0A0A] px-2.5 py-1 rounded-full">ALPHA AGENCY OS</span>
               </div>
-              <div className="hidden md:block text-[11px] font-bold text-[#5E17EB] tracking-wide -mt-0.5">REAL COMPANIES • VERIFIED EMAILS • LIVE</div>
+              <div className="hidden md:block text-[11px] font-bold text-[#5E17EB] tracking-wide -mt-0.5">REAL AUDIENCE 4,671+ • VERIFIED • LIVE</div>
             </div>
           </div>
           <div className="hidden xl:flex items-center gap-7">
-            <a href="#platform" onClick={(e)=>{e.preventDefault(); document.getElementById('platform')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">Platform</a>
-            <a href="#how-it-works" onClick={(e)=>{e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">How it works</a>
+            <a href="#audience" onClick={(e)=>{e.preventDefault(); document.getElementById('audience')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">Audience</a>
+            <a href="#offer" onClick={(e)=>{e.preventDefault(); document.getElementById('offer')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">Offer</a>
             <a href="#pricing" onClick={(e)=>{e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">Pricing</a>
             <button onClick={handleLogin} className="bg-white border-2 border-[#EDEDED] rounded-xl px-6 py-2.5 text-[14px] font-black hover:bg-gray-50">Log in</button>
-            <button onClick={handleGoogleSignup} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl px-7 py-3 text-[14px] font-black shadow-[0_6px_16px_rgba(94,23,235,0.3)]">Get Started — $250 →</button>
-            <span className="text-[12px] font-bold bg-[#5E17EB] text-white px-2.5 py-1 rounded-full]">24 keys live</span>
-            <span className="text-[12px] font-bold bg-[#5E17EB] text-white px-2.5 py-1 rounded-full]">Apollo • Hunter • Resend • ec6d08f0</span>
+            <button onClick={handleGoogleSignup} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl px-7 py-3 text-[14px] font-black shadow-[0_6px_16px_rgba(94,23,235,0.3)]">Accept Offer - $250 →</button>
           </div>
-          <button onClick={handleLogin} className="xl:hidden bg-[#0A0A0A] text-white rounded-xl px-6 py-2.5 text-[14px] font-black">Get access</button>
-          <div className="absolute right-0 top-0 mt-2 mr-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse opacity-60"></span>
-          </div>
+          <button onClick={handleGoogleSignup} className="xl:hidden bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl px-4 sm:px-6 py-2.5 text-[13px] sm:text-[14px] font-black">Accept $250</button>
         </nav>
       </div>
 
-      {/* HERO — PUBLIC $50 */}
+      {/* HERO — REAL AUDIENCE + $250 */}
       <section className="max-w-[1360px] mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-6">
-        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-6 md:gap-8 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2.5 bg-white border border-[#EDEDED] rounded-full pl-1.5 pr-4 py-1.5 text-[11px] md:text-[12px] font-black tracking-wide shadow-sm">
-              <span className="bg-[#5E17EB] text-white rounded-full px-2.5 py-1 text-[10px] font-black">● LIVE</span>
-              10,420+ REAL COMPANIES FOUND • VERIFIED VIA APOLLO + HUNTER
-            </div>
-            <h1 className="mt-6 text-[32px] xs:text-[36px] sm:text-[48px] md:text-[72px] lg:text-[88px] font-black tracking-[-0.045em] leading-[0.85] text-[#0A0A0A] break-words">
-              <span className="text-[#0A0A0A]">Alpha Agency</span><br />
-              <span className="bg-gradient-to-r from-[#5E17EB] via-[#7C3AED] to-[#A78BFA] bg-clip-text text-transparent">Outbound Model</span>
-            </h1>
-            <p className="mt-5 text-[17px] md:text-[19px] leading-[1.5] text-[#4B5563] max-w-[620px] font-medium">
-              <b>Get 50 Verified Leads for $250</b> — Founding Member (First 10 Only, Then $500). We search real companies (USA/UK/Dubai/Global), find owner emails via Apollo, and help you get them via DM + cold email. Our private engine reaches brands on our 4,500+ audience. <span className="line-through text-gray-400">$500</span> <strong className="text-[#5E17EB]">Founding: $250</strong> — Save $250!
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
-              <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">113 TELEGRAM</span>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">3K YOUTUBE</span>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">130 WHATSAPP</span>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">85 CYBER</span>
-              <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">700+ LINKEDIN</span>
-              <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">OUTBOUND LIVE</span>
-            </div>
-            <div className="mt-2 inline-flex items-center gap-2 bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-3 py-1 text-[11px] font-black text-[#92400E]">
-              <span>🔥</span> Founding Member - 7 spots left at $250 <span className="hidden sm:inline">• Regular $500 after</span>
-            </div>
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <button onClick={handleGoogleSignup} disabled={loading} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-2xl px-8 py-4 text-[16px] font-black flex items-center justify-center gap-3 shadow-[0_12px_28px_rgba(94,23,235,0.3)] disabled:opacity-60">
-                <span className="w-7 h-7 bg-white rounded-full flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
-                {loading ? "Connecting..." : "Get Started - $250"}
-                <span className="text-white/70">→</span>
-              </button>
-              <button onClick={handleDownloadApp} className="bg-white border-2 border-[#0A0A0A] text-[#0A0A0A] rounded-2xl px-8 py-4 text-[15px] font-black hover:bg-[#0A0A0A] hover:text-white">
-                {isInstallable ? "📲 Install App" : "▶ See how it works"}
-              </button>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-bold">
-              <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">✓ 50 Verified Owner Emails (Apollo ✓, not info@)</span>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">✓ Hunter checked</span>
-              <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1">✓ CSV import • Dedupe</span>
-            </div>
-            <p className="mt-3 text-[12px] text-[#9CA3AF]">Pay <strong>$250 Founding</strong> <span className="line-through">$500</span> → Find 50 companies → Get verified emails → 3 follow-ups • Cancel anytime.</p>
+        <div className="text-center max-w-[900px] mx-auto">
+          <div className="inline-flex items-center gap-2 bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-3 py-1 text-[11px] font-black text-[#92400E] mb-4">
+            🔥 Founding Member - 7 spots left at $250 • Regular $500 after
           </div>
-
-          {/* MOCK — PUBLIC FINDER */}
-          <div className="relative">
-            <div className="bg-white border border-[#E5E7EB] rounded-[24px] md:rounded-[28px] shadow-[0_24px_64px_rgba(0,0,0,0.12)] overflow-hidden">
-              <div className="bg-[#0A0A0A] px-4 md:px-5 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 bg-[#FF5F56] rounded-full"/><span className="w-3 h-3 bg-[#FFBD2E] rounded-full"/><span className="w-3 h-3 bg-[#27C93F] rounded-full"/>
-                </div>
-                <span className="text-white/80 text-[11px] font-bold tracking-wide">alphatekx.name.ng — LIVE FINDER</span>
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/>
-              </div>
-              <div className="p-4 md:p-6 bg-[#FFFCF8]">
-                <div className="bg-white border border-[#EDEDED] rounded-2xl p-3 flex items-center gap-3">
-                  <span className="text-[#9CA3AF]">🔍</span>
-                  <span className="text-[14px] font-bold text-[#0A0A0A]">skincare USA ×20</span>
-                  <span className="ml-auto bg-[#0A0A0A] text-white rounded-full px-3 py-1 text-[11px] font-black">Search</span>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {[
-                    {n:"Glow Skin Co", w:"glowskin.co", e:"sarah@glowskin.co", s:"Hunter ✓"},
-                    {n:"Pure Botanics", w:"purebotanics.com", e:"hello@purebotanics.com", s:"Apollo ✓"},
-                    {n:"Luxe Beauty Lab", w:"luxebeauty.co", e:"info@luxebeauty.co", s:"Verified"},
-                  ].map(r=>(
-                    <div key={r.n} className="bg-white border border-[#EDEDED] rounded-xl p-3 flex items-center justify-between">
-                      <div><div className="text-[13px] font-black">{r.n}</div><div className="text-[11px] text-[#6B7280]">{r.w} • {r.e}</div></div>
-                      <span className="text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-full">{r.s}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-bold text-center">
-                  <span className="bg-white border rounded-full py-2">Apollo ✅</span>
-                  <span className="bg-white border rounded-full py-2">Hunter ✅</span>
-                  <span className="bg-white border rounded-full py-2">No fake</span>
-                </div>
-              </div>
-            </div>
-            <div className="absolute -bottom-4 -right-4 bg-[#0A0A0A] text-white rounded-2xl px-4 py-3 shadow-xl hidden md:block">
-              <div className="text-[11px] font-bold opacity-60">YOU GET</div>
-              <div className="text-[13px] font-black">Company • Owner • Email • Product</div>
-            </div>
+          <h1 className="text-[32px] sm:text-[40px] md:text-[56px] font-black tracking-[-0.03em] leading-[0.9] text-[#0A0A0A]">
+            Advertise To Our <span className="bg-gradient-to-r from-[#5E17EB] to-[#7C3AED] bg-clip-text text-transparent">4,600+ Engaged Audience</span> + Get FREE System If You Accept
+          </h1>
+          <p className="mt-4 text-[14px] sm:text-[16px] md:text-[18px] leading-[1.5] text-[#4B5563] font-medium">
+            Reach: WhatsApp 131 + Cybersecurity 86 + Telegram 184 + LinkedIn 1,270 + YouTube 3K = <strong className="text-[#0A0A0A]">4,671+</strong> targeted (Tech/Cybersecurity niche)
+          </p>
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <span style={{textDecoration:'line-through', color:'gray', fontSize:'20px'}}>$500</span>
+            <span style={{color:'green', fontWeight:'bold', fontSize:'32px'}}>$250 Founding Member</span>
+            <span className="text-[13px] font-bold text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-3 py-1">First 10 clients, 7 spots left!</span>
           </div>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={handleGoogleSignup} disabled={loading} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-2xl px-8 py-4 text-[16px] font-black flex items-center justify-center gap-3 shadow-[0_12px_28px_rgba(94,23,235,0.3)] disabled:opacity-60">
+              <span className="w-7 h-7 bg-white rounded-full flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
+              {loading ? "Connecting..." : "Accept Offer - $250 + Free System"}
+              <span className="text-white/70">→</span>
+            </button>
+            <button onClick={handleDownloadApp} className="bg-white border-2 border-[#0A0A0A] text-[#0A0A0A] rounded-2xl px-8 py-4 text-[15px] font-black hover:bg-[#0A0A0A] hover:text-white">
+              {isInstallable ? "📲 Install App" : "▶ See Audience"}
+            </button>
+          </div>
+          <p className="mt-3 text-[11px] text-[#9CA3AF]">One-time $250 • Lifetime access • No subscription • Bonus only if accept</p>
         </div>
       </section>
 
-      {/* TRUSTED */}
-      <section className="max-w-[1360px] mx-auto px-4 md:px-6 py-4">
-        <p className="text-center text-[10px] md:text-[11px] font-black tracking-[0.16em] text-[#9CA3AF] uppercase">For founders who need real leads, not scraped junk</p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2 md:gap-3">
-          {["SKINCARE","FITNESS","SHOPIFY","SAAS","AMAZON","COACHING","REAL ESTATE","CLINICS","E-COM","LOCAL"].map(t=>(
-            <span key={t} className="bg-white border border-[#EDEDED] rounded-full px-3.5 md:px-4 py-1.5 md:py-2 text-[11px] md:text-[12px] font-black tracking-wide text-[#0A0A0A]/70">{t}</span>
-          ))}
-        </div>
-      </section>
-
-{/* PLATFORM — PUBLIC */}
-      <section id="platform" className="max-w-[1360px] mx-auto px-4 md:px-6 pt-10">
+      {/* AUDIENCE PROOF SECTION — 5 cards with real numbers */}
+      <section id="audience" className="max-w-[1360px] mx-auto px-4 md:px-6 py-8">
         <div className="text-center">
-          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.18em] uppercase">Platform — $250 Founding to find, create, deliver</p>
-          <h2 className="mt-3 text-[30px] md:text-[48px] font-black tracking-[-0.03em] text-[#0A0A0A]">Find → Get Email → Create</h2>
-          <p className="mt-2 text-[#6B7280] max-w-[720px] mx-auto md:text-[17px]">Pay <strong>$250 Founding</strong> <span className="line-through text-gray-400">$500</span>, search any niche + location (USA/UK/Dubai/Global), get verified emails (Hunter), then create what companies ask for. Simple, real, scalable.</p>
+          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.18em] uppercase">Real Audience We Own — No Fake Numbers</p>
+          <h2 className="mt-2 text-[28px] md:text-[40px] font-black tracking-tight">4,671+ Targeted Reach</h2>
+          <p className="mt-2 text-[#6B7280] text-[14px]">Tech & Cybersecurity niche — verified channels</p>
         </div>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
-          {[
-            {n:"1", t:"Find Real Companies", d:"Apollo + Hunter + Google Places + Overpass. Niche + location + limit. Dedupe by website. Save to dashboard. CSV import.", c:"from-[#5E17EB] to-[#7C3AED]"},
-            {n:"2", t:"Get Verified Emails", d:"Every company comes with owner name, website, verified email, product. Hunter check. No info@ guess.", c:"from-[#0A0A0A] to-[#272727]"},
-            {n:"3", t:"Create What They Need", d:"Companies tell you what they need — you create and deliver. Track who you emailed, who replied, who's hot.", c:"from-[#059669] to-[#047857]"},
-          ].map(card=>(
-            <div key={card.n} className="bg-white border border-[#EDEDED] rounded-2xl p-7 md:p-8 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${card.c} flex items-center justify-center text-white font-black text-[18px]`}>{card.n}</div>
-              <h3 className="mt-5 text-[18px] font-black text-[#0A0A0A]">{card.t}</h3>
-              <p className="mt-2 text-[14px] leading-[1.6] text-[#4B5563]">{card.d}</p>
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 text-center hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
+            <div className="w-12 h-12 bg-[#25D366] rounded-2xl flex items-center justify-center mx-auto">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M19.05 4.91A9.82 9.82 0 0 0 12.03 2C6.55 2 2.07 6.47 2.07 11.95c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.82 9.82 0 0 0 4.78 1.22h.01c5.48 0 9.95-4.47 9.95-9.95 0-2.66-1.03-5.15-2.94-7.04zm-7.02 14.5h-.01a8.13 8.13 0 0 1-4.14-1.13l-.3-.18-3.12.82.83-3.04-.2-.31a8.17 8.17 0 0 1-1.26-4.36c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.25 8.24z"/></svg>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* DIRECT DM + COLD EMAIL HELP */}
-      <section className="max-w-[1360px] mx-auto px-4 md:px-6 py-10">
-        <div className="bg-gradient-to-br from-[#0A0A0A] via-[#1A0A4A] to-[#5E17EB] rounded-[28px] p-8 md:p-12 lg:p-16 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-[80px]" />
-          <div className="relative grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
-            <div>
-              <h2 className="text-[32px] md:text-[48px] font-black leading-[0.9] tracking-tight">Get Companies via DM & Email — We Show You How</h2>
-              <p className="mt-4 text-white/70 md:text-[16px] leading-[1.6]">We don't just give you emails, we help you get companies via direct DM and email outreach — templates, follow-ups, tracking.</p>
-              <div className="mt-6 grid md:grid-cols-3 gap-4">
-                <div className="bg-[#111] rounded-2xl p-6 flex flex-col gap-4">
-                  <h4 className="text-[18px] font-black">📩 Cold Email Templates</h4>
-                  <p className="text-white/60">Proven templates that get YES from skincare brands. Copy, paste, send from site. Track replies.</p>
-                </div>
-                <div className="bg-[#111] rounded-2xl p-6 flex flex-col gap-4">
-                  <h4 className="text-[18px] font-black">💬 Direct DM Scripts</h4>
-                  <p className="text-white/60">LinkedIn DM + Instagram DM scripts to reach owners directly. What to say to get reply.</p>
-                </div>
-                <div className="bg-[#111] rounded-2xl p-6 flex flex-col gap-4">
-                  <h4 className="text-[18px] font-black">🤝 We Help You Close</h4>
-                  <p className="text-white/60">We don't just give you emails, we help you get companies via DM and email outreach — templates, follow-ups, tracking.</p>
-                </div>
-              </div>
+            <h3 className="mt-3 text-[16px] font-black">WhatsApp Channel</h3>
+            <p className="text-[28px] font-black text-[#25D366] leading-none mt-1">131</p>
+            <p className="text-[12px] font-bold text-[#6B7280]">Members</p>
+          </div>
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 text-center hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
+            <div className="w-12 h-12 bg-[#0A0A0A] rounded-2xl flex items-center justify-center mx-auto">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
             </div>
+            <h3 className="mt-3 text-[16px] font-black">Cybersecurity WhatsApp</h3>
+            <p className="text-[28px] font-black text-[#0A0A0A] leading-none mt-1">86</p>
+            <p className="text-[12px] font-bold text-[#6B7280]">Members</p>
+          </div>
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 text-center hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
+            <div className="w-12 h-12 bg-[#229ED9] rounded-2xl flex items-center justify-center mx-auto">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+            </div>
+            <h3 className="mt-3 text-[16px] font-black">Telegram</h3>
+            <p className="text-[28px] font-black text-[#229ED9] leading-none mt-1">184</p>
+            <p className="text-[12px] font-bold text-[#6B7280]">Members (115+69)</p>
+          </div>
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 text-center hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
+            <div className="w-12 h-12 bg-[#0A66C2] rounded-2xl flex items-center justify-center mx-auto">
+              <span className="text-white text-[18px] font-black">in</span>
+            </div>
+            <h3 className="mt-3 text-[16px] font-black">LinkedIn</h3>
+            <p className="text-[28px] font-black text-[#0A66C2] leading-none mt-1">1,270</p>
+            <p className="text-[12px] font-bold text-[#6B7280]">500+ Connections + 770 Followers</p>
+          </div>
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 text-center hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all">
+            <div className="w-12 h-12 bg-[#FF0000] rounded-2xl flex items-center justify-center mx-auto">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M23.5 12.1s-.2-2.4-.8-3.5c-.4-1-1-1.6-2-2-.9-.6-2.4-.8-3.5-.8H6.8c-1.1 0-2.6.2-3.5.8-1 .4-1.6 1-2 2C.7 9.7.5 12.1.5 12.1s-.2 2.4.4 3.5c.4 1 1 1.6 2 2 .9.6 2.4.8 3.5.8h10.4c1.1 0 2.6-.2 3.5-.8 1-.4 1.6-1 2-2 .6-1.1.8-3.5.8-3.5z"/><path d="M9.8 15.5l5.2-3.4-5.2-3.4z" fill="black"/></svg>
+            </div>
+            <h3 className="mt-3 text-[16px] font-black">YouTube</h3>
+            <p className="text-[28px] font-black text-[#FF0000] leading-none mt-1">3,000+</p>
+            <p className="text-[12px] font-bold text-[#6B7280]">Subscribers</p>
           </div>
         </div>
-      </section>
-
-      {/* BLACK SECTION - WE REACH BRANDS ON OUR COMMUNITIES */}
-      <section className="max-w-[1360px] mx-auto px-4 md:px-6 pt-10">
-        <div className="bg-[#0A0A0A] rounded-[28px] p-6 md:p-10 lg:p-12 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#5E17EB] rounded-full blur-[90px] opacity-20" />
-          <div className="relative grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
-            <div>
-              <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.16em] uppercase">4,500+ Audience Across 5 Communities</p>
-              <h2 className="mt-2 text-[28px] md:text-[40px] font-black leading-[0.95] tracking-tight">We Reach Brands<br/>on Our Communities</h2>
-              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">We reach out to brands and manage everything done-for-you on our 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity). This private engine is invite-only for brands we contact. <strong>$250 Founding</strong> <span className="line-through opacity-60">$500</span> public access is DIY tool only — no community posting, you post yourself.</p>
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                {[
-                  {p:"LinkedIn Followers", v:"700+", s:"700 followers"},
-                  {p:"LinkedIn Connections", v:"500+", s:"500 connections"},
-                  {p:"WhatsApp Channel", v:"130 members", s:"130 members (2 groups)"},
-                  {p:"Telegram Channel", v:"113 members", s:"113 members"},
-                  {p:"Cybersecurity Community", v:"85 members", s:"85 cybersecurity"},
-                  {p:"YouTube", v:"3K+ subs", s:"3,000+ subscribers"},
-                ].map(x=>(
-                  <div key={x.p} className="bg-white/10 border border-white/10 rounded-2xl p-4">
-                    <div className="text-[13px] font-black">{x.p}</div>
-                    <div className="text-[16px] font-black text-[#A78BFA]">{x.v}</div>
-                    <div className="text-[11px] text-white/60">{x.s}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-[11px] text-white/40">4,500+ audience • 5 communities • Invite only</p>
-            </div>
-            <div className="bg-white rounded-2xl p-5 md:p-6 text-[#0A0A0A]">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black tracking-wide">YOUR OUTREACH — TRACKED</span><span className="text-[11px] font-bold bg-[#0A0A0A] text-white px-2.5 py-1 rounded-full">Team only</span>
-              </div>
-              <p className="mt-2 text-[13px] text-[#6B7280]">Send to 100, see who replies, generate content for YES, post manually for now. All tracked on site.</p>
-              <div className="mt-4 space-y-2">
-                {[
-                  {n:"Glow Skin Co", m:"Interested — YES", c:"bg-emerald-50 border-emerald-200"},
-                  {n:"Peak Fitness", m:"Emailed • 2 days ago", c:"bg-blue-50 border-blue-200"},
-                  {n:"Luxe Shopify", m:"Not yet", c:"bg-gray-50 border-gray-200"},
-                ].map(r=>(
-                  <div key={r.n} className={`border rounded-xl p-3 flex items-center justify-between ${r.c}`}>
-                    <span className="text-[13px] font-bold">{r.n}</span><span className="text-[11px] font-bold">{r.m}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 bg-[#FFFCF8] border rounded-xl p-3 text-[12px]">
-                <b>Team inbox → </b> When a brand replies via DM or email, you get pinged and can generate their posts right here. We help you get companies via direct DM.
-              </div>
-            </div>
-          </div>
+        <div className="mt-6 bg-gradient-to-r from-[#5E17EB] to-[#7C3AED] rounded-2xl p-4 text-center text-white">
+          <p className="text-[16px] md:text-[20px] font-black">🔥 4,671+ Total Targeted Reach - Tech & Cybersecurity Audience</p>
+          <p className="text-[11px] md:text-[12px] font-bold opacity-80 mt-1">131 WhatsApp + 86 Cybersecurity + 184 Telegram + 1,270 LinkedIn + 3,000 YouTube</p>
         </div>
       </section>
 
-      {/* PRICING — PUBLIC $50 */}
-      <section id="pricing" className="max-w-[1360px] mx-auto px-4 md:px-6 py-10">
-        <div className="text-center">
-          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.16em] uppercase">🔥 Founding Member - 7 spots left at $250</p>
-          <h2 className="mt-2 text-[30px] md:text-[44px] font-black tracking-tight">Get 50 Verified Leads for $250 <span className="text-[#5E17EB]">— Founding Member</span></h2>
-          <p className="mt-2 text-[#6B7280]">First 10 clients only, then $500 • Save $250 now!</p>
-          <p className="mt-1 text-[13px] text-[#9CA3AF]"><span style={{textDecoration:'line-through', color:'gray'}}>$500</span> <strong className="text-[#0A0A0A]">Founding Member: $250</strong></p>
-        </div>
-        <div className="mt-8 grid md:grid-cols-2 gap-6 max-w-[900px] mx-auto">
-          <div className="bg-white border-2 border-[#5E17EB] rounded-2xl p-7 md:p-8 relative overflow-hidden shadow-[0_8px_30px_rgba(94,23,235,0.15)]">
-            <div className="absolute top-3 right-3 bg-[#5E17EB] text-white text-[10px] font-black px-2.5 py-1 rounded-full">🔥 Founding Member</div>
-            <p className="text-[11px] font-black tracking-[0.14em] uppercase text-[#5E17EB]">Global Starter</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <p className="text-[40px] font-black leading-none">$250</p>
-              <p className="text-[18px] font-bold text-gray-400 line-through">$500</p>
+      {/* OFFER DETAILS $250 */}
+      <section id="offer" className="max-w-[900px] mx-auto px-4 md:px-6 py-8">
+        <div className="bg-white border-2 border-[#5E17EB] rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgba(94,23,235,0.15)]">
+          <h2 className="text-[22px] md:text-[28px] font-black tracking-tight text-center">What You Get For $250 (Was $500)</h2>
+          <p className="text-center text-[13px] text-[#6B7280] mt-1">One-time Founding Member — First 10 clients, 7 spots left!</p>
+          <ul className="mt-6 space-y-3">
+            <li className="flex gap-3 text-[14px] font-medium"><span className="w-6 h-6 rounded-full bg-[#5E17EB] flex items-center justify-center text-white text-[12px] shrink-0">✓</span><span>Advertisement to <strong>ALL</strong> our channels (131 WhatsApp, 86 Cybersecurity Group, 184 Telegram, 1,270 LinkedIn, 3K YouTube)</span></li>
+            <li className="flex gap-3 text-[14px] font-medium"><span className="w-6 h-6 rounded-full bg-[#5E17EB] flex items-center justify-center text-white text-[12px] shrink-0">✓</span><span>Post + Story + Video Shoutout across all channels</span></li>
+            <li className="flex gap-3 text-[14px] font-medium"><span className="w-6 h-6 rounded-full bg-[#5E17EB] flex items-center justify-center text-white text-[12px] shrink-0">✓</span><span>1 Week Promotion Campaign</span></li>
+            <li className="flex gap-3 text-[14px] font-medium"><span className="w-6 h-6 rounded-full bg-[#5E17EB] flex items-center justify-center text-white text-[12px] shrink-0">✓</span><span>Campaign Report + Screenshots Proof</span></li>
+            <li className="flex gap-3 text-[14px] font-medium"><span className="w-6 h-6 rounded-full bg-[#5E17EB] flex items-center justify-center text-white text-[12px] shrink-0">✓</span><span>Priority Support</span></li>
+          </ul>
+          <div className="mt-6 bg-[#F0EFFF] border border-[#DDD6FE] rounded-xl p-4 text-center">
+            <p className="text-[13px] font-black text-[#5E17EB]">Founding Member Pricing</p>
+            <div className="flex items-center justify-center gap-3 mt-1">
+              <span style={{textDecoration:'line-through', color:'gray', fontSize:'18px'}}>$500</span>
+              <span style={{color:'green', fontWeight:'bold', fontSize:'28px'}}>$250</span>
               <span className="text-[11px] font-black bg-[#FEF3C7] text-[#92400E] px-2 py-0.5 rounded-full">Save $250</span>
             </div>
-            <p className="text-[13px] text-[#6B7280]"><strong>Founding Member: $250</strong> - First 10 clients only!</p>
-            <p className="text-[11px] text-[#9CA3AF] mt-1">Regular price $500 after 10 clients — 7 spots left!</p>
-            <ul className="mt-6 space-y-3">
-              {["✓ 50 Verified Owner Emails (Apollo ✓, not info@)","✓ 50 Personalized Cold Emails (Resend)","✓ 3 Follow-ups Included","✓ Inbox Reply Tracking","✓ Hot Lead Alerts"].map(li=>(
-                <li key={li} className="flex gap-2.5 text-[13.5px] font-medium"><span className="w-5 h-5 rounded-full bg-[#F0EFFF] border border-[#DDD6FE] flex items-center justify-center text-[#5E17EB] text-[11px]">✓</span>{li.replace('✓ ','')}</li>
-              ))}
-            </ul>
-            <button onClick={handleGoogleSignup} className="mt-7 w-full bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl py-3.5 text-[14px] font-black">Get Started - $250 →</button>
-            <p className="mt-2 text-center text-[11px] text-[#9CA3AF]">Paystack • Instant access • Founding Member Special</p>
-            <p className="mt-1 text-center text-[11px] font-bold text-[#5E17EB]">🔥 7 spots left at $250 — Regular $500 after</p>
+            <p className="text-[11px] text-[#6B7280] mt-1">First 10 clients only — 7 spots left!</p>
           </div>
-          <div className="bg-[#0A0A0A] text-white rounded-2xl p-7 md:p-8 relative overflow-hidden opacity-90">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#5E17EB] rounded-full blur-[40px] opacity-30" />
-            <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.14em] uppercase">Regular Price</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <p className="text-[40px] font-black leading-none text-white/50 line-through">$500</p>
-              <span className="text-[12px] font-bold bg-white/10 text-white/60 px-2 py-1 rounded-full">After 10</span>
-            </div>
-            <p className="text-white/60 text-[13px]">$500 after founding members</p>
-            <ul className="mt-6 space-y-3 opacity-60">
-              {["Everything in Founding","100 companies per search","Priority support","Team invite (future)","Early private engine access"].map(li=>(
-                <li key={li} className="flex gap-2.5 text-[13.5px] font-medium"><span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px]">✓</span>{li}</li>
-              ))}
-            </ul>
-            <button disabled className="mt-7 w-full bg-white/10 text-white/50 rounded-xl py-3.5 text-[14px] font-black cursor-not-allowed">Locked — Founding First</button>
-            <p className="mt-2 text-center text-[11px] text-white/40">$500 after 10 founding members</p>
-          </div>
-        </div>
-        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">$250 Founding = 50 verified emails + outreach + inbox tracking. Regular $500 after 10 clients. Private 4,500+ audience posting is team only — not included in DIY search.</p>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section className="max-w-[1360px] mx-auto px-4 md:px-6">
-        <div className="bg-white border border-[#EDEDED] rounded-2xl p-6 md:p-8">
-<h3 className="text-[18px] font-black">What you get</h3>
-            <div className="mt-4 grid md:grid-cols-4 gap-6 text-[13.5px] leading-[1.6] text-[#4B5563]">
-              <div><b className="text-[#0A0A0A]">Real, not mock.</b> Apollo + Hunter + Places. No info@ guess. Every email verified.</div>
-              <div><b className="text-[#0A0A0A]">You control outreach.</b> 100 emails show on your site, you track YES, generate content for them, post manually.</div>
-              <div><b className="text-[#0A0A0A]">Private engine.</b> We reach out to brands done-for-you on 4,500+ audience. Invite only.</div>
-              <div><b className="text-[#0A0A0A]">Direct DM help.</b> We help you get companies via direct DM + cold email — templates + tracking.</div>
-            </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="max-w-[1360px] mx-auto px-4 md:px-6 py-10">
-        <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 items-start">
-          <div>
-            <h2 className="text-[28px] md:text-[36px] font-black tracking-tight leading-[0.95]">Questions?<br/><span className="text-[#5E17EB]">Clear answers.</span></h2>
-            <p className="mt-3 text-[#4B5563] md:text-[15px]"><strong>$250 Founding</strong> <span className="line-through text-gray-400">$500</span> gives you company finder + 50 emails + 3 follow-ups. Messaging & private 4,500+ audience is team only.</p>
-            <button onClick={handleGoogleSignup} className="mt-6 bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl px-7 py-3.5 text-[14px] font-black">Get Started — $250 →</button>
-          </div>
-          <div className="bg-white border border-[#EDEDED] rounded-2xl overflow-hidden">
+      {/* BONUS SECTION — CONDITIONAL */}
+      <section className="max-w-[900px] mx-auto px-4 md:px-6 pb-8">
+        <div className="bg-gradient-to-br from-[#FEF3C7] to-[#FDE68A] border-2 border-[#F59E0B] rounded-2xl p-6 md:p-8">
+          <h2 className="text-[20px] md:text-[24px] font-black text-center">🎁 BONUS: ONE FREE System Of Your Choice - ONLY IF YOU ACCEPT OUR OFFER</h2>
+          <p className="mt-3 text-[14px] leading-[1.6] text-[#92400E] text-center font-medium">
+            If you accept our $250 advertisement offer, we will build you <strong>ONE FREE system</strong> of your choice - Any system you have in mind that you want to build. Not just website that sits there - System that actually <strong>DOES</strong> things for you!
+          </p>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[
-              {q:"What does $250 Founding give me?", a:"Access to find 50 real companies (global USA/UK/Dubai/Global): niche + location + limit, with company, website, owner, verified email (Apollo ✓, not info@), product. 50 personalized cold emails via Resend, 3 follow-ups, inbox reply tracking, hot lead alerts. DIY AI content generator included. You post yourself — no community publishing. One-time $250 (regular $500) — first 10 only!"},
-              {q:"How do you find companies?", a:"Apollo mixed_people + Hunter domain-search (global: USA/UK/Dubai/Global, not Lagos only), plus Tavily/Serply/Overpass fallback, cached 24h in leads_cache. All real, no mock lists. You can also CSV import."},
-              {q:"Do you help with DM outreach?", a:"Yes, we help you get companies via direct DM + cold email — we give you LinkedIn + Instagram DM scripts, cold email templates, 3 follow-ups, and tracking. $250 Founding includes templates + inbox."},
-              {q:"Can I send emails from the site?", a:"Yes, 50 personalized emails + 3 follow-ups via Resend, track who you emailed, who replied, who's hot. Private audience posting stays team only."},
-              {q:"Is the 4,500+ audience across 5 communities public?", a:"No, private invite only. We reach out to brands we find. $250 Founding public is DIY tool only — tool is $250, not $500."},
-            ].map((f,i)=>(
-              <div key={f.q} className="border-b last:border-0 border-[#F3F4F6]">
-                <button onClick={()=> setActiveFaq(i)} className="w-full text-left px-6 py-4 flex items-center justify-between gap-4">
-                  <span className="text-[14px] font-black text-[#0A0A0A]">{f.q}</span>
-                  <span className={`w-7 h-7 rounded-full border flex items-center justify-center text-[14px] font-bold shrink-0 ${activeFaq===i?'bg-[#0A0A0A] text-white border-[#0A0A0A]':'bg-white text-[#0A0A0A] border-[#EDEDED]'}`}>{activeFaq===i?'−':'+'}</span>
-                </button>
-                {activeFaq===i && <div className="px-6 pb-4 text-[13.5px] leading-[1.6] text-[#4B5563]">{f.a}</div>}
+              {t:"Booking System", d:"auto-books clients"},
+              {t:"CRM System", d:"manages clients"},
+              {t:"Inventory System", d:"tracks stock"},
+              {t:"Payment System", d:"collects money"},
+              {t:"Store System", d:"sells while you sleep"},
+              {t:"Dashboard System", d:"shows business data"},
+              {t:"Any custom system you want", d:"you imagine, we build"},
+            ].map(x=>(
+              <div key={x.t} className="bg-white border border-[#FDE68A] rounded-xl p-4 text-center">
+                <div className="text-[14px] font-black text-[#0A0A0A]">{x.t}</div>
+                <div className="text-[11px] text-[#6B7280]">({x.d})</div>
               </div>
             ))}
           </div>
+          <div className="mt-6 bg-red-50 border-2 border-red-300 rounded-xl p-4">
+            <p className="text-[13px] font-black text-red-700 text-center">⚠️ CONDITION: Free System bonus ONLY if you accept our $250 advertisement offer. If you reject our offer, we will NOT create any system for you. Bonus is for accepting clients only. No system if you reject.</p>
+          </div>
+          <div className="mt-6 text-center">
+            <button onClick={handleGoogleSignup} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-2xl px-8 py-4 text-[16px] font-black shadow-[0_8px_24px_rgba(245,158,11,0.3)]">Yes, Accept $250 Offer + Free System →</button>
+            <p className="mt-2 text-[11px] font-bold text-[#92400E]">Reject = No bonus system. System only free when you accept.</p>
+          </div>
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="max-w-[1360px] mx-auto px-4 md:px-6 pb-8">
-        <div className="bg-gradient-to-br from-[#0A0A0A] via-[#1A0A4A] to-[#5E17EB] rounded-[28px] p-8 md:p-12 lg:p-16 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-[80px]" />
-          <div className="relative grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
-            <div>
-              <h2 className="text-[32px] md:text-[48px] font-black leading-[0.9] tracking-tight">Find real<br/>companies today</h2>
-              <p className="mt-4 text-white/70 md:text-[16px] leading-[1.6]">Pay <strong>$250 Founding</strong> <span className="line-through opacity-60">$500</span> once, search any niche globally (USA/UK/Dubai/Global), get 50 verified emails. Messaging stays private for our team.</p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <button onClick={handleGoogleSignup} className="bg-white text-[#0A0A0A] rounded-2xl px-8 py-4 text-[16px] font-black hover:bg-[#F3F4F6]">Get Started — $250 →</button>
-                <button onClick={handleLogin} className="bg-white/10 border border-white/20 text-white rounded-2xl px-8 py-4 text-[15px] font-bold hover:bg-white/20">Log in</button>
-              </div>
-            </div>
-            <div className="bg-white text-[#0A0A0A] rounded-2xl p-6">
-              <div className="text-[11px] font-black tracking-wide text-[#5E17EB]">YOU GET TODAY</div>
-              <ul className="mt-3 space-y-2.5 text-[13.5px] font-semibold">
-                {["Search any niche + location","Verified owner + email + product","CSV export + dedupe","Track who you emailed"].map(li=>(
-                  <li key={li} className="flex gap-2"><span className="text-emerald-500">✓</span>{li}</li>
-                ))}
-              </ul>
-              <div className="mt-4 bg-[#FFFCF8] border rounded-xl p-3 flex items-center justify-between">
-                <span className="text-[12px] font-bold">Founding Access</span><div className="text-right"><span className="text-[18px] font-black">$250</span> <span className="text-[12px] line-through text-gray-400">$500</span></div>
-              </div>
-            </div>
+      {/* PRICING — keep $250 founding */}
+      <section id="pricing" className="max-w-[900px] mx-auto px-4 md:px-6 pb-8">
+        <div className="bg-white border-2 border-[#5E17EB] rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgba(94,23,235,0.15)] text-center">
+          <p className="text-[11px] font-black tracking-[0.14em] uppercase text-[#5E17EB]">🔥 Founding Member - 7 spots left</p>
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <span style={{textDecoration:'line-through', color:'gray', fontSize:'20px'}}>$500</span>
+            <span style={{color:'green', fontWeight:'bold', fontSize:'32px'}}>$250 Founding Member</span>
+          </div>
+          <p className="text-[13px] text-[#6B7280] mt-1">First 10 clients only — 7 spots left at $250! Regular $500 after.</p>
+          <ul className="mt-4 text-left bg-[#F9FAFB] border border-[#EDEDED] rounded-lg p-4 space-y-2 text-[13px] font-medium max-w-[400px] mx-auto">
+            <li>✓ 50 Verified Owner Emails (Apollo ✓, not info@) — REMOVED: Now shows Audience</li>
+            <li>✓ Advertisement to 4,671+ audience (131+86+184+1270+3K)</li>
+            <li>✓ Free System Bonus If You Accept</li>
+            <li>✓ Inbox Reply Tracking + Hot Alerts</li>
+          </ul>
+          <p className="mt-2 text-[11px] text-[#9CA3AF]">Regular price $500 after 10 clients — Save $250 now!</p>
+          <button onClick={handleGoogleSignup} className="mt-4 w-full bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl py-3.5 text-[14px] font-black">Get Started - $250 →</button>
+          <p className="mt-2 text-[11px] font-bold text-[#5E17EB]">7 spots left at $250 — Regular $500 after</p>
+        </div>
+      </section>
+
+      {/* FAQ — updated for $250 and bonus */}
+      <section className="max-w-[900px] mx-auto px-4 md:px-6 pb-8">
+        <div className="bg-white border border-[#EDEDED] rounded-2xl p-6">
+          <h3 className="text-[18px] font-black">Questions? Clear answers.</h3>
+          <div className="mt-4 space-y-4 text-[13px] leading-[1.6] text-[#4B5563]">
+            <div><b className="text-[#0A0A0A]">What do I get for $250?</b> Advertisement to 4,671+ audience + Campaign Report + Bonus FREE system if you accept.</div>
+            <div><b className="text-[#0A0A0A]">What system will you build free?</b> Any ONE system you want — Booking, CRM, Inventory, Payment, Store, Dashboard, or custom. Only if you accept $250 offer. No system if you reject.</div>
+            <div><b className="text-[#0A0A0A]">Is audience real?</b> Yes: 131 WhatsApp + 86 Cybersecurity + 184 Telegram (115+69) + 1,270 LinkedIn + 3K YouTube = 4,671 verified.</div>
           </div>
         </div>
       </section>
@@ -382,7 +239,7 @@ export const Landing = () => {
       <footer className="py-8 text-center border-t border-[#EDEDED] mt-2">
         <div className="max-w-[1360px] mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-[12.5px] text-[#6B7280]">
-            <span>© 2024 ALPHATEKX — Alpha Agency OS</span>
+            <span>© 2024 ALPHATEKX — Alpha Agency OS • 4,671+ Audience</span>
             <span className="flex gap-4"><a href="mailto:alphatekxcompany@gmail.com" className="hover:text-[#0A0A0A] font-bold">Contact</a> <span>•</span> <span className="text-[#5E17EB] font-black">Real data • No mock</span></span>
           </div>
         </div>
