@@ -501,8 +501,9 @@ function prospeoIndustryForNiche(niche) {
 }
 
 export async function findCompaniesProspeo(env, niche, location, limit) {
-  const apiKey = env.PROSPEO_API_KEY || env.PROSPEO_KEY;
-  if (!apiKey) throw new Error('PROSPEO_API_KEY missing');
+  const keys = [env.PROSPEO_API_KEY, env.PROSPEO_API_KEY_1, env.PROSPEO_KEY].filter(Boolean);
+  if (keys.length === 0) throw new Error('PROSPEO_API_KEY missing');
+  const tryKeys = keys.length > 1 ? keys : [keys[0]];
   const perPage = Math.min(limit || 10, 10);
   // Build filters: seniority Founder/Owner + industry if mapped + location if provided
   const filters = {
@@ -520,32 +521,54 @@ export async function findCompaniesProspeo(env, niche, location, limit) {
     else if (locLower.includes('dubai') || locLower.includes('uae')) filters.company_location_search = { include: ['United Arab Emirates'] };
     else filters.company_location_search = { include: [location.trim()] };
   }
-  const doSearch = async (f) => {
-    const res = await fetch('https://api.prospeo.io/search-person', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-KEY': apiKey },
-      body: JSON.stringify({ page: 1, filters: f })
-    });
-    const txt = await res.text();
-    let data = null;
-    try { data = txt ? JSON.parse(txt) : null; } catch { throw new Error(`Prospeo JSON parse failed: ${txt.slice(0,300)}`); }
-    if (!res.ok || data.error) {
-      const code = data?.error_code || '';
-      const msg = data?.filter_error || data?.error || txt.slice(0,400);
-      throw new Error(`Prospeo ${res.status} ${code}: ${msg}`.slice(0,500));
+  const doSearchWithKeys = async (f) => {
+    let lastErr = null;
+    for (const k of keys) {
+      try {
+        const res = await fetch('https://api.prospeo.io/search-person', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-KEY': k },
+          body: JSON.stringify({ page: 1, filters: f })
+        });
+        const txt = await res.text();
+        let data = null;
+        try { data = txt ? JSON.parse(txt) : null; } catch { throw new Error(`Prospeo JSON parse failed: ${txt.slice(0,300)}`); }
+        if (!res.ok || data.error) {
+          const code = data?.error_code || '';
+          const msg = data?.filter_error || data?.error || txt.slice(0,400);
+          // If insufficient credits or invalid key, try next key
+          if (code === 'INSUFFICIENT_CREDITS' || code === 'INVALID_API_KEY') {
+            console.log(`Prospeo key ${k.slice(0,6)}... failed ${code}, trying next key`);
+            lastErr = new Error(`Prospeo ${res.status} ${code}: ${msg}`.slice(0,500));
+            continue;
+          }
+          throw new Error(`Prospeo ${res.status} ${code}: ${msg}`.slice(0,500));
+        }
+        // Success — return with key used
+        data._usedKey = k;
+        return data;
+      } catch (e) {
+        const msg = String(e.message);
+        if (msg.includes('INSUFFICIENT_CREDITS') || msg.includes('INVALID_API_KEY')) {
+          lastErr = e; continue;
+        }
+        throw e;
+      }
     }
-    return data;
+    throw lastErr || new Error('Prospeo all keys failed');
   };
   let data = null;
+  let usedKey = keys[0];
   try {
-    data = await doSearch(filters);
+    data = await doSearchWithKeys(filters);
+    usedKey = data._usedKey || keys[0];
   } catch (e) {
     const msg = String(e.message);
-    // If location filter invalid, retry without location
     if (msg.includes('INVALID_FILTERS') && filters.company_location_search) {
       console.log('Prospeo location filter invalid, retrying without location:', location);
       const f2 = { ...filters }; delete f2.company_location_search;
-      data = await doSearch(f2);
+      data = await doSearchWithKeys(f2);
+      usedKey = data._usedKey || keys[0];
     } else throw e;
   }
   const results = data.results || [];
@@ -562,24 +585,34 @@ export async function findCompaniesProspeo(env, niche, location, limit) {
     const personId = person.person_id || person.id;
     let verifiedEmail = '';
     let ownerName = `${person.first_name || ''} ${person.last_name || ''}`.trim();
-    // Try enrich for verified email
+    // Try enrich for verified email — try each key if first fails
     if (personId) {
-      try {
-        const enrichRes = await fetch('https://api.prospeo.io/enrich-person', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-KEY': apiKey },
-          body: JSON.stringify({ only_verified_email: true, enrich_mobile: false, data: { person_id: personId } })
-        });
-        const enrichTxt = await enrichRes.text();
-        const enrichData = enrichTxt ? JSON.parse(enrichTxt) : null;
-        if (enrichRes.ok && enrichData && !enrichData.error && enrichData.person?.email?.email) {
-          verifiedEmail = enrichData.person.email.email;
-          ownerName = `${enrichData.person.first_name || person.first_name || ''} ${enrichData.person.last_name || person.last_name || ''}`.trim() || ownerName;
-        } else {
-          // fallback to person email if enrich says NO_MATCH but person has email stub
-          if (person.email) verifiedEmail = person.email;
-        }
-      } catch (e) { console.log('Prospeo enrich failed for', personId, e.message); }
+      let enriched = false;
+      for (const k of keys) {
+        try {
+          const enrichRes = await fetch('https://api.prospeo.io/enrich-person', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-KEY': k },
+            body: JSON.stringify({ only_verified_email: true, enrich_mobile: false, data: { person_id: personId } })
+          });
+          const enrichTxt = await enrichRes.text();
+          const enrichData = enrichTxt ? JSON.parse(enrichTxt) : null;
+          if (enrichRes.ok && enrichData && !enrichData.error && enrichData.person?.email?.email) {
+            verifiedEmail = enrichData.person.email.email;
+            ownerName = `${enrichData.person.first_name || person.first_name || ''} ${enrichData.person.last_name || person.last_name || ''}`.trim() || ownerName;
+            enriched = true;
+            break;
+          } else if (enrichData?.error_code === 'INSUFFICIENT_CREDITS' || enrichData?.error_code === 'INVALID_API_KEY') {
+            console.log(`Prospeo enrich key ${k.slice(0,6)}... failed ${enrichData.error_code}, trying next`);
+            continue;
+          } else {
+            if (person.email) verifiedEmail = person.email;
+            break;
+          }
+        } catch (e) { console.log('Prospeo enrich failed for', personId, e.message); }
+      }
+      // Gmail sync: if enrich gave gmail, prefer it (user wants gmail)
+      if (!enriched && person.email && person.email.includes('@gmail.com')) verifiedEmail = person.email;
     }
     const domain = (company.domain || company.website || '').replace(/^https?:\/\//,'').split('/')[0].replace('www.','') || `${(company.name||'company').toLowerCase().replace(/[^a-z0-9]+/g,'')}.com`;
     const website = company.website || (company.domain ? `https://${company.domain}` : `https://${domain}`);
