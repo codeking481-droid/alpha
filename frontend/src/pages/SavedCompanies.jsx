@@ -19,8 +19,31 @@ function BackBtn({ onClick }) {
 /* ─── Email Modal ─── */
 function EmailModal({ company, onClose, onSent, getToken }) {
   const [toEmail, setToEmail] = useState(company.owner_email || '');
-  const [subject, setSubject] = useState(`Quick idea for ${company.company_name || company.name || 'your company'} — 4,500+ audience feature?`);
-  const [body, setBody] = useState(`Hey ${company.owner_name || 'there'},\n\nSaw ${company.company_name || company.name || 'your company'} — great work in ${company.niche || 'your space'}. We own 4,500+ audience (3K YouTube, 700 LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber) and reach out to brands done-for-you. Can we feature ${company.company_name || company.name || 'your company'} on our communities? Reply YES and we handle everything.\n\n— Alpha Agency OS`);
+  const [subject, setSubject] = useState(`Exclusive Sponsorship + Free Custom System for ${company.company_name || company.name || 'your company'}`);
+  const [body, setBody] = useState(`Hi ${company.owner_name || 'there'},
+
+We are currently scaling outreach for our Q3 digital campaign across our multi-channel network:
+
+* YouTube: 3,000+ tech & business subscribers
+* LinkedIn: 1,270+ decision-makers & professionals
+* Telegram & WhatsApp: 300+ engaged community members (131 + 86 + 184)
+
+We are opening up our Founding Partner slots (only 7 left) to advertise your business across all these channels for a flat rate of $250 (originally $500).
+
+The Founding Bonus:
+If you accept this offer, we will also build and deploy one fully functional custom system of your choice (CRM, Booking System, Inventory Tracker, Payment Gateway, E-commerce Store, or Business Dashboard) tailored specifically for your business.
+
+This isn't just a static website—it's a live, working system built via our automated enterprise platform. We are offering this $2,000+ value completely free for our first 7 founding clients to build out our case study portfolio.
+
+(Note: This bonus is strictly tied to our founding partnership slots).
+
+If you are interested in grabbing one of the remaining spots, you can lock it in here: ${API}/api/checkout/service ($250 private checkout - POST /api/checkout/service 25000)
+
+Best regards,
+Alpha Agency
+Powered by AlphaTekx
+
+Platform: Get Access To Real Companies With Just $50 Lifetime - Same tool we used to find you (Apollo + Hunter verified, Global USA/UK not Lagos info@, Groq 120B openai/gpt-oss-120b, Vault 12)`);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const send = async () => {

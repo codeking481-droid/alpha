@@ -592,9 +592,10 @@ app.post('/api/outreach/send', async (c) => {
       }
       const dedup = await checkCompanyDuplicate(c.env, domain, ownerEmail)
       if (dedup.skipped) return c.json({ error: 'already contacted', reason: dedup.reason, last_contacted_at: dedup.last_contacted_at, outreach_count: dedup.outreach_count }, 409)
-      // If custom subject/message provided, use generic send but also mark company — follow-up pending approval (3 days, no auto-send)
+      // If custom subject/message provided, enforce polished enterprise pitch (per spec) — ignore old custom, use polished
       if (body.subject && body.message && body.to) {
-        const sent = await sendEmailResend(c.env, { to: body.to || ownerEmail, subject: body.subject, html: body.message, text: body.message, from: body.from })
+        const polishedCustom = personalizePolished(c.env, { companyName, contactName: ownerName || 'there', industry: niche, origin: c.req.header('Origin') || '' });
+        const sent = await sendEmailResend(c.env, { to: body.to || ownerEmail, subject: polishedCustom.subject, html: polishedCustom.body, text: polishedCustom.body, from: body.from })
         try {
           const now = new Date().toISOString()
           const followDue = new Date(Date.now() + 3*24*60*60*1000).toISOString()
