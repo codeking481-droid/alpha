@@ -54,7 +54,7 @@ export const Landing = () => {
             <a href="#how-it-works" onClick={(e)=>{e.preventDefault(); document.getElementById('how-it-works')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">How it works</a>
             <a href="#pricing" onClick={(e)=>{e.preventDefault(); document.getElementById('pricing')?.scrollIntoView({behavior:'smooth'})}} className="text-[14px] font-bold text-[#0A0A0A] hover:text-[#5E17EB]">Pricing</a>
             <button onClick={handleLogin} className="bg-white border-2 border-[#EDEDED] rounded-xl px-6 py-2.5 text-[14px] font-black hover:bg-gray-50">Log in</button>
-            <button onClick={handleGoogleSignup} className="bg-[#0A0A0A] hover:bg-black text-white rounded-xl px-7 py-3 text-[14px] font-black shadow-[0_6px_16px_rgba(0,0,0,0.15)]">Get access — $50 →</button>
+            <button onClick={handleGoogleSignup} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl px-7 py-3 text-[14px] font-black shadow-[0_6px_16px_rgba(94,23,235,0.3)]">Get Started — $250 →</button>
             <span className="text-[12px] font-bold bg-[#5E17EB] text-white px-2.5 py-1 rounded-full]">24 keys live</span>
             <span className="text-[12px] font-bold bg-[#5E17EB] text-white px-2.5 py-1 rounded-full]">Apollo • Hunter • Resend • ec6d08f0</span>
           </div>
@@ -78,7 +78,7 @@ export const Landing = () => {
               <span className="bg-gradient-to-r from-[#5E17EB] via-[#7C3AED] to-[#A78BFA] bg-clip-text text-transparent">Outbound Model</span>
             </h1>
             <p className="mt-5 text-[17px] md:text-[19px] leading-[1.5] text-[#4B5563] max-w-[620px] font-medium">
-              <b>Outbound:</b> We search real companies, find owner emails, and help you get them via direct DM + cold email. Our private engine reaches brands on our 4,500+ audience. Public access is DIY tool for $50 — you find, you post yourself, we give you DM + email scripts.
+              <b>Get 50 Verified Leads for $250</b> — Founding Member (First 10 Only, Then $500). We search real companies (USA/UK/Dubai/Global), find owner emails via Apollo, and help you get them via DM + cold email. Our private engine reaches brands on our 4,500+ audience. <span className="line-through text-gray-400">$500</span> <strong className="text-[#5E17EB]">Founding: $250</strong> — Save $250!
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-bold">
               <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">113 TELEGRAM</span>
@@ -88,10 +88,13 @@ export const Landing = () => {
               <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">700+ LINKEDIN</span>
               <span className="bg-[#5E17EB] text-white border border-[#DDD6FE] rounded-full px-3 py-1">OUTBOUND LIVE</span>
             </div>
+            <div className="mt-2 inline-flex items-center gap-2 bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-3 py-1 text-[11px] font-black text-[#92400E]">
+              <span>🔥</span> Founding Member - 7 spots left at $250 <span className="hidden sm:inline">• Regular $500 after</span>
+            </div>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <button onClick={handleGoogleSignup} disabled={loading} className="bg-[#0A0A0A] hover:bg-black text-white rounded-2xl px-8 py-4 text-[16px] font-black flex items-center justify-center gap-3 shadow-[0_12px_28px_rgba(0,0,0,0.18)] disabled:opacity-60">
+              <button onClick={handleGoogleSignup} disabled={loading} className="bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-2xl px-8 py-4 text-[16px] font-black flex items-center justify-center gap-3 shadow-[0_12px_28px_rgba(94,23,235,0.3)] disabled:opacity-60">
                 <span className="w-7 h-7 bg-white rounded-full flex items-center justify-center"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span>
-                {loading ? "Connecting..." : "Start with Google — $50"}
+                {loading ? "Connecting..." : "Get Started - $250"}
                 <span className="text-white/70">→</span>
               </button>
               <button onClick={handleDownloadApp} className="bg-white border-2 border-[#0A0A0A] text-[#0A0A0A] rounded-2xl px-8 py-4 text-[15px] font-black hover:bg-[#0A0A0A] hover:text-white">
@@ -99,11 +102,11 @@ export const Landing = () => {
               </button>
             </div>
             <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-bold">
-              <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">✓ Apollo verified</span>
+              <span className="bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] rounded-full px-3 py-1">✓ 50 Verified Owner Emails (Apollo ✓, not info@)</span>
               <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-3 py-1">✓ Hunter checked</span>
               <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1">✓ CSV import • Dedupe</span>
             </div>
-            <p className="mt-3 text-[12px] text-[#9CA3AF]">Pay $50 once → Find companies → Get emails → Create & deliver. Cancel anytime.</p>
+            <p className="mt-3 text-[12px] text-[#9CA3AF]">Pay <strong>$250 Founding</strong> <span className="line-through">$500</span> → Find 50 companies → Get verified emails → 3 follow-ups • Cancel anytime.</p>
           </div>
 
           {/* MOCK — PUBLIC FINDER */}
@@ -162,9 +165,9 @@ export const Landing = () => {
 {/* PLATFORM — PUBLIC */}
       <section id="platform" className="max-w-[1360px] mx-auto px-4 md:px-6 pt-10">
         <div className="text-center">
-          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.18em] uppercase">Platform — $50 to find, create, deliver</p>
+          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.18em] uppercase">Platform — $250 Founding to find, create, deliver</p>
           <h2 className="mt-3 text-[30px] md:text-[48px] font-black tracking-[-0.03em] text-[#0A0A0A]">Find → Get Email → Create</h2>
-          <p className="mt-2 text-[#6B7280] max-w-[720px] mx-auto md:text-[17px]">Pay $50, search any niche + location, get verified emails (Hunter), then create what companies ask for. Simple, real, scalable.</p>
+          <p className="mt-2 text-[#6B7280] max-w-[720px] mx-auto md:text-[17px]">Pay <strong>$250 Founding</strong> <span className="line-through text-gray-400">$500</span>, search any niche + location (USA/UK/Dubai/Global), get verified emails (Hunter), then create what companies ask for. Simple, real, scalable.</p>
         </div>
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
           {[
@@ -216,7 +219,7 @@ export const Landing = () => {
             <div>
               <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.16em] uppercase">4,500+ Audience Across 5 Communities</p>
               <h2 className="mt-2 text-[28px] md:text-[40px] font-black leading-[0.95] tracking-tight">We Reach Brands<br/>on Our Communities</h2>
-              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">We reach out to brands and manage everything done-for-you on our 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity). This private engine is invite-only for brands we contact. $50 public access is DIY tool only — no community posting, you post yourself.</p>
+              <p className="mt-4 text-white/70 md:text-[15px] leading-[1.6]">We reach out to brands and manage everything done-for-you on our 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity). This private engine is invite-only for brands we contact. <strong>$250 Founding</strong> <span className="line-through opacity-60">$500</span> public access is DIY tool only — no community posting, you post yourself.</p>
               <div className="mt-6 grid grid-cols-2 gap-3">
                 {[
                   {p:"LinkedIn Followers", v:"700+", s:"700 followers"},
@@ -262,38 +265,49 @@ export const Landing = () => {
       {/* PRICING — PUBLIC $50 */}
       <section id="pricing" className="max-w-[1360px] mx-auto px-4 md:px-6 py-10">
         <div className="text-center">
-          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.16em] uppercase">Simple pricing — public</p>
-          <h2 className="mt-2 text-[30px] md:text-[44px] font-black tracking-tight">Get Access for $50</h2>
-          <p className="mt-2 text-[#6B7280]">Find companies, get verified emails, create what they need. Messaging for team only.</p>
+          <p className="text-[#5E17EB] text-[11px] font-black tracking-[0.16em] uppercase">🔥 Founding Member - 7 spots left at $250</p>
+          <h2 className="mt-2 text-[30px] md:text-[44px] font-black tracking-tight">Get 50 Verified Leads for $250 <span className="text-[#5E17EB]">— Founding Member</span></h2>
+          <p className="mt-2 text-[#6B7280]">First 10 clients only, then $500 • Save $250 now!</p>
+          <p className="mt-1 text-[13px] text-[#9CA3AF]"><span style={{textDecoration:'line-through', color:'gray'}}>$500</span> <strong className="text-[#0A0A0A]">Founding Member: $250</strong></p>
         </div>
         <div className="mt-8 grid md:grid-cols-2 gap-6 max-w-[900px] mx-auto">
-          <div className="bg-white border border-[#EDEDED] rounded-2xl p-7 md:p-8">
-            <p className="text-[11px] font-black tracking-[0.14em] uppercase text-[#6B7280]">Starter</p>
-            <p className="mt-2 text-[40px] font-black leading-none">$50<span className="text-[14px] font-bold text-[#6B7280]"> / access</span></p>
-            <p className="text-[13px] text-[#6B7280]">One-time, find & export companies</p>
+          <div className="bg-white border-2 border-[#5E17EB] rounded-2xl p-7 md:p-8 relative overflow-hidden shadow-[0_8px_30px_rgba(94,23,235,0.15)]">
+            <div className="absolute top-3 right-3 bg-[#5E17EB] text-white text-[10px] font-black px-2.5 py-1 rounded-full">🔥 Founding Member</div>
+            <p className="text-[11px] font-black tracking-[0.14em] uppercase text-[#5E17EB]">Global Starter</p>
+            <div className="mt-2 flex items-baseline gap-2">
+              <p className="text-[40px] font-black leading-none">$250</p>
+              <p className="text-[18px] font-bold text-gray-400 line-through">$500</p>
+              <span className="text-[11px] font-black bg-[#FEF3C7] text-[#92400E] px-2 py-0.5 rounded-full">Save $250</span>
+            </div>
+            <p className="text-[13px] text-[#6B7280]"><strong>Founding Member: $250</strong> - First 10 clients only!</p>
+            <p className="text-[11px] text-[#9CA3AF] mt-1">Regular price $500 after 10 clients — 7 spots left!</p>
             <ul className="mt-6 space-y-3">
-              {["Apollo + Hunter verified search","Niche + location + limit (20-100)","Company, owner, email, product","CSV export + dedupe","Dashboard to track"].map(li=>(
-                <li key={li} className="flex gap-2.5 text-[13.5px] font-medium"><span className="w-5 h-5 rounded-full bg-[#F0EFFF] border border-[#DDD6FE] flex items-center justify-center text-[#5E17EB] text-[11px]">✓</span>{li}</li>
+              {["✓ 50 Verified Owner Emails (Apollo ✓, not info@)","✓ 50 Personalized Cold Emails (Resend)","✓ 3 Follow-ups Included","✓ Inbox Reply Tracking","✓ Hot Lead Alerts"].map(li=>(
+                <li key={li} className="flex gap-2.5 text-[13.5px] font-medium"><span className="w-5 h-5 rounded-full bg-[#F0EFFF] border border-[#DDD6FE] flex items-center justify-center text-[#5E17EB] text-[11px]">✓</span>{li.replace('✓ ','')}</li>
               ))}
             </ul>
-            <button onClick={handleGoogleSignup} className="mt-7 w-full bg-[#0A0A0A] text-white rounded-xl py-3.5 text-[14px] font-black hover:bg-black">Get access — $50 →</button>
-            <p className="mt-2 text-center text-[11px] text-[#9CA3AF]">Paystack • Instant access • No subscription</p>
+            <button onClick={handleGoogleSignup} className="mt-7 w-full bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl py-3.5 text-[14px] font-black">Get Started - $250 →</button>
+            <p className="mt-2 text-center text-[11px] text-[#9CA3AF]">Paystack • Instant access • Founding Member Special</p>
+            <p className="mt-1 text-center text-[11px] font-bold text-[#5E17EB]">🔥 7 spots left at $250 — Regular $500 after</p>
           </div>
-          <div className="bg-[#0A0A0A] text-white rounded-2xl p-7 md:p-8 relative overflow-hidden">
+          <div className="bg-[#0A0A0A] text-white rounded-2xl p-7 md:p-8 relative overflow-hidden opacity-90">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#5E17EB] rounded-full blur-[40px] opacity-30" />
-            <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.14em] uppercase">For Agencies</p>
-            <p className="mt-2 text-[40px] font-black leading-none">$99<span className="text-[14px] font-bold text-white/60"> / Pro</span></p>
-            <p className="text-white/60 text-[13px]">Everything in Starter + more</p>
-            <ul className="mt-6 space-y-3">
-              {["Everything in Starter","100 companies per search","Priority support","Team invite (future)","Early private engine access"].map(li=>(
-                <li key={li} className="flex gap-2.5 text-[13.5px] font-medium"><span className="w-5 h-5 rounded-full bg-[#5E17EB] flex items-center justify-center text-[11px]">✓</span>{li}</li>
+            <p className="text-[#A78BFA] text-[11px] font-black tracking-[0.14em] uppercase">Regular Price</p>
+            <div className="mt-2 flex items-baseline gap-2">
+              <p className="text-[40px] font-black leading-none text-white/50 line-through">$500</p>
+              <span className="text-[12px] font-bold bg-white/10 text-white/60 px-2 py-1 rounded-full">After 10</span>
+            </div>
+            <p className="text-white/60 text-[13px]">$500 after founding members</p>
+            <ul className="mt-6 space-y-3 opacity-60">
+              {["Everything in Founding","100 companies per search","Priority support","Team invite (future)","Early private engine access"].map(li=>(
+                <li key={li} className="flex gap-2.5 text-[13.5px] font-medium"><span className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[11px]">✓</span>{li}</li>
               ))}
             </ul>
-            <button onClick={handleGoogleSignup} className="mt-7 w-full bg-white text-[#0A0A0A] rounded-xl py-3.5 text-[14px] font-black">Get Pro — $99 →</button>
-            <p className="mt-2 text-center text-[11px] text-white/40">For heavy users • Private invite on request</p>
+            <button disabled className="mt-7 w-full bg-white/10 text-white/50 rounded-xl py-3.5 text-[14px] font-black cursor-not-allowed">Locked — Founding First</button>
+            <p className="mt-2 text-center text-[11px] text-white/40">$500 after 10 founding members</p>
           </div>
         </div>
-        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">$50 = DIY tool: search companies + verified emails + AI content generator (you post yourself). Private 4,500+ audience posting is team only — not included in $50 public access. Brands we reach out to get private invite.</p>
+        <p className="mt-4 text-center text-[11px] text-[#9CA3AF]">$250 Founding = 50 verified emails + outreach + inbox tracking. Regular $500 after 10 clients. Private 4,500+ audience posting is team only — not included in DIY search.</p>
       </section>
 
       {/* TESTIMONIALS */}
@@ -314,16 +328,16 @@ export const Landing = () => {
         <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 items-start">
           <div>
             <h2 className="text-[28px] md:text-[36px] font-black tracking-tight leading-[0.95]">Questions?<br/><span className="text-[#5E17EB]">Clear answers.</span></h2>
-            <p className="mt-3 text-[#4B5563] md:text-[15px]"> $50 gives you company finder. Messaging & private 4,500+ audience is team only.</p>
-            <button onClick={handleGoogleSignup} className="mt-6 bg-[#0A0A0A] text-white rounded-xl px-7 py-3.5 text-[14px] font-black">Get access — $50 →</button>
+            <p className="mt-3 text-[#4B5563] md:text-[15px]"><strong>$250 Founding</strong> <span className="line-through text-gray-400">$500</span> gives you company finder + 50 emails + 3 follow-ups. Messaging & private 4,500+ audience is team only.</p>
+            <button onClick={handleGoogleSignup} className="mt-6 bg-[#5E17EB] hover:bg-[#4D0FD4] text-white rounded-xl px-7 py-3.5 text-[14px] font-black">Get Started — $250 →</button>
           </div>
           <div className="bg-white border border-[#EDEDED] rounded-2xl overflow-hidden">
             {[
-              {q:"What does $50 give me?", a:"Access to find real companies: niche + location + limit, with company, website, owner, verified email, product. Export CSV, dedupe. DIY AI content generator included. You post yourself — no community publishing. One-time, not monthly."},
-              {q:"How do you find companies?", a:"Apollo mixed_companies + Hunter domain-search, plus Tavily/Serply/Overpass fallback, cached 24h in leads_cache. All real, no mock lists. You can also CSV import."},
-              {q:"Do you help with DM outreach?", a:"Yes, we help you get companies via direct DM + cold email — we give you LinkedIn + Instagram DM scripts, cold email templates, follow-ups, and tracking. $50 DIY includes templates."},
-              {q:"Can I send emails from the site?", a:"Yes, track who you emailed, who replied, who's hot. Private audience posting stays team only."},
-              {q:"Is the 4,500+ audience across 5 communities public?", a:"No, private invite only. We reach out to brands we find. $50 public is DIY tool only."},
+              {q:"What does $250 Founding give me?", a:"Access to find 50 real companies (global USA/UK/Dubai/Global): niche + location + limit, with company, website, owner, verified email (Apollo ✓, not info@), product. 50 personalized cold emails via Resend, 3 follow-ups, inbox reply tracking, hot lead alerts. DIY AI content generator included. You post yourself — no community publishing. One-time $250 (regular $500) — first 10 only!"},
+              {q:"How do you find companies?", a:"Apollo mixed_people + Hunter domain-search (global: USA/UK/Dubai/Global, not Lagos only), plus Tavily/Serply/Overpass fallback, cached 24h in leads_cache. All real, no mock lists. You can also CSV import."},
+              {q:"Do you help with DM outreach?", a:"Yes, we help you get companies via direct DM + cold email — we give you LinkedIn + Instagram DM scripts, cold email templates, 3 follow-ups, and tracking. $250 Founding includes templates + inbox."},
+              {q:"Can I send emails from the site?", a:"Yes, 50 personalized emails + 3 follow-ups via Resend, track who you emailed, who replied, who's hot. Private audience posting stays team only."},
+              {q:"Is the 4,500+ audience across 5 communities public?", a:"No, private invite only. We reach out to brands we find. $250 Founding public is DIY tool only — tool is $250, not $500."},
             ].map((f,i)=>(
               <div key={f.q} className="border-b last:border-0 border-[#F3F4F6]">
                 <button onClick={()=> setActiveFaq(i)} className="w-full text-left px-6 py-4 flex items-center justify-between gap-4">
@@ -344,9 +358,9 @@ export const Landing = () => {
           <div className="relative grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-center">
             <div>
               <h2 className="text-[32px] md:text-[48px] font-black leading-[0.9] tracking-tight">Find real<br/>companies today</h2>
-              <p className="mt-4 text-white/70 md:text-[16px] leading-[1.6]">Pay $50 once, search any niche, get verified emails. Messaging stays private for our team.</p>
+              <p className="mt-4 text-white/70 md:text-[16px] leading-[1.6]">Pay <strong>$250 Founding</strong> <span className="line-through opacity-60">$500</span> once, search any niche globally (USA/UK/Dubai/Global), get 50 verified emails. Messaging stays private for our team.</p>
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <button onClick={handleGoogleSignup} className="bg-white text-[#0A0A0A] rounded-2xl px-8 py-4 text-[16px] font-black hover:bg-[#F3F4F6]">Get access — $50 →</button>
+                <button onClick={handleGoogleSignup} className="bg-white text-[#0A0A0A] rounded-2xl px-8 py-4 text-[16px] font-black hover:bg-[#F3F4F6]">Get Started — $250 →</button>
                 <button onClick={handleLogin} className="bg-white/10 border border-white/20 text-white rounded-2xl px-8 py-4 text-[15px] font-bold hover:bg-white/20">Log in</button>
               </div>
             </div>
@@ -358,7 +372,7 @@ export const Landing = () => {
                 ))}
               </ul>
               <div className="mt-4 bg-[#FFFCF8] border rounded-xl p-3 flex items-center justify-between">
-                <span className="text-[12px] font-bold">Access</span><span className="text-[18px] font-black">$50</span>
+                <span className="text-[12px] font-bold">Founding Access</span><div className="text-right"><span className="text-[18px] font-black">$250</span> <span className="text-[12px] line-through text-gray-400">$500</span></div>
               </div>
             </div>
           </div>

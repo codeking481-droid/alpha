@@ -203,7 +203,7 @@ export async function saveReply(env, replyData) {
         const product = comp?.product || 'your product'
         // Generate via Groq
         const groqKey = env.GROQ_API_KEY
-        let followupMsg = `Thanks for YES! Next steps: we generate content + post on 5 communities (3K YouTube, 700+ LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber = 4,500+). Private engine $500 invite-only. Pay here: ${env.PAYMENT_LINK || '[PAYMENT_LINK]'}. After payment we handle everything async via email — no call needed. Reply with your product link + 1 image.`
+        let followupMsg = `Thanks for YES! Next steps: we generate content + post on 5 communities (3K YouTube, 700+ LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber = 4,500+). Private engine $250 Founding Member (regular $500, save $250 — first 10 only). Pay here: ${env.PAYMENT_LINK || '[PAYMENT_LINK]'}. After payment we handle everything async via email — no call needed. Reply with your product link + 1 image.`
         if (groqKey) {
           try {
             const gRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -211,7 +211,7 @@ export async function saveReply(env, replyData) {
               headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 model: 'llama-3.3-70b-versatile',
-                messages: [{ role: 'user', content: `Generate 80-120 words follow-up for ${compName} owner ${owner} who said YES to feature ${product} to 4,500+ audience. Must include: Thanks for YES, next steps we generate content + post on 5 communities (3K YouTube, 700+ LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber = 4,500+), private engine $500 one-time invite-only, payment link ${env.PAYMENT_LINK || '[PAYMENT_LINK]'}, after payment handle everything async via email no call needed, ask for product link + 1 image. DO NOT SAY call, Zoom, Meet, Loom, screen recording, video call. Tone friendly private exclusive.` }],
+                messages: [{ role: 'user', content: `Generate 80-120 words follow-up for ${compName} owner ${owner} who said YES to feature ${product} to 4,500+ audience. Must include: Thanks for YES, next steps we generate content + post on 5 communities (3K YouTube, 700+ LinkedIn, 500 connections, 130 WhatsApp, 113 Telegram, 85 cyber = 4,500+), private engine $250 Founding Member (regular $500) one-time invite-only, payment link ${env.PAYMENT_LINK || '[PAYMENT_LINK]'}, after payment handle everything async via email no call needed, ask for product link + 1 image. DO NOT SAY call, Zoom, Meet, Loom, screen recording, video call. Tone friendly private exclusive.` }],
                 temperature: 0.7, max_tokens: 300
               })
             })

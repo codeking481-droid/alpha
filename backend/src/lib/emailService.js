@@ -20,16 +20,16 @@ export async function checkCompanyDuplicate(env, domain, ownerEmail) {
   return { skipped: false }
 }
 
-// Real outreach template with correct audience numbers
+// Real outreach template — Founding Member $250 (regular $500) with global 4,500+ audience
 const OUTREACH_TEMPLATE = {
   subject: 'Quick win for {{companyName}} - 4,500+ audience',
   body: `Hi {{ownerName}},
 
 I manage 4,500+ audience across 5 communities (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp channel, 113 Telegram channel, 85 cybersecurity). 
 
-I will handle everything and post {{companyName}} on all my communities done-for-you for $500. No work for you whatsoever.
+I will handle everything and post {{companyName}} on all my communities done-for-you for $250 Founding Member (regular $500 — you save $250, first 10 clients only). No work for you whatsoever.
 
-If $500 is an issue, we can negotiate down to $300 for 3 channels (YouTube + LinkedIn + WhatsApp, or any 3 you choose).
+If $250 is an issue, we can do $200 for 3 channels (YouTube + LinkedIn + WhatsApp, or any 3 you choose).
 
 Reply YES and I will start immediately.
 

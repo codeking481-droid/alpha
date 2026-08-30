@@ -108,7 +108,7 @@ function StatusBadge({ status }) {
     contacted: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Contacted' },
     replied: { bg: 'bg-yellow-50', text: 'text-yellow-700', label: 'Replied' },
     hot: { bg: 'bg-emerald-50', text: 'text-emerald-700', label: '🔥 Hot' },
-    closed_won: { bg: 'bg-purple-50', text: 'text-purple-700', label: '$500 Won' },
+    closed_won: { bg: 'bg-purple-50', text: 'text-purple-700', label: '$250 Won' },
   };
   const st = s[status] || s.new;
   return <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${st.bg} ${st.text} whitespace-nowrap`}>{st.label}</span>;
@@ -206,7 +206,7 @@ export const SavedCompanies = () => {
         {(stats.closed_won || 0) > 0 && (
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl p-3 mb-4 flex items-center justify-between">
             <span className="text-sm font-bold">Revenue Collected</span>
-            <span className="text-xl font-black">${(stats.closed_won || 0) * 500}</span>
+            <div className="text-right"><span className="text-xl font-black">${(stats.closed_won || 0) * 250}</span> <span className="text-xs line-through opacity-70">${(stats.closed_won || 0) * 500}</span></div>
           </div>
         )}
 
@@ -290,7 +290,7 @@ export const SavedCompanies = () => {
                           {i.status === 'new' && <button onClick={() => setModalCompany(i)} className="bg-[#0A0A0A] text-white rounded-lg px-2.5 py-1 text-[11px] font-black active:scale-95">Send</button>}
                           {i.status === 'contacted' && <button onClick={() => setModalCompany(i)} className="border rounded-lg px-2.5 py-1 text-[11px] font-black">Resend</button>}
                           {(i.status === 'replied' || i.status === 'hot') && <button onClick={() => navigate(`/inbox?companyId=${i.id}`)} className="bg-emerald-500 text-white rounded-lg px-2.5 py-1 text-[11px] font-black">Inbox →</button>}
-                          {i.status === 'closed_won' && <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2 py-0.5 rounded-full">$500 ✓</span>}
+                          {i.status === 'closed_won' && <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2 py-0.5 rounded-full">$250 ✓</span>}
                           <button onClick={() => setDeleteCompany(i)} className="text-red-400 hover:text-red-600 px-1.5 py-1 text-[11px]">✕</button>
                         </div>
                       </td>

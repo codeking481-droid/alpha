@@ -129,7 +129,7 @@ export const Campaigns = () => {
             <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 10 posts</span>
             <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="8.6" x2="15.4" y2="15.4"/><line x1="8.6" y1="15.4" x2="15.4" y2="8.6"/></svg> 3 platforms</span>
             <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h8"/></svg> 1 week</span>
-            <span className="inline-flex items-center gap-1.5 bg-[#5E17EB] text-white text-[13px] font-semibold px-3 py-1.5 rounded-full">$ &nbsp;1 week • $500</span>
+            <span className="inline-flex items-center gap-1.5 bg-[#5E17EB] text-white text-[13px] font-semibold px-3 py-1.5 rounded-full">$ &nbsp;1 week • $250 <span className="line-through opacity-60">$500</span> 🔥 Founding</span>
           </div>
         </div>
 

@@ -20,7 +20,7 @@ function Confetti({ show }) {
   if (!show) return null;
   return (
     <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
-      <div className="text-5xl sm:text-7xl font-black animate-bounce drop-shadow-lg">Closed $500! 💰</div>
+      <div className="text-5xl sm:text-7xl font-black animate-bounce drop-shadow-lg">Closed $250! 💰</div>
     </div>
   );
 }
@@ -308,7 +308,7 @@ export const Inbox = () => {
                       <>
                         <button onClick={() => markHot(r.company_id)} className="bg-amber-500 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-black active:scale-95">🔥 Hot</button>
                         <button onClick={() => generateContent(r.company_id, companyName)} className="bg-[#5E17EB] text-white rounded-lg px-2.5 py-1.5 text-[11px] font-black active:scale-95">Content</button>
-                        <button onClick={() => markClosedWon(r.company_id)} className="bg-purple-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-black active:scale-95">Won $500</button>
+                        <button onClick={() => markClosedWon(r.company_id)} className="bg-purple-600 text-white rounded-lg px-2.5 py-1.5 text-[11px] font-black active:scale-95">Won $250</button>
                       </>
                     )}
                   </div>

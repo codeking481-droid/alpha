@@ -8,9 +8,9 @@ export const OUTREACH_TEMPLATE = {
 
 I manage 4,500+ audience across 5 communities (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp channel, 113 Telegram channel, 85 cybersecurity). 
 
-I will handle everything and post {{companyName}} on all my communities done-for-you for $500. No work for you whatsoever.
+I will handle everything and post {{companyName}} on all my communities done-for-you for $250 Founding Member (regular $500 — you save $250, first 10 clients only). No work for you whatsoever.
 
-If $500 is an issue, we can negotiate down to $300 for 3 channels (YouTube + LinkedIn + WhatsApp, or any 3 you choose).
+If $250 is an issue, we can do $200 for 3 channels (YouTube + LinkedIn + WhatsApp, or any 3 you choose).
 
 Reply YES and I will start immediately.
 
@@ -36,7 +36,8 @@ export function personalizeOffer(lead, opts = {}) {
     companyName: lead.company || lead.name || 'your company',
     ownerName: lead.owner || lead.name || 'the owner',
     dashboardLink: 'https://alpha-agency-api.alphatekxcompany.workers.dev/dashboard',
-    price: '$500',
+    price: '$250',
+    originalPrice: '$500',
     ...opts.vars,
   }
   const includeTruth = opts.includeTruth !== false
@@ -55,7 +56,7 @@ export async function personalizeWithGroq(env, lead, opts = {}) {
   const base = personalizeOffer(lead, { ...opts, includeTruth: false })
   if (!env.GROQ_API_KEY) return personalizeOffer(lead, opts)
   try {
-    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: I manage 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity) and will handle everything done-for-you for $500. If price issue we can do $300 for 3 channels. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
+    const prompt = `Rewrite this outreach email to ${lead.name} at ${lead.company} (${lead.industry || 'unknown'} in ${lead.location||''}). Keep offer: I manage 4,500+ audience (3K YouTube, 700 LinkedIn followers, 500 connections, 130 WhatsApp, 113 Telegram, 85 cybersecurity) and will handle everything done-for-you for $250 Founding Member (regular $500). If price issue we can do $200 for 3 channels. Always end with this truth clause verbatim: "${TRUTH_CLAUSE}". Original:\nSubject: ${base.subject}\nBody:\n${base.text}`
     const { text } = await groqGenerate(env, { prompt })
     const lines = text.split('\n').filter(Boolean)
     const subj = lines.find(l=>l.toLowerCase().includes('subject'))?.replace(/.*subject\s*:\s*/i,'') || base.subject

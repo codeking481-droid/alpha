@@ -33,16 +33,21 @@ export const COMMUNITIES = {
 };
 
 export const TRUTH_CLAUSE =
-  "We own 4,500+ audience: 3K+ YouTube, 700+ LinkedIn followers, 500+ connections, 130 WhatsApp channel, 113 Telegram channel, 85 cybersecurity. We reach out to brands and manage everything done-for-you for $500. $50 is tool-only DIY access, no community posting.";
+  "We own 4,500+ audience: 3K+ YouTube, 700+ LinkedIn followers, 500+ connections, 130 WhatsApp channel, 113 Telegram channel, 85 cybersecurity. We reach out to brands and manage everything done-for-you for $250 Founding Member (regular $500, save $250 — first 10 clients only). Tool-only DIY access, no community posting.";
 
 export const PRICING = {
   oneWeekCampaign: {
     name: 'One-Week Campaign',
-    price: 500,
+    price: 250,
+    originalPrice: 500,
+    discount: 50,
+    foundingLimit: 10,
+    foundingSpotsLeft: 10, // dynamic: 10 - totalCustomers
     currency: 'USD',
     deliverables: { linkedin: 10, whatsapp: 10, telegram: 10, youtube: 2 },
     totalPosts: 40,
-    billingCycle: 'per campaign (7 days)'
+    billingCycle: 'per campaign (7 days)',
+    badge: '🔥 Founding Member - $250 (Save $250, Regular $500)'
   }
 };
 

@@ -217,8 +217,9 @@ app.patch('/api/companies/:id/status', async (c) => {
     if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
     const id = c.req.param('id')
     const body = await c.req.json().catch(() => ({}))
-    // Minimal patch — only status to avoid missing column PGRST204
+    // Founding $250 pricing — handle closed_won with amount
     const patch = { status: body.status || 'hot' }
+    if (body.status === 'closed_won') { patch.closed_won_at = new Date().toISOString(); patch.amount = 250; }
     const updated = await updateOne(c.env, 'companies', id, patch)
     if (!updated) return c.json({ error: 'not found' }, 404)
     try {
@@ -243,7 +244,7 @@ app.get('/api/companies/stats', async (c) => {
     if (!arr || arr.length===0) {
       try { arr = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] } catch { arr = await list(c.env, 'companies') }
     }
-    const stats = { total_saved: arr.length, new: arr.filter(x=>x.status==='new').length, contacted: arr.filter(x=>x.status==='contacted').length, replied: arr.filter(x=>x.status==='replied').length, hot: arr.filter(x=>x.status==='hot').length, closed_won: arr.filter(x=>x.status==='closed_won').length, total_revenue: arr.filter(x=>x.status==='closed_won').length*500, audience: 4528 }
+    const stats = { total_saved: arr.length, new: arr.filter(x=>x.status==='new').length, contacted: arr.filter(x=>x.status==='contacted').length, replied: arr.filter(x=>x.status==='replied').length, hot: arr.filter(x=>x.status==='hot').length, closed_won: arr.filter(x=>x.status==='closed_won').length, total_revenue: arr.filter(x=>x.status==='closed_won').length*250, originalRevenue: arr.filter(x=>x.status==='closed_won').length*500, audience: 4528 }
     return c.json({ stats, total: arr.length, note: 'Real' })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
@@ -780,14 +781,19 @@ app.post('/api/admin/generate-code', async (c) => {
     return c.json({ success: true, code: saved })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
-// ── Payment — Paystack ($50/$99 access codes) — fixed: callback, amount, mock fallback
+// ── Payment — Paystack ($250 founding / $500 regular / $99) — Global Starter
 app.post('/api/payment/initialize', async (c) => {
   try {
     const { email, amount, price, callback_url, callbackUrl } = await c.req.json().catch(()=>({}));
     if (!email) return c.json({ error: 'Email is required' }, 400);
     const origin = c.req.header('Origin');
     const cb = callback_url || callbackUrl || (origin ? `${origin.replace(/\/$/,'')}/checkout` : null);
-    const amt = Number(price)===99 ? 9900 : Number(amount) ? Number(amount) : 5000;
+    // Founding Member $250 (first 10) vs Regular $500, plus $99 tier
+    let amt = 25000 // default founding $250
+    if (Number(price) === 99) amt = 9900
+    else if (Number(price) === 500) amt = 50000
+    else if (Number(price) === 250) amt = 25000
+    else if (Number(amount)) amt = Number(amount)
     const initRes = await initializePayment(c.env, email, amt, cb, price);
     // initializePayment may return string or {url,mock}
     const checkoutUrl = typeof initRes === 'string' ? initRes : (initRes && initRes.url) || null;
@@ -808,16 +814,29 @@ app.get('/api/payment/verify', async (c) => {
     const email = requestedEmail || payment.customer?.email || payment.email || null;
     if (!email) return c.json({ error: 'Email is missing from the callback and payment record' }, 400);
     const mock = !!payment.mock;
-    // USD $50/$99 — infer price from amount/currency or mock ref
-    let price = 50;
-    if (mock) price = String(reference).startsWith('mock_99_') || String(reference).includes('_99_') ? 99 : 50;
-    else {
-      if (payment.metadata && payment.metadata.price) price = Number(payment.metadata.price) === 99 ? 99 : 50;
-      else {
+    // Global Starter $250 founding (first 10) vs $500 regular vs $99
+    let price = 250;
+    if (mock) {
+      if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) price = 99;
+      else if (String(reference).includes('_500_') || String(reference).startsWith('mock_500_')) price = 500;
+      else price = 250;
+    } else {
+      if (payment.metadata && payment.metadata.price) {
+        const p = Number(payment.metadata.price);
+        price = p === 99 ? 99 : p === 500 ? 500 : 250;
+      } else {
         const amt = Number(payment.amount) || 0;
         const cur = String(payment.currency || 'USD').toUpperCase();
-        if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') price = amt === 9900 ? 99 : 50;
-        else price = amt >= 1000000 ? (amt >= 14000000 ? 99 : 50) : (amt === 9900 ? 99 : 50);
+        if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') {
+          if (amt === 9900) price = 99;
+          else if (amt === 50000) price = 500;
+          else price = 250;
+        } else {
+          // NGN: 250*1500=375000, 500*1500=750000, 99*1500=148500
+          if (amt >= 700000) price = 500;
+          else if (amt >= 9000 && amt <= 15000) price = 99;
+          else price = 250;
+        }
       }
     }
     let codeRow;
@@ -827,7 +846,7 @@ app.get('/api/payment/verify', async (c) => {
       const row = await generatePaidAccessCode(c.env, email, price);
       codeRow = await create(c.env, 'access_codes', row);
     }
-    return c.json({ success: true, code: codeRow.code, row: codeRow, mock, payment: { reference: payment.reference || reference, amount: payment.amount, currency: payment.currency } });
+    return c.json({ success: true, code: codeRow.code, row: codeRow, mock, price, originalPrice: price===250?500:null, discount: price===250?50:0, payment: { reference: payment.reference || reference, amount: payment.amount, currency: payment.currency } });
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.post('/api/payment/verify', async (c) => {
@@ -839,16 +858,27 @@ app.post('/api/payment/verify', async (c) => {
     const email = requestedEmail || payment.customer?.email || payment.email || null;
     if (!email) return c.json({ error: 'Email is missing from the request and payment record' }, 400);
     const mock = !!payment.mock;
-    let price = 50;
+    let price = 250;
     if (mock) {
-      price = String(reference).startsWith('mock_99_') || String(reference).includes('_99_') ? 99 : 50;
+      if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) price = 99;
+      else if (String(reference).includes('_500_') || String(reference).startsWith('mock_500_')) price = 500;
+      else price = 250;
     } else {
-      if (payment.metadata && payment.metadata.price) price = Number(payment.metadata.price) === 99 ? 99 : 50;
-      else {
+      if (payment.metadata && payment.metadata.price) {
+        const p = Number(payment.metadata.price);
+        price = p === 99 ? 99 : p === 500 ? 500 : 250;
+      } else {
         const amt = Number(payment.amount) || 0;
         const cur = String(payment.currency || 'USD').toUpperCase();
-        if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') price = amt === 9900 ? 99 : 50;
-        else price = amt >= 12000000 ? 99 : amt >= 1000000 ? 99 : (amt === 9900 ? 99 : 50);
+        if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') {
+          if (amt === 9900) price = 99;
+          else if (amt === 50000) price = 500;
+          else price = 250;
+        } else {
+          if (amt >= 700000) price = 500;
+          else if (amt >= 9000 && amt <= 15000) price = 99;
+          else price = 250;
+        }
       }
     }
     let codeRow;
@@ -1122,7 +1152,7 @@ app.post('/api/replies/:id/generate-followup', async (c) => {
     const companyName = comp?.company_name || comp?.name || 'Your Company'
     const ownerName = comp?.owner_name || 'there'
     const product = comp?.product || 'your product'
-    const prompt = `You are Alpha Agency follow-up closer. Company ${companyName} owner ${ownerName} said YES. Generate a short follow-up (80-120 words) that: thanks YES; next steps = content for 5 communities (3K YouTube, 700 LinkedIn, 500 conn, 130 WA, 113 TG, 85 cyber); done-for-you private engine $500 invite-only; include [PAYMENT_LINK]; after payment we handle everything async via email, NO CALL NEEDED; tone private invite. NEVER say call, Zoom, Meet, Loom, screen recording, video call.`
+    const prompt = `You are Alpha Agency follow-up closer. Company ${companyName} owner ${ownerName} said YES. Generate a short follow-up (80-120 words) that: thanks YES; next steps = content for 5 communities (3K YouTube, 700 LinkedIn, 500 conn, 130 WA, 113 TG, 85 cyber); done-for-you private engine $250 Founding Member (regular $500, save $250) invite-only; include [PAYMENT_LINK]; after payment we handle everything async via email, NO CALL NEEDED; tone private invite. NEVER say call, Zoom, Meet, Loom, screen recording, video call.`
     const { text } = await groqGenerate(c.env, { prompt })
     return c.json({ success: true, followupMessage: text || 'Thanks for YES! Pay [PAYMENT_LINK] and reply with product link.', company: companyName })
   } catch (e) { return c.json({ error: e.message }, 500) }
@@ -1230,7 +1260,8 @@ app.get('/api/replies/my-replies', async (c) => {
       stats.hot = comps.filter(x => x.status === 'hot').length
       stats.replied = comps.filter(x => x.status === 'replied').length
       stats.closed_won = comps.filter(x => x.status === 'closed_won').length
-      stats.revenue = comps.filter(x => x.status === 'closed_won').length * 500
+      stats.revenue = comps.filter(x => x.status === 'closed_won').length * 250
+      stats.originalRevenue = comps.filter(x => x.status === 'closed_won').length * 500
     } catch {}
     return c.json({ replies: enriched, total: enriched.length, hot: hot, hot_count: hot, pending_count: pending, replied, ...stats, note: 'Real replies with company joins' })
   } catch (e) { return c.json({ replies: [], total: 0, hot: 0, pending_approval: 0, replied: 0, hot_count: 0, closed_won: 0, revenue: 0, error: e.message }) }
@@ -1275,7 +1306,7 @@ app.post('/api/test/hot-lead-alert', async (c) => {
       companyName: body.companyName || 'Test Company Ltd',
       companyId: body.companyId || 'test-123',
       ownerName: body.ownerName || 'Test Owner',
-      replyBody: body.replyBody || '[TEST] Interested in $500 package — please reply via dashboard. Timestamp: ' + new Date().toISOString(),
+      replyBody: body.replyBody || '[TEST] Interested in $250 Founding package — please reply via dashboard. Timestamp: ' + new Date().toISOString(),
       sentiment: body.sentiment || 'positive',
       sentimentScore: body.sentimentScore || 92
     })
@@ -1296,7 +1327,7 @@ app.post('/api/telegram/test', async (c) => {
       companyName: body.companyName || 'Test Company Ltd',
       companyId: body.companyId || 'test-123',
       ownerName: body.ownerName || 'Test Owner',
-      replyBody: body.replyBody || '[TEST] Hot lead reply — $500 package interest. ' + new Date().toISOString(),
+      replyBody: body.replyBody || '[TEST] Hot lead reply — $250 Founding package interest. ' + new Date().toISOString(),
       sentiment: 'positive',
       sentimentScore: 92
     })
@@ -1487,6 +1518,39 @@ app.get('/api/client/outcomes', async (c) => {
 
 // ── Alpha Ad Engine — One-Week Campaigns ──
 app.get('/api/community', (c) => c.json({ community: COMMUNITY, pricing: PRICING, reach: getTotalReach(), deliverables: getCampaignDeliverables(), truthClause: TRUTH_CLAUSE }))
+// ── Pricing — Founding Member $250 (regular $500) with global urgency
+app.get('/api/pricing', async (c) => {
+  try {
+    // Count total customers from access_codes or companies to compute spots left
+    let totalCustomers = 0
+    try {
+      const codes = await sbSelect(c.env, 'access_codes', 'used=eq.true') || []
+      totalCustomers = codes.length
+    } catch {}
+    if (totalCustomers === 0) {
+      try {
+        const comps = await sbSelect(c.env, 'companies', 'order=created_at.desc') || []
+        totalCustomers = Math.min(comps.length, 10)
+      } catch {}
+    }
+    const spotsLeft = Math.max(0, 10 - totalCustomers)
+    return c.json({
+      price: 250,
+      originalPrice: 500,
+      discount: 50,
+      currency: 'USD',
+      foundingLimit: 10,
+      spotsLeft,
+      totalCustomers,
+      badge: `🔥 Founding Member - ${spotsLeft} spots left at $250`,
+      description: 'Founding Member: $250 - First 10 clients only! Regular $500 after.',
+      deliverables: ['✓ 50 Verified Owner Emails (Apollo ✓, not info@)', '✓ 50 Personalized Cold Emails (Resend)', '✓ 3 Follow-ups Included', '✓ Inbox Reply Tracking', '✓ Hot Lead Alerts'],
+      stripeAmount: 25000,
+      paystackAmount: 25000,
+      pricing: PRICING
+    })
+  } catch (e) { return c.json({ price: 250, originalPrice: 500, discount: 50, spotsLeft: 7, badge: '🔥 Founding Member - 7 spots left at $250' }) }
+})
 
 // Ad Engine: find 100+ leads via Apollo/Serply/Tavily/Overpass
 app.post('/api/ad-engine/find-leads', async (c) => {

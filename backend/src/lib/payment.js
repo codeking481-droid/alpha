@@ -17,16 +17,21 @@ function getPaystackKey(env) {
 }
 
 function resolveAmount(env, price, amount) {
-  // Boss wants USD $50 / $99 — never NGN. Frontend sends price (50/99).
-  const p = Number(price) || (Number(amount) >= 100 ? (Number(amount) === 9900 ? 99 : 50) : 50);
+  // Global Starter: Founding $250 (first 10) vs Regular $500 vs $99
+  const rawPrice = Number(price)
+  let p = 250
+  if (rawPrice === 99 || rawPrice === 500 || rawPrice === 250) p = rawPrice
+  else if (Number(amount) === 9900) p = 99
+  else if (Number(amount) === 50000) p = 500
+  else if (Number(amount) === 25000) p = 250
+  else if (Number(amount) >= 100) p = rawPrice || 250
   const currency = (env.PAYSTACK_CURRENCY || env.CURRENCY || 'USD').toUpperCase();
   if (currency === 'NGN') {
-    // Only if explicitly set to NGN: convert USD -> NGN via rate then *100 kobo
     const rate = Number(env.PAYSTACK_NGN_RATE || env.NGN_RATE || 1500);
     const ngn = Math.round(p * rate);
     return ngn * 100;
   }
-  // Default USD cents: $50 -> 5000, $99 -> 9900 (also GHS/ZAR same)
+  // USD cents: $250 -> 25000, $500 -> 50000, $99 -> 9900
   return p * 100;
 }
 
@@ -36,17 +41,17 @@ function isMockAllowed(env) {
   return String(env.ENV || 'development').toLowerCase() !== 'production';
 }
 
-export async function initializePayment(env, email, amount = 5000, callbackUrl = null, price = null) {
+export async function initializePayment(env, email, amount = 25000, callbackUrl = null, price = null) {
   const key = getPaystackKey(env);
   const currency = (env.PAYSTACK_CURRENCY || 'USD').toUpperCase();
 
-  // Resolve amount correctly
-  const resolvedAmount = resolveAmount(env, price || (amount === 9900 ? 99 : 50), amount);
+  // Resolve amount correctly — default $250 founding
+  const resolvedAmount = resolveAmount(env, price || (amount === 9900 ? 99 : amount === 50000 ? 500 : 250), amount);
 
-  // Mock fallback — when no key in dev/test, allow local testing without Paystack (USD $50/$99)
+  // Mock fallback — when no key in dev/test, allow local testing without Paystack ($250/$500/$99)
   if (!key) {
     if (isMockAllowed(env)) {
-      const pForMock = Number(price) || 50;
+      const pForMock = Number(price) || 250;
       const mockRef = `mock_${pForMock}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const cb = callbackUrl || env.PAYSTACK_CALLBACK_URL || (env.FRONTEND_URL ? `${env.FRONTEND_URL.replace(/\/$/,'')}/access` : 'http://localhost:5173/access');
       // Use URL with reference so frontend verify picks it up
@@ -65,7 +70,7 @@ export async function initializePayment(env, email, amount = 5000, callbackUrl =
     amount: resolvedAmount,
     currency,
     callback_url: cb,
-    metadata: { type: 'access_code', price: price || (resolvedAmount === 9900 || resolvedAmount === 990000 ? 99 : 50), source: 'alpha-agency' },
+    metadata: { type: 'access_code', price: price || (resolvedAmount === 9900 ? 99 : resolvedAmount === 50000 ? 500 : 250), originalPrice: 500, founding: true, source: 'alpha-agency' },
   };
 
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -97,13 +102,16 @@ export async function verifyPayment(env, reference) {
   const key = getPaystackKey(env);
   if (!reference) throw new Error('Reference required');
 
-  // Mock reference — allowed when key missing in dev, issues success without calling Paystack (USD)
+  // Mock reference — allowed when key missing in dev, issues success without calling Paystack
   if (String(reference).startsWith('mock_')) {
     if (isMockAllowed(env)) {
       const now = new Date().toISOString();
-      const is99 = String(reference).startsWith('mock_99_') || String(reference).includes('_99_');
-      const mockAmt = is99 ? 9900 : 5000;
-      return { status: 'success', reference, amount: mockAmt, currency: env.PAYSTACK_CURRENCY || 'USD', paid_at: now, gateway_response: 'Approved (mock — no Paystack key, USD)', mock: true };
+      let mockAmt = 25000
+      if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) mockAmt = 9900
+      else if (String(reference).includes('_500_') || String(reference).startsWith('mock_500_')) mockAmt = 50000
+      else mockAmt = 25000
+      const priceForMock = mockAmt === 9900 ? 99 : mockAmt === 50000 ? 500 : 250
+      return { status: 'success', reference, amount: mockAmt, currency: env.PAYSTACK_CURRENCY || 'USD', paid_at: now, gateway_response: `Approved (mock — $` + priceForMock + `)`, mock: true, metadata: { price: priceForMock } };
     }
     throw new Error('Mock reference not allowed with real Paystack key — complete real checkout.');
   }

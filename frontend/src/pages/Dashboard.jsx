@@ -74,7 +74,7 @@ export const Dashboard = () => {
           <button onClick={() => navigate('/saved-companies')} className="relative bg-[#EDE8FF] border border-[#C4B5FD] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group">
             <div className="w-10 h-10 bg-[#5E17EB] rounded-xl flex items-center justify-center mb-4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg></div>
             <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Vault</h3>
-            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Saved companies — send email via Resend, track replies, close $500 deal</p>
+            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Saved companies — send email via Resend, track replies, close $250 Founding deal</p>
             <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#C4B5FD] bg-[#F0EFFF] flex items-center justify-center text-[#5E17EB] group-hover:bg-white transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
             </span>
