@@ -536,9 +536,9 @@ export async function findCompaniesProspeo(env, niche, location, limit) {
         if (!res.ok || data.error) {
           const code = data?.error_code || '';
           const msg = data?.filter_error || data?.error || txt.slice(0,400);
-          // If insufficient credits or invalid key, try next key
-          if (code === 'INSUFFICIENT_CREDITS' || code === 'INVALID_API_KEY') {
-            console.log(`Prospeo key ${k.slice(0,6)}... failed ${code}, trying next key`);
+          // If insufficient credits, invalid key, or rate limit, try next key
+          if (code === 'INSUFFICIENT_CREDITS' || code === 'INVALID_API_KEY' || code === 'Rate limit exceeded' || txt.includes('Rate limit')) {
+            console.log(`Prospeo key ${k.slice(0,6)}... failed ${code || 'rate_limit'}, trying next key`);
             lastErr = new Error(`Prospeo ${res.status} ${code}: ${msg}`.slice(0,500));
             continue;
           }
@@ -602,8 +602,8 @@ export async function findCompaniesProspeo(env, niche, location, limit) {
             ownerName = `${enrichData.person.first_name || person.first_name || ''} ${enrichData.person.last_name || person.last_name || ''}`.trim() || ownerName;
             enriched = true;
             break;
-          } else if (enrichData?.error_code === 'INSUFFICIENT_CREDITS' || enrichData?.error_code === 'INVALID_API_KEY') {
-            console.log(`Prospeo enrich key ${k.slice(0,6)}... failed ${enrichData.error_code}, trying next`);
+          } else if (enrichData?.error_code === 'INSUFFICIENT_CREDITS' || enrichData?.error_code === 'INVALID_API_KEY' || enrichData?.error_code === 'Rate limit exceeded' || String(enrichData?.error).includes('Rate limit')) {
+            console.log(`Prospeo enrich key ${k.slice(0,6)}... failed ${enrichData.error_code || 'rate_limit'}, trying next`);
             continue;
           } else {
             const fallbackEmail = typeof person.email === 'string' ? person.email : person.email?.email || '';
