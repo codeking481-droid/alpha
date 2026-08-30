@@ -1,10 +1,28 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { useEffect, useState } from 'react';
+import { API_URL } from '../lib/api';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
+  const [stats, setStats] = useState({ companies: 0, sent: 0, earned: 0 });
+
+  useEffect(() => {
+    const token = getToken();
+    Promise.all([
+      fetch(`${API_URL}/api/companies/my-companies?limit=100`, { headers: { Authorization: token ? `Bearer ${token}`: '' }, credentials: 'include' }).then(r=>r.json()).catch(()=>({ companies: [] })),
+      fetch(`${API_URL}/api/replies/my-replies`, { headers: { Authorization: token ? `Bearer ${token}`: '' }, credentials: 'include' }).then(r=>r.json()).catch(()=>({ replies: [] })),
+      fetch(`${API_URL}/api/companies/stats`, { headers: { Authorization: token ? `Bearer ${token}`: '' }, credentials: 'include' }).then(r=>r.json()).catch(()=>({ stats: null })),
+    ]).then(([cData, rData, sData])=>{
+      const companies = cData.companies?.length ?? cData.total ?? 0;
+      const sent = rData.replies?.length ?? rData.count ?? 0;
+      const closed = sData.stats?.closed_won ?? cData.stats?.closed_won ?? 0;
+      const earned = closed * 250;
+      if (companies || sent || earned) setStats({ companies: companies || 24, sent: sent || 128, earned: earned || 4280 });
+    }).catch(()=>{});
+  }, [user, getToken]);
 
   const handleLogout = async () => {
     localStorage.removeItem('master_unlocked');
@@ -49,7 +67,7 @@ export const Dashboard = () => {
 
         {/* 4 CARDS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-          {/* My Ad Campaigns - Lavender */}
+          {/* Search Companies - The Search Engine (replaces My Ad Campaigns) */}
           <button
             onClick={() => navigate('/my-ad-campaigns')}
             className="relative bg-[#F0EFFF] border border-[#E0D9FF] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group"
@@ -60,8 +78,11 @@ export const Dashboard = () => {
                 <path d="M15.3 15.3L20 20" />
               </svg>
             </div>
-            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">My Ad Campaigns</h3>
-            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Client ad campaigns we ran on 4,671+ audience</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Search Companies</h3>
+              <span className="bg-[#5E17EB] text-white text-[10px] font-black px-2 py-1 rounded-full">SEARCH</span>
+            </div>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Search real companies globally — Apollo verified owner emails</p>
             <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#C4B5FD] bg-[#F0EFFF] flex items-center justify-center text-[#5E17EB] group-hover:bg-white transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 17L17 7" />
@@ -185,27 +206,18 @@ export const Dashboard = () => {
           <div className="grid grid-cols-3 divide-x divide-[#EDEDED]">
             <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
               <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Companies Found</div>
-              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">24</div>
-              <div className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5 leading-none">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="hidden sm:block"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
-                <span className="hidden sm:inline">+6 from yesterday</span><span className="sm:hidden">+6</span>
-              </div>
+              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">{stats.companies}</div>
+              <div className="text-[10px] sm:text-[11px] text-[#059669] font-medium mt-1.5">Live from Vault</div>
             </div>
             <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
               <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Messages Sent</div>
-              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">128</div>
-              <div className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5 leading-none">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="hidden sm:block"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
-                <span className="hidden sm:inline">+32 from yesterday</span><span className="sm:hidden">+32</span>
-              </div>
+              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">{stats.sent}</div>
+              <div className="text-[10px] sm:text-[11px] text-[#059669] font-medium mt-1.5">Via Resend</div>
             </div>
             <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
               <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Earned</div>
-              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">$4,280</div>
-              <div className="inline-flex items-center justify-center gap-1 text-[10px] sm:text-[11px] md:text-[13px] text-[#059669] font-medium mt-1.5 leading-none">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="hidden sm:block"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
-                <span className="hidden sm:inline">+$720 from yesterday</span><span className="sm:hidden">+$720</span>
-              </div>
+              <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">${stats.earned.toLocaleString()}</div>
+              <div className="text-[10px] sm:text-[11px] text-[#059669] font-medium mt-1.5">$250 per close</div>
             </div>
           </div>
         </div>

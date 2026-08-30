@@ -15,7 +15,6 @@ function BackBtn({ onClick }) {
   );
 }
 
-/* ─── Confetti overlay ─── */
 function Confetti({ show }) {
   if (!show) return null;
   return (
@@ -25,17 +24,14 @@ function Confetti({ show }) {
   );
 }
 
-/* ─── Followup Card ─── */
 function FollowupCard({ reply, getToken, onRefresh }) {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState(reply.followup_message || '');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
-
   const bannedWords = ['call', 'zoom', 'meet', 'loom', 'screen recording', 'video call'];
   const hasBanned = bannedWords.some(b => message.toLowerCase().includes(b));
-
   const generateFollowup = async () => {
     setGenerating(true);
     try {
@@ -49,7 +45,6 @@ function FollowupCard({ reply, getToken, onRefresh }) {
     } catch {}
     setGenerating(false);
   };
-
   const approveAndSend = async () => {
     setSending(true); setError('');
     try {
@@ -63,7 +58,6 @@ function FollowupCard({ reply, getToken, onRefresh }) {
     } catch { setError('Send error'); }
     setSending(false);
   };
-
   const rejectFollowup = async () => {
     try {
       const token = getToken();
@@ -71,8 +65,6 @@ function FollowupCard({ reply, getToken, onRefresh }) {
       onRefresh();
     } catch {}
   };
-
-  // No followup yet
   if (!reply.followup_message && reply.followup_status !== 'sent' && reply.followup_status !== 'rejected') {
     return (
       <div className="mt-3 pt-3 border-t border-gray-200">
@@ -82,35 +74,29 @@ function FollowupCard({ reply, getToken, onRefresh }) {
       </div>
     );
   }
-
-  // Sent
   if (reply.followup_status === 'sent') {
     return (
       <div className="mt-3 pt-3 border-t border-gray-200">
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-black text-emerald-800">✅ Sent {reply.followup_sent_at ? timeAgo(reply.followup_sent_at) : ''}</span>
-            <button onClick={() => navigator.clipboard.writeText(reply.followup_message || '')} className="text-xs font-bold text-emerald-600 hover:text-emerald-800 active:scale-95">Copy</button>
+            <button onClick={() => navigator.clipboard.writeText(reply.followup_message || '')} className="text-xs font-bold text-emerald-600 hover:text-emerald-800">Copy</button>
           </div>
           <div className="text-xs text-emerald-900 whitespace-pre-wrap leading-relaxed">{reply.followup_message}</div>
         </div>
       </div>
     );
   }
-
-  // Rejected
   if (reply.followup_status === 'rejected') {
     return (
       <div className="mt-3 pt-3 border-t border-gray-200">
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between">
           <span className="text-xs font-black text-red-800">❌ Rejected</span>
-          <button onClick={generateFollowup} className="text-xs font-bold text-red-600 underline active:scale-95">Regenerate</button>
+          <button onClick={generateFollowup} className="text-xs font-bold text-red-600 underline">Regenerate</button>
         </div>
       </div>
     );
   }
-
-  // Pending approval
   return (
     <div className="mt-3 pt-3 border-t border-gray-200">
       <div className="bg-amber-50 border border-amber-300 rounded-xl p-3">
@@ -127,16 +113,15 @@ function FollowupCard({ reply, getToken, onRefresh }) {
         {hasBanned && <div className="text-[11px] text-red-600 font-bold mb-2">⚠️ Contains banned words — will be rejected</div>}
         {error && <div className="text-[11px] text-red-600 font-bold mb-2">{error}</div>}
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setEditing(!editing)} className="border rounded-lg px-3 py-1.5 text-[11px] font-black active:scale-95">{editing ? 'Preview' : 'Edit'}</button>
-          <button onClick={approveAndSend} disabled={sending || hasBanned} className="bg-[#0A0A0A] text-white rounded-lg px-3 py-1.5 text-[11px] font-black disabled:opacity-50 active:scale-95">{sending ? 'Sending...' : 'Approve & Send'}</button>
-          <button onClick={rejectFollowup} className="border border-red-300 text-red-600 rounded-lg px-3 py-1.5 text-[11px] font-black active:scale-95">Reject</button>
+          <button onClick={() => setEditing(!editing)} className="border rounded-lg px-3 py-1.5 text-[11px] font-black">{editing ? 'Preview' : 'Edit'}</button>
+          <button onClick={approveAndSend} disabled={sending || hasBanned} className="bg-[#0A0A0A] text-white rounded-lg px-3 py-1.5 text-[11px] font-black disabled:opacity-50">{sending ? 'Sending...' : 'Approve & Send'}</button>
+          <button onClick={rejectFollowup} className="border border-red-300 text-red-600 rounded-lg px-3 py-1.5 text-[11px] font-black">Reject</button>
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── Pending Company Follow-up Card (Vault/Inbox) ─── */
 function PendingCompanyCard({ company, getToken, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState(company.follow_up_message || `Hi ${company.owner_name || 'there'},\n\nJust following up on my previous email about featuring ${company.company_name || company.name} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`);
@@ -157,7 +142,7 @@ function PendingCompanyCard({ company, getToken, onUpdate }) {
     <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3">
       <div className="flex items-center gap-2 mb-2">
         <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-        <span className="text-xs font-black text-amber-900">Follow-up ready for {company.company_name || company.name} - Send?</span>
+        <span className="text-xs font-black text-amber-900">Follow-up ready for {company.company_name || company.name} — Send?</span>
         <span className="ml-auto text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">Waiting approval</span>
       </div>
       {editing ? <textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={4} className="w-full text-xs border border-amber-300 rounded-lg p-2 bg-white focus:ring-2 focus:ring-amber-400 outline-none resize-none mb-2" /> : <div className="text-xs text-amber-900 bg-white/70 rounded-lg p-2 mb-2 whitespace-pre-wrap max-h-24 overflow-y-auto border border-amber-200">{msg}</div>}
@@ -171,7 +156,6 @@ function PendingCompanyCard({ company, getToken, onUpdate }) {
   );
 }
 
-/* ─── Main ─── */
 export const Inbox = () => {
   const navigate = useNavigate();
   const { user, getToken } = useAuth();
@@ -185,6 +169,7 @@ export const Inbox = () => {
   const [filter, setFilter] = useState('all');
   const [showConfetti, setShowConfetti] = useState(false);
   const [pendingCompanies, setPendingCompanies] = useState([]);
+  const [syncing, setSyncing] = useState(false);
 
   const fetchPendingFollowUps = useCallback(async () => {
     try {
@@ -192,6 +177,8 @@ export const Inbox = () => {
       const res = await fetch(`${API}/api/companies/pending-followups`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
       const data = await res.json();
       setPendingCompanies(data.pending || []);
+      // merge pending count into stats
+      setStats(prev => ({ ...prev, pending_approval: (data.pending || []).length }));
     } catch { setPendingCompanies([]); }
   }, [getToken]);
 
@@ -200,34 +187,68 @@ export const Inbox = () => {
     try {
       const token = getToken();
       let data = null;
-      // Primary: my-replies (user-scoped with company joins)
       try {
         const res = await fetch(`${API}/api/replies/my-replies`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
-        data = await res.json();
-      } catch {}
-      // Fallback: generic replies if my-replies empty or failed
+        const txt = await res.text();
+        data = txt ? JSON.parse(txt) : {};
+        if (!res.ok && data.error) throw new Error(data.error);
+      } catch (e) { console.warn('my-replies failed', e.message); }
       if (!data || !data.replies || data.replies.length === 0) {
         try {
           const res2 = await fetch(`${API}/api/replies`, { headers: { Authorization: token ? 'Bearer ' + token : '' }, credentials: 'include' });
-          const data2 = await res2.json();
+          const txt2 = await res2.text();
+          const data2 = txt2 ? JSON.parse(txt2) : {};
           if (data2 && data2.replies && data2.replies.length > 0) {
-            data = { replies: data2.replies, hot: 0, replied: data2.count || 0, closed_won: 0, revenue: 0 };
+            data = { replies: data2.replies, hot: 0, replied: data2.count || data2.replies.length, closed_won: 0, revenue: 0 };
           }
         } catch {}
       }
       if (data && data.error) setError(data.error);
-      else if (data && data.replies) {
+      else if (data && Array.isArray(data.replies)) {
         setReplies(data.replies || []);
-        setStats({ hot: data.hot || 0, replied: data.replied || 0, closed_won: data.closed_won || 0, revenue: data.revenue || 0, pending_approval: (data.replies || []).filter(r => r.followup_status === 'pending_approval').length });
+        const pendingFromReplies = (data.replies || []).filter(r => r.followup_status === 'pending_approval').length;
+        setStats(prev => ({
+          hot: data.hot ?? data.hot_count ?? prev.hot,
+          replied: data.replied ?? prev.replied,
+          closed_won: data.closed_won ?? prev.closed_won,
+          revenue: data.revenue ?? prev.revenue,
+          pending_approval: pendingFromReplies || prev.pending_approval
+        }));
+        // Also try to enrich stats from companies endpoint
+        try {
+          const cRes = await fetch(`${API}/api/companies/my-companies?limit=100`, { headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
+          const cData = await cRes.json();
+          if (cData && cData.stats) {
+            setStats(prev => ({
+              hot: cData.stats.hot || prev.hot,
+              replied: cData.stats.replied || prev.replied,
+              closed_won: cData.stats.closed_won || prev.closed_won,
+              revenue: (cData.stats.closed_won || 0) * 250 || prev.revenue,
+              pending_approval: prev.pending_approval
+            }));
+          }
+        } catch {}
       } else {
         setReplies([]);
       }
-    } catch (e) { setError('Failed to load inbox'); }
+    } catch (e) { setError(e.message || 'Failed to load inbox'); setReplies([]); }
     setLoading(false);
-  }, [user, getToken]);
+  }, [getToken]);
 
   useEffect(() => { fetchData(); fetchPendingFollowUps(); }, [fetchData, fetchPendingFollowUps]);
   useEffect(() => { if (replyIdParam) { const el = document.getElementById(replyIdParam); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, [replyIdParam, replies]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const token = getToken();
+      const res = await fetch(`${API}/api/replies/sync`, { method: 'POST', headers: { Authorization: token ? 'Bearer ' + token : '', 'Content-Type': 'application/json' }, credentials: 'include' });
+      const data = await res.json();
+      if (data.success || data.synced !== undefined) { await fetchData(); await fetchPendingFollowUps(); }
+      else if (data.error) setError(data.error);
+    } catch (e) { setError(e.message); }
+    setSyncing(false);
+  };
 
   const markHot = async (companyId) => {
     try { const t = getToken(); await fetch(`${API}/api/companies/${companyId}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: t ? 'Bearer ' + t : '' }, credentials: 'include', body: JSON.stringify({ status: 'hot' }) }); fetchData(); } catch {}
@@ -252,9 +273,7 @@ export const Inbox = () => {
   };
 
   const filtered = replies.filter(r => {
-    // Company filter: if companyIdParam is set, always apply it
     if (companyIdParam && String(r.company_id) !== String(companyIdParam)) return false;
-    // Sentiment / status filters
     if (filter === 'all') return true;
     if (filter === 'pending') return r.followup_status === 'pending_approval';
     if (filter === 'sent') return r.followup_status === 'sent';
@@ -263,10 +282,9 @@ export const Inbox = () => {
     return true;
   });
 
-  /* Loading */
-  if (loading && replies.length === 0) return (
-    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
-      <div className="max-w-[1100px] mx-auto w-full max-w-full">
+  if (loading && replies.length === 0 && pendingCompanies.length === 0) return (
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full">
+      <div className="max-w-[1100px] mx-auto w-full">
         <div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6"><BackBtn onClick={() => navigate('/dashboard')} /><h1 className="text-lg sm:text-xl font-black">Inbox</h1></div>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-5 sm:mb-6">{[1,2,3,4,5].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
         <div className="space-y-3">{[1,2].map(i => <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />)}</div>
@@ -275,22 +293,37 @@ export const Inbox = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full">
       <Confetti show={showConfetti} />
-      <div className="max-w-[1100px] mx-auto w-full max-w-full">
+      <div className="max-w-[1100px] mx-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-5">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <BackBtn onClick={() => navigate('/dashboard')} />
             <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">Inbox</h1>
+            <button onClick={handleSync} disabled={syncing} className="hidden sm:inline-flex items-center gap-1.5 border bg-white rounded-full px-3 py-1.5 text-[12px] font-bold hover:bg-[#F9FAFB] disabled:opacity-50">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={syncing ? 'animate-spin' : ''}><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg>
+              {syncing ? 'Syncing...' : 'Sync Gmail'}
+            </button>
           </div>
-          <button onClick={() => navigate('/saved-companies')} className="bg-[#0A0A0A] text-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black active:scale-95 transition-all shrink-0">Vault →</button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={handleSync} disabled={syncing} className="sm:hidden border bg-white rounded-full px-3 py-1.5 text-[11px] font-bold disabled:opacity-50">{syncing ? '...' : 'Sync'}</button>
+            <button onClick={() => navigate('/saved-companies')} className="bg-[#0A0A0A] text-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-black active:scale-95 transition-all">Vault →</button>
+          </div>
         </div>
 
-        {/* Stats */}
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4 flex items-center justify-between gap-2">
+            <span className="font-medium">{error}</span>
+            <button onClick={() => { setError(''); fetchData(); fetchPendingFollowUps(); }} className="bg-white border border-red-200 rounded-full px-3 py-1 text-xs font-black shrink-0">Retry</button>
+          </div>
+        )}
+
+        {/* Stats — always visible */}
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 mb-4 sm:mb-5 w-full">
           {[
-            { label: 'Pending ⏳', v: stats.pending_approval, bg: 'bg-amber-50', tc: 'text-amber-700' },
+            { label: 'Pending ⏳', v: stats.pending_approval ?? pendingCompanies.length, bg: 'bg-amber-50', tc: 'text-amber-700' },
             { label: 'Hot 🔥', v: stats.hot, bg: 'bg-orange-50', tc: 'text-orange-700' },
             { label: 'Sent', v: stats.replied, bg: 'bg-blue-50', tc: 'text-blue-700' },
             { label: 'Won', v: stats.closed_won, bg: 'bg-purple-50', tc: 'text-purple-700' },
@@ -303,9 +336,9 @@ export const Inbox = () => {
           ))}
         </div>
 
-        {/* Pending Company Follow-ups (User Approval) */}
+        {/* Pending Company Follow-ups — always show if any */}
         {pendingCompanies.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-5">
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
               <h3 className="text-sm font-black text-amber-900">Follow-ups Waiting Approval ({pendingCompanies.length})</h3>
@@ -330,17 +363,29 @@ export const Inbox = () => {
           ].map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)} className={`rounded-full px-3.5 py-1.5 text-xs font-black whitespace-nowrap transition-all active:scale-95 ${filter === f.key ? 'bg-[#0A0A0A] text-white' : 'border bg-white text-[#6B7280]'}`}>{f.label}</button>
           ))}
+          {filter !== 'all' && <button onClick={() => setFilter('all')} className="text-xs font-bold text-[#5E17EB] px-2">Clear</button>}
         </div>
 
-        {/* Empty */}
-        {filtered.length === 0 && !loading ? (
+        {/* Content */}
+        {filtered.length === 0 ? (
           <div className="bg-white border rounded-2xl p-8 text-center">
             <div className="w-16 h-16 bg-[#FFF6E5] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>
             </div>
-            <h2 className="text-lg font-black mb-1">No replies yet</h2>
-            <p className="text-[#6B7280] text-sm mb-4">Send emails from vault — when brands reply YES you'll see hot leads here + Telegram 113 alert</p>
-            <button onClick={() => navigate('/saved-companies')} className="bg-[#5E17EB] text-white rounded-xl px-6 py-3 font-black text-sm active:scale-95 transition-all">Go to Vault →</button>
+            <h2 className="text-lg font-black mb-1">{filter !== 'all' ? `No ${filter} replies` : 'No replies yet'}</h2>
+            <p className="text-[#6B7280] text-sm mb-1">Send emails from Vault — when brands reply YES you'll see hot leads here + Telegram alert.</p>
+            {pendingCompanies.length === 0 && replies.length === 0 && (
+              <p className="text-[#9CA3AF] text-xs mb-4">Tip: Search companies → Save to Vault → Send → Track here</p>
+            )}
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <button onClick={() => navigate('/saved-companies')} className="bg-[#5E17EB] text-white rounded-xl px-6 py-3 font-black text-sm active:scale-95">Go to Vault →</button>
+              <button onClick={() => navigate('/my-ad-campaigns')} className="border rounded-xl px-6 py-3 font-black text-sm bg-white hover:bg-[#FAFAFA]">Search Companies →</button>
+            </div>
+            <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#9CA3AF]">
+              <button onClick={handleSync} className="underline font-bold">Sync Gmail</button>
+              <span>•</span>
+              <button onClick={fetchData} className="underline font-bold">Refresh</button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -362,7 +407,7 @@ export const Inbox = () => {
                       {r.sentiment === 'interested' ? 'YES 🔥' : r.sentiment === 'positive' ? 'Positive 🔥' : r.sentiment === 'question' ? 'Question' : r.sentiment || 'Reply'}
                     </span>
                   </div>
-                  <div className="bg-white/70 rounded-xl p-2.5 text-xs text-[#4B5563] mb-1 whitespace-pre-wrap leading-relaxed">{replyText}</div>
+                  <div className="bg-white/70 rounded-xl p-2.5 text-xs text-[#4B5563] mb-1 whitespace-pre-wrap leading-relaxed max-h-32 overflow-y-auto">{replyText || '— No content —'}</div>
                   <FollowupCard reply={r} getToken={getToken} onRefresh={fetchData} />
                   <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-gray-100">
                     {r.company_id && (

@@ -19,8 +19,9 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/access" element={<AccessCode />} />
         <Route path="/dashboard" element={<ProtectedRoute requirePayment={true}><Dashboard /></ProtectedRoute>} />
-        <Route path="/find-companies" element={<ProtectedRoute requirePayment={true}><MyAdCampaigns /></ProtectedRoute>} />
-        <Route path="/my-ad-campaigns" element={<ProtectedRoute requirePayment={true}><MyAdCampaigns /></ProtectedRoute>} />
+        <Route path="/find-companies" element={<ProtectedRoute requirePayment={true}><FindCompanies /></ProtectedRoute>} />
+        <Route path="/my-ad-campaigns" element={<ProtectedRoute requirePayment={true}><FindCompanies /></ProtectedRoute>} />
+        <Route path="/search" element={<ProtectedRoute requirePayment={true}><FindCompanies /></ProtectedRoute>} />
         <Route path="/send-messages" element={<ProtectedRoute requirePayment={true}><SendMessages /></ProtectedRoute>} />
         <Route path="/track-replies" element={<ProtectedRoute requirePayment={true}><TrackReplies /></ProtectedRoute>} />
         <Route path="/campaigns" element={<ProtectedRoute requirePayment={true}><Campaigns /></ProtectedRoute>} />

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { API_URL } from '../lib/api';
 
 const defaultPosts = [
-  { id: '01', platform: 'LinkedIn', type: 'Announcment', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Launch announcement: Acme Innovations introduces new AI workflow automation to save teams 10hrs/week →' },
+  { id: '01', platform: 'LinkedIn', type: 'Announcement', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Launch announcement: Acme Innovations introduces new AI workflow automation to save teams 10hrs/week →' },
   { id: '02', platform: 'WhatsApp', type: 'Teaser', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: 'Teaser: Something big is coming this week. Want early access? Reply "YES" to join the waitlist →' },
   { id: '03', platform: 'Telegram', type: 'Intro', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Intro: Meet the team behind the product. Why we built this for agencies like yours →' },
   { id: '04', platform: 'LinkedIn', type: 'Educational', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Educational: How the 10-post system drives 3x engagement without extra ad spend →' },
@@ -11,7 +12,7 @@ const defaultPosts = [
   { id: '06', platform: 'Telegram', type: 'Poll', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Poll: What\'s your biggest marketing challenge? A) Content • B) Leads • C) Retention →' },
   { id: '07', platform: 'LinkedIn', type: 'Case Study', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Case Study: How we helped a SaaS company cut onboarding time by 60% using automated posts →' },
   { id: '08', platform: 'WhatsApp', type: 'Tip', typeColor: 'bg-[#DCFCE7] text-[#166534]', content: 'Tip: 3 quick ways to keep clients engaged on WhatsApp without spamming →' },
-  { id: '09', platform: 'Telegram', type: 'Promo', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Promo: Limited spots available — 20% off setup if you join this week. Ends Friday →' },
+  { id: '09', platform: 'Telegram', type: 'Promo', typeColor: 'bg-[#DBEAFE] text-[#1E40AF]', content: 'Promo: Limited spots — 20% off setup if you join this week. Ends Friday →' },
   { id: '10', platform: 'LinkedIn', type: 'Recap', typeColor: 'bg-[#EDE9FF] text-[#5E17EB]', content: 'Recap: Week 1 results + what\'s next. Full performance summary drops tomorrow →' },
 ];
 
@@ -23,6 +24,7 @@ const platformIcon = (platform) => {
 
 export const Campaigns = () => {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const [companyName, setCompanyName] = useState('Acme Innovations');
   const [industry, setIndustry] = useState('SaaS / Technology');
   const [clientCount, setClientCount] = useState('24');
@@ -33,231 +35,114 @@ export const Campaigns = () => {
   const [error, setError] = useState('');
 
   const generatePosts = async () => {
-    if (!companyName || !industry) {
-      setError('Please enter company name and industry');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    
+    if (!companyName.trim() || !industry.trim()) { setError('Company name and industry required'); return; }
+    setLoading(true); setError('');
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       const res = await fetch(`${API_URL}/api/campaigns/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          companyName: companyName,
-          industry: industry,
-          clientCount: parseInt(clientCount) || 10,
-          tone: 'professional'
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, credentials: 'include',
+        body: JSON.stringify({ companyName: companyName.trim(), industry: industry.trim(), clientCount: parseInt(clientCount)||10, tone: 'professional' })
       });
-
       const data = await res.json();
-
-      if (data.success && data.posts) {
-        setPosts(data.posts.map((post, idx) => ({
-          id: String(idx + 1).padStart(2, '0'),
-          ...post
-        })));
-      } else {
-        setError(data.error || 'Failed to generate posts');
-      }
-    } catch (e) {
-      setError(e.message || 'Generation failed');
-    } finally {
-      setLoading(false);
-    }
+      if (data.success && Array.isArray(data.posts) && data.posts.length>0) {
+        setPosts(data.posts.map((post, idx) => ({ id: String(idx+1).padStart(2,'0'), platform: post.platform || ['LinkedIn','WhatsApp','Telegram'][idx%3], type: post.type || 'Post', typeColor: post.typeColor || 'bg-[#EDE9FF] text-[#5E17EB]', content: post.content || post.text || '' })));
+      } else if (data.posts) {
+        setPosts(data.posts.map((p,i)=>({ id:String(i+1).padStart(2,'0'), platform:p.platform||'LinkedIn', type:p.type||'Post', typeColor:'bg-[#EDE9FF] text-[#5E17EB]', content:p.content||p.text||'' })));
+      } else { setError(data.error || 'Failed to generate. Check GROQ_API_KEY.'); }
+    } catch (e) { setError(e.message || 'Generation failed'); } finally { setLoading(false); }
   };
 
-  const copyToClipboard = (content) => {
-    navigator.clipboard.writeText(content);
-  };
-
-  const startEdit = (post) => {
-    setEditingId(post.id);
-    setEditContent(post.content);
-  };
-
-  const saveEdit = () => {
-    setPosts(posts.map(p => p.id === editingId ? { ...p, content: editContent } : p));
-    setEditingId(null);
-  };
-
+  const copyToClipboard = (content) => { navigator.clipboard.writeText(content); };
+  const startEdit = (post) => { setEditingId(post.id); setEditContent(post.content); };
+  const saveEdit = () => { setPosts(posts.map(p => p.id===editingId ? { ...p, content: editContent } : p)); setEditingId(null); };
   const exportCSV = () => {
     const csv = `#,Platform,Post Type,Content\n` + posts.map(p => `${p.id},${p.platform},${p.type},"${p.content.replace(/"/g, '""')}"`).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `campaign-${companyName.replace(/\s+/g,'-')}.csv`;
-    a.click();
+    const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`campaign-${companyName.replace(/\s+/g,'-')}.csv`; a.click(); URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF7F0] md:bg-[#FFFCF8] font-['Inter',sans-serif] pb-20 overflow-x-hidden w-full max-w-[100vw]">
-      {/* Top nav */}
-      <div className="bg-[#FFFDF9] md:bg-white border-b border-[#EDEDED] px-3 sm:px-4 py-3 sticky top-0 z-10 w-full max-w-full">
-        <div className="max-w-[1120px] mx-auto flex items-center justify-between gap-2 w-full">
-          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1 sm:gap-1.5 border border-[#0A0A0A] rounded-lg px-2.5 sm:px-3 py-1.5 text-[12px] sm:text-[13px] font-medium text-[#0A0A0A] bg-white hover:bg-[#FAFAFA] shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-            <span className="hidden sm:inline">Back</span>
-          </button>
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#5E17EB] rounded-lg flex items-center justify-center shrink-0">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="white" className="sm:w-4 sm:h-4"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>
-            </div>
-            <span className="text-[15px] sm:text-[18px] font-bold tracking-tight text-[#0A0A0A] truncate">Alpha Agency</span>
-            <span className="hidden sm:inline bg-[#EDE9FF] text-[#5E17EB] text-[11px] sm:text-[12px] font-medium px-2 sm:px-3 py-1 rounded-full truncate">the money maker</span>
+    <div className="min-h-screen bg-[#FFFCF8] font-['Inter',sans-serif] pb-8">
+      <div className="bg-white border-b border-[#EDEDED] sticky top-0 z-10">
+        <div className="max-w-[1120px] mx-auto px-3 sm:px-4 h-[56px] flex items-center justify-between gap-2">
+          <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1.5 border border-[#E5E7EB] rounded-full px-3 py-1.5 text-[13px] font-medium bg-white hover:bg-[#F9FAFB]"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-[#5E17EB] rounded-lg flex items-center justify-center text-white text-[12px]">✦</div>
+            <span className="text-[15px] font-black">Campaigns</span>
+            <span className="hidden sm:inline text-[11px] font-bold bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] px-2 py-1 rounded-full">MONEY MAKER</span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <button className="text-[#0A0A0A] hidden sm:block"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M18 8A6 6 0 0 0 6 8c0 7-6 9-6 9h16s-6-2-6-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#EDE9FF] rounded-full flex items-center justify-center text-[#5E17EB] text-[11px] sm:text-[12px] font-bold shrink-0">AA</div>
-          </div>
+          <div className="w-16" />
         </div>
       </div>
 
-      <div className="max-w-[1120px] mx-auto px-3 sm:px-4 w-full max-w-full overflow-hidden">
-        {/* Title */}
-        <div className="text-center md:text-left mt-6">
-          <h1 className="text-[28px] md:text-[40px] font-bold tracking-tight text-[#0A0A0A] leading-tight">Campaigns - 10 Posts System</h1>
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-3">
-            <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 10 posts</span>
-            <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="8.6" x2="15.4" y2="15.4"/><line x1="8.6" y1="15.4" x2="15.4" y2="8.6"/></svg> 3 platforms</span>
-            <span className="inline-flex items-center gap-1.5 bg-[#EDE9FF] text-[#0A0A0A] text-[13px] font-medium px-3 py-1.5 rounded-full"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h8"/></svg> 1 week</span>
-            <span className="inline-flex items-center gap-1.5 bg-[#5E17EB] text-white text-[13px] font-semibold px-3 py-1.5 rounded-full">$ &nbsp;1 week • $250 <span className="line-through opacity-60">$500</span> 🔥 Founding</span>
+      <div className="max-w-[1120px] mx-auto px-3 sm:px-4">
+        <div className="mt-6 text-center md:text-left">
+          <h1 className="text-[26px] md:text-[34px] font-black tracking-[-0.02em]">10 Posts System <span className="text-[#5E17EB]">— 1 Week</span></h1>
+          <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-start">
+            <span className="bg-white border border-[#EDEDED] rounded-full px-3 py-1.5 text-[12px] font-semibold">10 posts</span>
+            <span className="bg-white border border-[#EDEDED] rounded-full px-3 py-1.5 text-[12px] font-semibold">3 platforms</span>
+            <span className="bg-[#5E17EB] text-white rounded-full px-3 py-1.5 text-[12px] font-bold">$250 Founding <span className="line-through opacity-60 ml-1">$500</span></span>
           </div>
         </div>
 
-        {/* Campaign Inputs */}
-        <div className="mt-6 bg-white border border-[#EDEDED] rounded-xl p-5 md:p-6 shadow-sm">
-          <h2 className="text-[18px] font-bold text-[#0A0A0A] flex items-center gap-2"><span className="text-[#5E17EB]">✨</span> Campaign Inputs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                       {error && <div className="col-span-full bg-red-50 border border-red-200 text-red-700 text-[13px] px-4 py-3 rounded-lg">{error}</div>}
-            <div>
-              <label className="text-[13px] font-semibold text-[#0A0A0A]">Company Name</label>
-              <div className="mt-1.5 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="8" width="18" height="12" rx="1"/><path d="M7 8V6a5 5 0 0 1 10 0v2"/><path d="M7 12h10M7 16h10"/></svg></span>
-                <input value={companyName} onChange={(e)=>setCompanyName(e.target.value)} placeholder="e.g., Dangote Cement" className="w-full border border-[#E5E7EB] rounded-lg pl-9 pr-3 py-2.5 text-[14px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white" />
-              </div>
-            </div>
-            <div>
-              <label className="text-[13px] font-semibold text-[#0A0A0A]">Industry</label>
-              <div className="mt-1.5 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span>
-                <input value={industry} onChange={(e)=>setIndustry(e.target.value)} placeholder="e.g., Construction" className="w-full border border-[#E5E7EB] rounded-lg pl-9 pr-3 py-2.5 text-[14px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white" />
-              </div>
-            </div>
-            <div>
-              <label className="text-[13px] font-semibold text-[#0A0A0A]">Clients Count</label>
-              <div className="mt-1.5 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                <input value={clientCount} onChange={(e)=>setClientCount(e.target.value)} placeholder="e.g., 500" className="w-full border border-[#E5E7EB] rounded-lg pl-9 pr-3 py-2.5 text-[14px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:border-[#5E17EB] focus:outline-none bg-white" />
-              </div>
-            </div>
+        <div className="mt-6 bg-white border border-[#EDEDED] rounded-2xl p-4 md:p-6">
+          <h2 className="text-[14px] font-black flex items-center gap-2"><span className="w-6 h-6 rounded-lg bg-[#F0EFFF] text-[#5E17EB] flex items-center justify-center text-[12px]">✦</span> Campaign Inputs</h2>
+          {error && <div className="mt-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-[13px]">{error}</div>}
+          <div className="mt-4 grid md:grid-cols-3 gap-3">
+            <div><label className="text-[12px] font-bold">Company Name</label><input value={companyName} onChange={e=>setCompanyName(e.target.value)} placeholder="e.g., Acme Innovations" className="mt-1 w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-[13px] focus:border-[#5E17EB] focus:outline-none focus:ring-2 focus:ring-[#5E17EB]/10" /></div>
+            <div><label className="text-[12px] font-bold">Industry</label><input value={industry} onChange={e=>setIndustry(e.target.value)} placeholder="e.g., SaaS" className="mt-1 w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-[13px] focus:border-[#5E17EB] focus:outline-none focus:ring-2 focus:ring-[#5E17EB]/10" /></div>
+            <div><label className="text-[12px] font-bold">Clients Count</label><input value={clientCount} onChange={e=>setClientCount(e.target.value)} placeholder="24" className="mt-1 w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-[13px] focus:border-[#5E17EB] focus:outline-none focus:ring-2 focus:ring-[#5E17EB]/10" /></div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button onClick={generatePosts} disabled={loading} className="bg-[#5E17EB] hover:bg-[#4E0FD1] text-white rounded-xl px-5 py-2.5 text-[13px] font-bold disabled:opacity-50 flex items-center gap-2">
+              {loading && <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/>}
+              {loading ? 'Generating via Groq 120B...' : '✨ Generate with Groq 120B'}
+            </button>
+            <button onClick={exportCSV} className="border bg-white rounded-xl px-4 py-2.5 text-[13px] font-semibold hover:bg-[#F9FAFB]">Export CSV</button>
           </div>
         </div>
 
-        {/* 10-Post Engine */}
         <div className="mt-6">
-          <div className="flex items-center gap-3">
-            <h2 className="text-[20px] md:text-[24px] font-bold tracking-tight text-[#0A0A0A]">10-Post Engine</h2>
-            <span className="bg-[#EDE9FF] text-[#5E17EB] text-[12px] font-semibold px-3 py-1 rounded-full">Draft • Ready to generate</span>
+          <div className="flex items-center gap-2">
+            <h2 className="text-[16px] font-black">10-Post Engine</h2>
+            <span className="text-[11px] font-bold bg-[#F0EFFF] text-[#5E17EB] border border-[#DDD6FE] px-2 py-1 rounded-full">{posts.length} posts</span>
+            <span className="ml-auto text-[11px] text-[#6B7280] hidden sm:inline">Estimated reach: 12.5k</span>
           </div>
-          <p className="text-[13px] text-[#6B7280] mt-1">Review and manage the 10 posts generated for this campaign</p>
 
-          {/* Table - desktop, cards on mobile for 100% fit */}
-          <div className="hidden md:block mt-3 bg-white border border-[#EDEDED] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
-            <table className="w-full min-w-[760px]">
-              <thead>
-                <tr className="bg-[#F9FAFB] border-b border-[#EDEDED] text-[12px] font-semibold text-[#6B7280]">
-                  <th className="text-center py-2.5 px-3 w-10">#</th>
-                  <th className="text-left py-2.5 px-2">Platform</th>
-                  <th className="text-left py-2.5 px-2">Post Type</th>
-                  <th className="text-left py-2.5 px-2">Content</th>
-                  <th className="text-left py-2.5 px-3 w-[130px]">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#EDEDED]">
-                {posts.map((post) => (
-                  <tr key={post.id} className="hover:bg-[#FAFAFA] text-[13px]">
-                    <td className="text-center py-2.5 px-3 text-[#6B7280] font-medium">{post.id}</td>
-                    <td className="py-2.5 px-2">
-                      <div className="flex items-center gap-1.5">
-                        {platformIcon(post.platform)}
-                        <span className="font-medium text-[#0A0A0A] text-[13px]">{post.platform}</span>
-                      </div>
+          <div className="hidden md:block mt-3 bg-white border border-[#EDEDED] rounded-2xl overflow-hidden">
+            <table className="w-full text-[13px]">
+              <thead className="bg-[#F9FAFB] border-b text-[11px] font-bold text-[#6B7280] uppercase tracking-wide"><tr><th className="px-3 py-2.5 text-center w-10">#</th><th className="px-3 py-2.5 text-left">Platform</th><th className="px-3 py-2.5 text-left">Type</th><th className="px-3 py-2.5 text-left">Content</th><th className="px-3 py-2.5 text-left w-[140px]">Actions</th></tr></thead>
+              <tbody className="divide-y divide-[#F3F4F6]">
+                {posts.map(post=>(
+                  <tr key={post.id} className="hover:bg-[#FFFCF8]">
+                    <td className="px-3 py-3 text-center text-[#9CA3AF] font-medium">{post.id}</td>
+                    <td className="px-3 py-3"><div className="flex items-center gap-2">{platformIcon(post.platform)}<span className="font-semibold text-[12px]">{post.platform}</span></div></td>
+                    <td className="px-3 py-3"><span className={`text-[11px] font-bold px-2 py-1 rounded-full ${post.typeColor}`}>{post.type}</span></td>
+                    <td className="px-3 py-3 max-w-[420px]">
+                      {editingId===post.id ? (
+                        <div className="flex gap-2"><input value={editContent} onChange={e=>setEditContent(e.target.value)} className="flex-1 border border-[#5E17EB] rounded-lg px-2 py-1.5 text-[12px] focus:outline-none" /><button onClick={saveEdit} className="bg-[#5E17EB] text-white px-3 py-1 rounded-lg text-[11px] font-bold">Save</button><button onClick={()=>setEditingId(null)} className="border px-3 py-1 rounded-lg text-[11px]">Cancel</button></div>
+                      ) : <span className="leading-snug line-clamp-2">{post.content}</span>}
                     </td>
-                    <td className="py-2.5 px-2">
-                      <span className={`inline-block text-[11px] font-semibold px-2.5 py-1 rounded-full ${post.typeColor}`}>{post.type}</span>
-                    </td>
-                    <td className="py-2.5 px-2 max-w-[420px]">
-                      {editingId === post.id ? (
-                        <div className="flex gap-2">
-                          <input value={editContent} onChange={(e)=>setEditContent(e.target.value)} className="flex-1 border border-[#5E17EB] rounded-lg px-2 py-1 text-[12px] focus:outline-none" />
-                          <button onClick={saveEdit} className="bg-[#5E17EB] text-white text-[11px] px-2 py-1 rounded">Save</button>
-                          <button onClick={()=>setEditingId(null)} className="bg-gray-200 text-[11px] px-2 py-1 rounded">Cancel</button>
-                        </div>
-                      ) : (
-                        <span className="text-[#0A0A0A] leading-tight line-clamp-2">{post.content}</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex gap-1.5">
-                        <button onClick={()=>copyToClipboard(post.content)} className="inline-flex items-center gap-1 border border-[#E5E7EB] bg-white rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-[#0A0A0A] hover:bg-[#F9FAFB]">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v3"/></svg>
-                          Copy
-                        </button>
-                        <button onClick={()=>startEdit(post)} className="inline-flex items-center gap-1 bg-[#5E17EB] hover:bg-[#4F0FE0] text-white rounded-lg px-2.5 py-1.5 text-[11px] font-medium">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                          Edit
-                        </button>
-                      </div>
-                    </td>
+                    <td className="px-3 py-3"><div className="flex gap-1.5"><button onClick={()=>copyToClipboard(post.content)} className="border rounded-lg px-2.5 py-1.5 text-[11px] font-semibold bg-white hover:bg-[#F9FAFB]">Copy</button><button onClick={()=>{setEditingId(post.id); setEditContent(post.content);}} className="bg-[#0A0A0A] text-white rounded-lg px-2.5 py-1.5 text-[11px] font-bold">Edit</button></div></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {/* Mobile cards fallback */}
+
           <div className="md:hidden mt-3 space-y-3">
-            {posts.map((post) => (
-              <div key={`m-${post.id}`} className="bg-white border border-[#EDEDED] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {platformIcon(post.platform)}
-                    <span className="text-xs font-bold">{post.platform}</span>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${post.typeColor}`}>{post.type}</span>
-                  </div>
-                  <span className="text-[11px] text-[#6B7280]">#{post.id}</span>
-                </div>
-                <p className="text-[13px] leading-snug text-[#0A0A0A] break-words mb-3">{post.content}</p>
-                <div className="flex gap-2">
-                  <button onClick={()=>copyToClipboard(post.content)} className="flex-1 border rounded-lg py-2 text-xs font-medium">Copy</button>
-                  <button onClick={()=>startEdit(post)} className="flex-1 bg-[#5E17EB] text-white rounded-lg py-2 text-xs font-medium">Edit</button>
-                </div>
+            {posts.map(post=>(
+              <div key={post.id} className="bg-white border border-[#EDEDED] rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2">{platformIcon(post.platform)}<span className="text-[12px] font-bold">{post.platform}</span><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${post.typeColor}`}>{post.type}</span></div><span className="text-[11px] text-[#9CA3AF]">#{post.id}</span></div>
+                {editingId===post.id ? (
+                  <div className="space-y-2"><textarea value={editContent} onChange={e=>setEditContent(e.target.value)} rows={3} className="w-full border border-[#5E17EB] rounded-xl p-3 text-[13px]"/><div className="flex gap-2"><button onClick={saveEdit} className="flex-1 bg-[#5E17EB] text-white rounded-xl py-2 text-[12px] font-bold">Save</button><button onClick={()=>setEditingId(null)} className="flex-1 border rounded-xl py-2 text-[12px] font-bold">Cancel</button></div></div>
+                ) : (
+                  <>
+                    <p className="text-[13px] leading-[1.6] break-words">{post.content}</p>
+                    <div className="mt-3 flex gap-2"><button onClick={()=>copyToClipboard(post.content)} className="flex-1 border rounded-xl py-2 text-[12px] font-bold">Copy</button><button onClick={()=>{setEditingId(post.id); setEditContent(post.content);}} className="flex-1 bg-[#0A0A0A] text-white rounded-xl py-2 text-[12px] font-bold">Edit</button></div>
+                  </>
+                )}
               </div>
             ))}
-          </div>
-
-          {/* Bottom bar */}
-          <div className="mt-4 bg-[#FFFCF8] border-t border-[#EDEDED] -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 flex flex-col gap-3">
-            <span className="text-[13px] text-[#0A0A0A] font-medium">10 of 10 posts ready • Estimated reach: 12.5k across platforms <span className="inline-flex items-center justify-center w-4 h-4 border border-[#6B7280] rounded-full text-[10px]">i</span></span>
-            <div className="flex gap-2">
-              <button onClick={exportCSV} className="inline-flex items-center gap-1.5 bg-white border border-[#0A0A0A] text-[#0A0A0A] rounded-lg px-4 py-2 text-[13px] font-medium hover:bg-[#FAFAFA]">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export CSV
-              </button>
-              <button onClick={generatePosts} disabled={loading} className={`inline-flex items-center gap-1.5 ${loading ? 'bg-[#A899D6] cursor-not-allowed' : 'bg-[#5E17EB] hover:bg-[#4F0FE0]'} text-white rounded-lg px-4 py-2 text-[13px] font-semibold`}>
-                {loading && <svg width="14" height="14" className="animate-spin" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0110 10"/></svg>}
-                {!loading && <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>}
-                {loading ? 'Generating...' : 'Generate All Posts'}
-              </button>
-            </div>
           </div>
         </div>
       </div>

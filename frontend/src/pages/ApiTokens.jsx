@@ -5,7 +5,7 @@ import { API_URL } from '../lib/api';
 
 export const ApiTokens = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creatingToken, setCreatingToken] = useState(false);
@@ -32,39 +32,24 @@ export const ApiTokens = () => {
   const fetchTokens = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       const res = await fetch(`${API_URL}/api/tokens`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }, credentials: 'include'
       });
       const data = await res.json();
-      if (data.success) {
-        setTokens(data.tokens || []);
-      }
-    } catch (e) {
-      console.error('Failed to fetch tokens:', e);
-    } finally {
-      setLoading(false);
-    }
+      if (data.success) setTokens(data.tokens || []);
+      else if (data.tokens) setTokens(data.tokens);
+      else if (Array.isArray(data)) setTokens(data);
+    } catch (e) { console.error('Failed to fetch tokens:', e); } finally { setLoading(false); }
   };
 
   const handleCreateToken = async () => {
-    if (!tokenName.trim()) {
-      alert('Please enter a token name');
-      return;
-    }
-
+    if (!tokenName.trim()) { alert('Please enter a token name'); return; }
     setCreatingToken(true);
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       const res = await fetch(`${API_URL}/api/tokens`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        method: 'POST', headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }, credentials: 'include',
         body: JSON.stringify({ name: tokenName })
       });
       const data = await res.json();
@@ -95,18 +80,11 @@ export const ApiTokens = () => {
   };
 
   const handleDeleteToken = async (tokenId) => {
-    if (!confirm('Are you sure you want to delete this token? This action cannot be undone.')) {
-      return;
-    }
-
+    if (!confirm('Are you sure you want to delete this token? This action cannot be undone.')) return;
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       const res = await fetch(`${API_URL}/api/tokens/${tokenId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        method: 'DELETE', headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }, credentials: 'include'
       });
       const data = await res.json();
 
@@ -122,18 +100,11 @@ export const ApiTokens = () => {
   };
 
   const handleRevokeToken = async (tokenId) => {
-    if (!confirm('Are you sure you want to revoke this token?')) {
-      return;
-    }
-
+    if (!confirm('Are you sure you want to revoke this token?')) return;
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = getToken();
       const res = await fetch(`${API_URL}/api/tokens/${tokenId}/revoke`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        method: 'PATCH', headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' }, credentials: 'include'
       });
       const data = await res.json();
 
