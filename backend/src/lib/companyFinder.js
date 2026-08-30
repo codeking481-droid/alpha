@@ -473,31 +473,10 @@ export async function findLeadsGooglePlaces(env, niche, location, limit) {
 // PROSPEO: Real verified owner emails — works on free tier, X-KEY header
 // ──────────────────────────────────────────────────
 function prospeoIndustryForNiche(niche) {
-  const n = (niche || '').toLowerCase().trim();
-  const map = {
-    'skincare': ['Cosmetics'],
-    'beauty': ['Cosmetics'],
-    'cosmetics': ['Cosmetics'],
-    'fitness': ['Health, Wellness & Fitness'],
-    'gym': ['Health, Wellness & Fitness'],
-    'gyms': ['Health, Wellness & Fitness'],
-    'saas': ['Software Development', 'Information Technology & Services'],
-    'software': ['Software Development'],
-    'tech': ['Software Development', 'Information Technology & Services'],
-    'shopify': ['Retail', 'Information Technology & Services'],
-    'ecommerce': ['Retail'],
-    'e-com': ['Retail'],
-    'real estate': ['Real Estate'],
-    'realestate': ['Real Estate'],
-    'hotels': ['Hospitality'],
-    'hotel': ['Hospitality'],
-    'clinics': ['Hospital & Health Care'],
-    'clinic': ['Hospital & Health Care'],
-    'marketing': ['Marketing & Advertising'],
-    'agency': ['Marketing & Advertising'],
-  };
-  for (const k in map) if (n.includes(k)) return map[k];
-  return null; // no industry filter — broader
+  // Prospeo industries are strict enums — to avoid INVALID_FILTERS, skip industry filter for now
+  // and let Prospeo return founders across industries, then we filter by niche keyword if needed
+  // Valid examples: Software Development, Wellness and Fitness Services, Retail Health and Personal Care Products
+  return null;
 }
 
 export async function findCompaniesProspeo(env, niche, location, limit) {
