@@ -3,28 +3,25 @@
 
 async function callGroq(env, prompt) {
   if (!env.GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured')
-  
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${env.GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 4000
-    })
-  })
-
-  if (!res.ok) {
-    const error = await res.text()
-    throw new Error(`Groq API error: ${res.status} ${error}`)
+  const primary = env.GROQ_MODEL || 'openai/gpt-oss-120b';
+  for (const model of [primary, 'openai/gpt-oss-20b', 'llama-3.1-8b-instant']) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.7, max_tokens: 4000 })
+      })
+      if (!res.ok) {
+        const txt = await res.text();
+        console.log(`Groq ${model} failed ${res.status}: ${txt.slice(0,200)}`);
+        continue;
+      }
+      const data = await res.json()
+      const content = data.choices?.[0]?.message?.content || ''
+      if (content) { console.log(`Groq ${model} succeeded`); return content; }
+    } catch (e) { console.log(`Groq ${model} exception: ${e.message}`); }
   }
-
-  const data = await res.json()
-  return data.choices[0]?.message?.content || ''
+  throw new Error(`Groq all models failed for GROQ_MODEL=${primary}`)
 }
 
 async function callOpenAI(env, prompt) {

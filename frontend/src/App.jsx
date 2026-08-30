@@ -10,7 +10,7 @@ import { Campaigns } from './pages/Campaigns';
 import { SavedCompanies } from './pages/SavedCompanies';
 import { Inbox } from './pages/Inbox';
 import { Settings } from './pages/Settings';
-import { MyAdCampaigns } from './pages/MyAdCampaigns';
+import { ApiTokens } from './pages/ApiTokens';
 
 function App() {
   return (
@@ -28,6 +28,7 @@ function App() {
         <Route path="/saved-companies" element={<ProtectedRoute requirePayment={true}><SavedCompanies /></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute requirePayment={true}><Inbox /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute requirePayment={true}><Settings /></ProtectedRoute>} />
+        <Route path="/api-tokens" element={<ProtectedRoute requirePayment={true}><ApiTokens /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
