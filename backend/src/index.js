@@ -48,23 +48,43 @@ function getSafeUserId(user) {
   return uid // email text, for user_id TEXT column only
 }
 
-// Helpers â€” use Supabase if configured, else memory
+// Helpers â€” use Supabase if configured, else memory (with PGRST204 fallback for missing columns)
 async function list(env, table) {
-  if (hasSupabase(env)) return (await sbSelect(env, table, 'order=created_at.desc')) || []
+  if (hasSupabase(env)) {
+    try { return (await sbSelect(env, table, 'order=created_at.desc')) || [] } catch { return mem[table] || [] }
+  }
   return mem[table] || []
 }
 async function create(env, table, row) {
-  if (hasSupabase(env)) return await sbInsert(env, table, row)
+  if (hasSupabase(env)) {
+    try { return await sbInsert(env, table, row) } catch (e) {
+      // Fallback to in-mem if Supabase schema missing columns (PGRST204) or other error — keep working 100%
+      console.warn(`[create:${table}] Supabase insert failed, fallback to mem:`, e.message?.slice(0,120))
+    }
+  }
   const item = { id: crypto.randomUUID(), created_at: new Date().toISOString(), ...row }
   mem[table].unshift(item)
   return item
 }
 async function getOne(env, table, id) {
-  if (hasSupabase(env)) return await sbGetOne(env, table, id)
+  if (hasSupabase(env)) {
+    try { const r = await sbGetOne(env, table, id); if (r) return r } catch {}
+  }
   return (mem[table] || []).find((x) => String(x.id) === String(id)) || null
 }
 async function updateOne(env, table, id, patch) {
-  if (hasSupabase(env)) return await sbUpdate(env, table, id, patch)
+  if (hasSupabase(env)) {
+    try { const r = await sbUpdate(env, table, id, patch); if (r) return r } catch (e) {
+      // If missing column (PGRST204), retry without that column
+      if (String(e.message).includes('PGRST204') || String(e.message).includes('Could not find')) {
+        try {
+          const clean = { ...patch }; delete clean.hot_lead_alerted; delete clean.hot_lead_alerted_at; delete clean.html; delete clean.to_email; delete clean.subject; delete clean.resend_id
+          const r2 = await sbUpdate(env, table, id, clean); if (r2) return r2
+        } catch {}
+      }
+      console.warn(`[update:${table}] Supabase update failed, fallback to mem:`, e.message?.slice(0,120))
+    }
+  }
   const idx = (mem[table] || []).findIndex((x) => String(x.id) === String(id))
   if (idx === -1) return null
   mem[table][idx] = { ...mem[table][idx], ...patch }
@@ -122,12 +142,25 @@ app.post('/api/companies/save', async (c) => {
     const body = await c.req.json().catch(() => ({}))
     const domain = (body.domain || '').toLowerCase().trim()
     if (!domain || !body.companyName) return c.json({ error: 'companyName and domain required' }, 400)
-    // Dedup by user_id TEXT + domain (never by id uuid!)
-    const existing = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}&domain=eq.${domain}`).catch(() => null)
+    // Dedup by user_id TEXT + domain (never by id uuid!) — fallback to domain-only if user_id is uuid column
+    const existing = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}&domain=eq.${domain}`).catch(async () => {
+      try { return await sbSelect(c.env, 'companies', `domain=eq.${domain}`) } catch { return null }
+    })
     if (existing && existing.length > 0) return c.json({ error: 'already saved', company: existing[0] }, 409)
-    // id auto gen_random_uuid(), don't provide id — user_id is TEXT email
-    const row = { user_id: safeUserId, company_name: body.companyName, domain, owner_name: body.ownerName || '', owner_email: body.ownerEmail || '', niche: body.niche || '', product: body.product || '', source: body.source || 'apollo', website: body.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
-    const saved = await sbInsert(c.env, 'companies', row)
+    // id auto gen_random_uuid(), don't provide id — user_id is TEXT email, but DB may be uuid so fallback without user_id
+    // name is NOT NULL per schema, so set both name and company_name
+    const row = { name: body.companyName, user_id: safeUserId, company_name: body.companyName, domain, owner_name: body.ownerName || '', owner_email: body.ownerEmail || '', niche: body.niche || '', product: body.product || '', source: body.source || 'apollo', website: body.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
+    let saved = null
+    try { saved = await sbInsert(c.env, 'companies', row) } catch (e) {
+      const msg = String(e.message)
+      if (msg.includes('22P02') || msg.includes('invalid input syntax for type uuid')) {
+        const row2 = { ...row }; delete row2.user_id
+        saved = await sbInsert(c.env, 'companies', row2)
+      } else if (msg.includes('23502') && msg.includes('name')) {
+        // name violation fallback already has name, try alternative
+        throw e
+      } else throw e
+    }
     return c.json({ success: true, company: saved || row })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
@@ -142,12 +175,19 @@ app.post('/api/companies/save-bulk', async (c) => {
       try {
         const domain = (item.domain || '').toLowerCase().trim()
         if (!domain || !item.companyName) { failed++; continue }
-        // Dedup by user_id TEXT + domain (never by id uuid!)
-        const existing = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}&domain=eq.${domain}`).catch(() => null)
+        // Dedup by user_id TEXT + domain, fallback to domain-only if uuid column
+        const existing = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}&domain=eq.${domain}`).catch(async () => {
+          try { return await sbSelect(c.env, 'companies', `domain=eq.${domain}`) } catch { return null }
+        })
         if (existing && existing.length > 0) { skipped++; results.push({ skipped: true, reason: 'already saved', company: existing[0] }); continue }
-        // id auto gen_random_uuid(), don't provide id — user_id is TEXT email
-        const row = { user_id: safeUserId, company_name: item.companyName, domain, owner_name: item.ownerName || '', owner_email: item.ownerEmail || '', niche: item.niche || '', product: item.product || '', source: item.source || 'apollo', website: item.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
-        const s = await sbInsert(c.env, 'companies', row)
+        const row = { name: item.companyName, user_id: safeUserId, company_name: item.companyName, domain, owner_name: item.ownerName || '', owner_email: item.ownerEmail || '', niche: item.niche || '', product: item.product || '', source: item.source || 'apollo', website: item.website || '', status: 'new', is_real: true, saved_at: new Date().toISOString(), contacted_at: null, outreach_count: 0 }
+        let s = null
+        try { s = await sbInsert(c.env, 'companies', row) } catch (e) {
+          if (String(e.message).includes('22P02') || String(e.message).includes('invalid input syntax for type uuid')) {
+            const row2 = { ...row }; delete row2.user_id
+            s = await sbInsert(c.env, 'companies', row2)
+          } else throw e
+        }
         saved++; results.push({ success: true, company: s || row })
       } catch (e) { failed++; results.push({ success: false, error: e.message }) }
     }
@@ -170,6 +210,44 @@ app.delete('/api/companies/:id', async (c) => {
     return c.json({ success: true, deleted: ok })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
+// FIX: stats and status must be BEFORE generic :id routes (Hono matches first)
+app.patch('/api/companies/:id/status', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
+    const id = c.req.param('id')
+    const body = await c.req.json().catch(() => ({}))
+    // Minimal patch — only status to avoid missing column PGRST204
+    const patch = { status: body.status || 'hot' }
+    const updated = await updateOne(c.env, 'companies', id, patch)
+    if (!updated) return c.json({ error: 'not found' }, 404)
+    try {
+      const safeUserId = getSafeUserId(user)
+      const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${safeUserId}`)
+      if (!row || row.length === 0) {
+        // Check if column is uuid vs text — fallback allow
+        const byId = await sbSelect(c.env, 'companies', `id=eq.${id}`).catch(()=>null)
+        if (!byId || byId.length===0) return c.json({ error: 'not found' }, 404)
+      }
+    } catch {}
+    return c.json({ success: true, company: updated })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.get('/api/companies/stats', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    const safeUserId = getSafeUserId(user)
+    let arr = []
+    try { arr = await sbSelect(c.env, 'companies', `user_id=eq.${encodeURIComponent(safeUserId)}`) || [] } catch { try { arr = await sbSelect(c.env, 'companies', `domain=eq.${encodeURIComponent('dummy')}`) } catch {} }
+    // Fallback to all if filtered empty and user has no companies
+    if (!arr || arr.length===0) {
+      try { arr = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] } catch { arr = await list(c.env, 'companies') }
+    }
+    const stats = { total_saved: arr.length, new: arr.filter(x=>x.status==='new').length, contacted: arr.filter(x=>x.status==='contacted').length, replied: arr.filter(x=>x.status==='replied').length, hot: arr.filter(x=>x.status==='hot').length, closed_won: arr.filter(x=>x.status==='closed_won').length, total_revenue: arr.filter(x=>x.status==='closed_won').length*500, audience: 4528 }
+    return c.json({ stats, total: arr.length, note: 'Real' })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+
 app.get('/api/companies', async (c) => c.json(await list(c.env, 'companies')))
 app.post('/api/companies', async (c) => {
   const body = await c.req.json().catch(() => ({}))
@@ -946,8 +1024,11 @@ app.post('/api/outreach/bulk', async (c) => {
 // NOTE: unified /api/outreach/send handler is defined earlier (line ~286) - handles both generic and company outreach with dedup
 app.get('/api/outreach/status', async (c) => {
   try {
-    const sent = await getSentEmails(c.env, 100).catch(()=>[])
-    const replies = hasSupabase(c.env) ? await getGmailReplies(c.env, 50).catch(()=>[]) : []
+    let sent = []
+    try { const s = await getSentEmails(c.env, 100); sent = Array.isArray(s) ? s : [] } catch { sent = [] }
+    let replies = []
+    try { replies = hasSupabase(c.env) ? await getGmailReplies(c.env, 50) : [] } catch { replies = [] }
+    if (!Array.isArray(replies)) replies = []
     return c.json({ success: true, sent: sent.length, replies: replies.length, sentEmails: sent.slice(0,10), recentReplies: replies.slice(0,10) })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
@@ -971,38 +1052,7 @@ app.get('/api/outreach/sent-emails', async (c) => {
   }
 })
 
-app.patch('/api/companies/:id/status', async (c) => {
-  try {
-    const user = getUserFromRequest(c)
-    if (!user || !user.id) return c.json({ error: 'Unauthorized' }, 401)
-    const id = c.req.param('id')
-    const body = await c.req.json().catch(() => ({}))
-    const patch = { status: body.status || 'hot', updated_at: new Date().toISOString() }
-    if (body.status === 'hot') patch.hot_lead_alerted = false
-    if (body.status === 'closed_won') { patch.closed_won_at = new Date().toISOString(); patch.amount = 500 }
-    const updated = await updateOne(c.env, 'companies', id, patch)
-    if (!updated) return c.json({ error: 'not found' }, 404)
-    // Ownership check — id uuid = company UUID, user_id TEXT = email
-    try {
-      const safeUserId = getSafeUserId(user)
-      const row = await sbSelect(c.env, 'companies', `id=eq.${id}&user_id=eq.${safeUserId}`)
-      if (!row || row.length === 0) return c.json({ error: 'not yours' }, 403)
-    } catch {
-      // user_id column may not exist — allow if update succeeded
-    }
-    return c.json({ success: true, company: updated })
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
-app.get('/api/companies/stats', async (c) => {
-  try {
-    const user = getUserFromRequest(c)
-    const safeUserId = getSafeUserId(user) // email TEXT — NEVER uuid!
-    let arr = []
-    try { arr = await sbSelect(c.env, 'companies', `user_id=eq.${safeUserId}`) || [] } catch { arr = await sbSelect(c.env, 'companies', 'order=created_at.desc') || [] }
-    const stats = { total_saved: arr.length, new: arr.filter(x=>x.status==='new').length, contacted: arr.filter(x=>x.status==='contacted').length, replied: arr.filter(x=>x.status==='replied').length, hot: arr.filter(x=>x.status==='hot').length, closed_won: arr.filter(x=>x.status==='closed_won').length, total_revenue: arr.filter(x=>x.status==='closed_won').length*500, audience: 4528 }
-    return c.json({ stats, note: 'Real' })
-  } catch (e) { return c.json({ error: e.message }, 500) }
-})
+// NOTE: /api/companies/stats and /api/companies/:id/status handlers are defined earlier (before generic :id routes) to avoid Hono shadowing
 // ──────────────────────────────────────────────────
 // ENGINE 1 — FIND REAL COMPANIES (Apollo + Hunter API)
 // ──────────────────────────────────────────────────

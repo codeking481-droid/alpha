@@ -179,7 +179,13 @@ alter table replies add column if not exists hot_lead_alerted_at timestamp;
 create unique index if not exists replies_gmail_id_key on replies(gmail_id) where gmail_id is not null;
 
 -- Vault + Inbox columns (prompt: VAULT + INBOX TWO CARDS)
-alter table companies add column if not exists user_id uuid;
+alter table companies add column if not exists user_id text;
+-- If previous migration created user_id as uuid, convert to text for email TEXT storage (safe fallback)
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_name='companies' and column_name='user_id' and data_type='uuid') then
+    alter table companies alter column user_id type text using user_id::text;
+  end if;
+end $$;
 alter table companies add column if not exists company_name text;
 alter table companies add column if not exists owner_name text;
 alter table companies add column if not exists owner_email text;
@@ -193,7 +199,12 @@ alter table companies add column if not exists amount decimal(10,2) default 0;
 alter table companies add column if not exists updated_at timestamp;
 
 -- Replies: user_id, company_id, followup columns
-alter table replies add column if not exists user_id uuid;
+alter table replies add column if not exists user_id text;
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_name='replies' and column_name='user_id' and data_type='uuid') then
+    alter table replies alter column user_id type text using user_id::text;
+  end if;
+end $$;
 alter table replies add column if not exists company_id uuid references companies(id) on delete set null;
 alter table replies add column if not exists reply_text text;
 alter table replies add column if not exists followup_message text;
@@ -217,6 +228,25 @@ create table if not exists leads_cache (
 -- Seed master codes (single-use, instant unlock)
 insert into access_codes (code, used) values ('126213JESUSISKING', false) on conflict (code) do nothing;
 insert into access_codes (code, used) values ('126213JESUS', false) on conflict (code) do nothing;
+
+-- Fix messages schema for outreach tracking
+alter table messages add column if not exists to_email text;
+alter table messages add column if not exists subject text;
+alter table messages add column if not exists html text;
+alter table messages add column if not exists text text;
+alter table messages add column if not exists resend_id text;
+
+alter table companies add column if not exists hot_lead_alerted boolean default false;
+alter table companies add column if not exists hot_lead_alerted_at timestamp;
+
+-- Fix messages schema
+alter table messages add column if not exists to_email text;
+alter table messages add column if not exists subject text;
+alter table messages add column if not exists html text;
+alter table messages add column if not exists text text;
+alter table messages add column if not exists resend_id text;
+alter table companies add column if not exists hot_lead_alerted boolean default false;
+alter table companies add column if not exists hot_lead_alerted_at timestamp;
 
 -- Indexes for Vault + Inbox
 create index if not exists idx_companies_user_id on companies(user_id);
