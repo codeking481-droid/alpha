@@ -74,7 +74,7 @@ export const FindCompanies = () => {
           ownerName: c.ownerName || '', ownerEmail: c.ownerEmail || c.email || '',
           color: 'bg-[#5E17EB]', phone: c.phone || '', source: c.source || 'search', verified: !!c.verified, employeeCount: c.employeeCount || 0
         })));
-        const src = data.source === 'apollo' ? 'Apollo ✓' : data.source || 'search';
+        let src = data.source === 'apollo' ? 'Apollo ✓' : data.source === 'mock' ? 'Generated • Ready to save' : data.source || 'search';
         setError(`${arr.length} found • Source: ${src}`);
       } else {
         setResults([]); setError(data.error || 'No companies found — try broader niche like "tech"');

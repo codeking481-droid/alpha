@@ -65,7 +65,7 @@ export const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full">
       <div className="max-w-[760px] mx-auto w-full max-w-full">
         <div className="bg-white border border-[#EDEDED] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm mb-4 sm:mb-6 gap-2">
           <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-1 sm:gap-1.5 bg-[#F3F3F3] hover:bg-[#EBEBEB] text-[#0A0A0A] border border-[#E5E7EB] rounded-full px-3 sm:px-4 py-1.5 text-[12px] sm:text-[14px] font-medium shrink-0">

@@ -239,7 +239,7 @@ export const SavedCompanies = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-4 sm:py-6 font-['Inter',sans-serif] overflow-x-hidden w-full">
       <div className="max-w-[1100px] mx-auto w-full max-w-full">
         {/* Header */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-5">
@@ -455,3 +455,4 @@ export const SavedCompanies = () => {
     </div>
   );
 };
+

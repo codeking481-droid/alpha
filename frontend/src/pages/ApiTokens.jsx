@@ -129,7 +129,7 @@ export const ApiTokens = () => {
   const displayName = user?.email?.split('@')[0] ? user.email.split('@')[0].charAt(0).toUpperCase() + user.email.split('@')[0].slice(1) : 'Alex';
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-3 sm:py-4 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-3 sm:py-4 font-['Inter',sans-serif] overflow-x-hidden w-full">
       <div className="max-w-[1120px] mx-auto w-full max-w-full">
         {/* UNAUTHORIZED MESSAGE */}
         {unauthorized && (
@@ -273,3 +273,4 @@ export const ApiTokens = () => {
     </div>
   );
 };
+

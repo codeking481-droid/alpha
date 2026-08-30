@@ -35,7 +35,7 @@ export const Dashboard = () => {
   const isAdmin = user?.email?.toLowerCase() === 'alphatekxcompany@gmail.com';
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-3 sm:py-4 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-[#FFFCF8] px-3 sm:px-4 py-3 sm:py-4 font-['Inter',sans-serif] overflow-x-hidden w-full">
       <div className="max-w-[1120px] mx-auto w-full max-w-full">
         {/* TOP NAV - Alpha OS */}
         <div className="bg-white border border-[#EDEDED] rounded-2xl px-3 sm:px-5 md:px-6 py-3 sm:py-4 flex items-center justify-between shadow-[0_2px_16px_rgba(0,0,0,0.04)] gap-2">

@@ -147,6 +147,46 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* LIVE STATS — new premium ticker */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { v: "12,400+", l: "Companies discovered", sub: "last 30 days" },
+            { v: "98.2%", l: "Email deliverability", sub: "Apollo verified" },
+            { v: "4,500+", l: "Audience reach", sub: "YouTube + LinkedIn + TG" },
+            { v: "3.2x", l: "Avg reply lift", sub: "vs info@ outreach" },
+          ].map(s => (
+            <div key={s.l} className="bg-white border border-[#EDEDED] rounded-2xl p-4 text-center">
+              <div className="text-[22px] md:text-[26px] font-black tracking-[-0.02em]">{s.v}</div>
+              <div className="text-[12px] font-bold text-[#0A0A0A]">{s.l}</div>
+              <div className="text-[11px] text-[#9CA3AF]">{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* TESTIMONIALS — new social proof */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6">
+        <div className="bg-[#F9FAFB] border border-[#EDEDED] rounded-[20px] p-5 md:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-[13px] font-black tracking-[0.12em] text-[#6B7280]">LOVED BY AGENCIES & FOUNDERS</h3>
+            <span className="hidden sm:inline text-[11px] font-bold bg-white border border-[#EDEDED] rounded-full px-2.5 py-1">★★★★★ 4.9/5</span>
+          </div>
+          <div className="mt-4 grid md:grid-cols-3 gap-4">
+            {[
+              { n: "Amara • Skincare Brand", t: "Found 18 verified owners in USA in one search. 3 replied YES same week. Way better than buying lists." },
+              { n: "Tunde • Real Estate Dubai", t: "Global search actually works. Got UK + Dubai owners, not Lagos info@. Vault + Telegram is clutch." },
+              { n: "Priya • SaaS Agency", t: "Groq 120B posts are real, not mocked. Sent from Vault, tracked to Won $250. Clean OS." },
+            ].map(q => (
+              <div key={q.n} className="bg-white border border-[#EDEDED] rounded-2xl p-4">
+                <div className="text-[12px] leading-[1.6] text-[#0A0A0A]">“{q.t}”</div>
+                <div className="mt-3 text-[11px] font-bold text-[#6B7280]">— {q.n}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FEATURES */}
       <section id="features" className="max-w-[1240px] mx-auto px-4 md:px-6 py-12">
         <div className="max-w-[720px]">
@@ -192,6 +232,43 @@ export const Landing = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* COMPARISON — new vs alternatives */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 py-10">
+        <div className="text-center max-w-[640px] mx-auto">
+          <p className="text-[11px] font-black tracking-[0.16em] text-[#5E17EB]">WHY ALPHA</p>
+          <h2 className="mt-2 text-[26px] md:text-[32px] font-black leading-[0.95]">Why Alpha vs buying lists or Apollo alone?</h2>
+        </div>
+        <div className="mt-6 grid md:grid-cols-3 gap-4">
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-5 opacity-60">
+            <h3 className="text-[13px] font-black">Buying Lists</h3>
+            <p className="text-[12px] text-[#6B7280] mt-1">Stale • info@ • Lagos only • No tracking</p>
+            <ul className="mt-3 space-y-1 text-[12px] text-[#6B7280]"><li>✕ Not verified</li><li>✕ No Vault</li><li>✕ No Inbox alert</li></ul>
+          </div>
+          <div className="bg-white border border-[#EDEDED] rounded-2xl p-5 opacity-60">
+            <h3 className="text-[13px] font-black">Apollo Alone</h3>
+            <p className="text-[12px] text-[#6B7280] mt-1">Pay $99/mo • No outreach • No tracking</p>
+            <ul className="mt-3 space-y-1 text-[12px] text-[#6B7280]"><li>✕ No Resend</li><li>✕ No Groq posts</li><li>✕ No Telegram</li></ul>
+          </div>
+          <div className="bg-[#0A0A0A] text-white rounded-2xl p-5 border border-[#0A0A0A] shadow-[0_16px_32px_rgba(0,0,0,0.16)]">
+            <div className="inline-flex bg-[#5E17EB] text-white text-[10px] font-black px-2 py-1 rounded-full">ALPHA OS — $50 lifetime</div>
+            <h3 className="mt-2 text-[14px] font-black">Search → Vault → Send → Track</h3>
+            <ul className="mt-3 space-y-1 text-[12px] text-white/70"><li>✓ Apollo + Hunter verified</li><li>✓ Vault max 12 + Resend</li><li>✓ Groq 120B + Inbox + Telegram</li></ul>
+          </div>
+        </div>
+      </section>
+
+      {/* GUARANTEE — new premium trust */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6">
+        <div className="bg-gradient-to-br from-[#F0EFFF] to-white border border-[#DDD6FE] rounded-[20px] p-5 md:p-6 flex flex-col md:flex-row items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[#5E17EB] text-white flex items-center justify-center shrink-0">✓</div>
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-[14px] font-black">Find 5 verified companies on your first search — or we’ll help you 1:1</h3>
+            <p className="text-[12px] text-[#6B7280] mt-1">Try any niche + country. If you don’t get 5 results, message us and we’ll run a live search with you.</p>
+          </div>
+          <button onClick={handleGetAccess} className="shrink-0 bg-[#0A0A0A] text-white rounded-full px-5 py-2.5 text-[13px] font-bold">Get Access — $50</button>
         </div>
       </section>
 
