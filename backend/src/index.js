@@ -145,6 +145,19 @@ async function checkAndSendHotLeadTelegram(env, replies) {
 // Health â€” both / and /api/health (for prompt's test)
 app.get('/', (c) => c.json({ status: 'Alpha Agency API â€” Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only â€” Root path must be backend' }))
 app.get('/api/debug/env', (c) => c.json({ hasSupabaseUrl: !!c.env.SUPABASE_URL, hasAnon: !!c.env.SUPABASE_ANON_KEY, hasService: !!c.env.SUPABASE_SERVICE_KEY, hasGroq: !!c.env.GROQ_API_KEY, envKeys: Object.keys(c.env || {}), note: 'debug — no values leaked' }))
+app.get('/api/debug/apollo', async (c) => {
+  try {
+    const niche = c.req.query('niche') || 'software';
+    const location = c.req.query('location') || 'USA';
+    const { findCompaniesApollo } = await import('./lib/companyFinder.js');
+    try {
+      const r = await findCompaniesApollo(c.env, niche, location, 5);
+      return c.json({ success: true, count: r.length, sample: r[0] || null, niche, location, source: 'apollo' });
+    } catch (e) {
+      return c.json({ success: false, error: String(e.message).slice(0,500), niche, location }, 500);
+    }
+  } catch (e) { return c.json({ error: e.message }, 500); }
+})
 app.get('/api/health', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live', timestamp: new Date().toISOString() }))
 app.get('/api/healthz', (c) => c.json({ status: 'ok', message: 'Alpha Agency API is live' }))
 
