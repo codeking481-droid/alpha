@@ -473,9 +473,30 @@ export async function findLeadsGooglePlaces(env, niche, location, limit) {
 // PROSPEO: Real verified owner emails — works on free tier, X-KEY header
 // ──────────────────────────────────────────────────
 function prospeoIndustryForNiche(niche) {
-  // Prospeo industries are strict enums — to avoid INVALID_FILTERS, skip industry filter for now
-  // and let Prospeo return founders across industries, then we filter by niche keyword if needed
-  // Valid examples: Software Development, Wellness and Fitness Services, Retail Health and Personal Care Products
+  const n = (niche || '').toLowerCase().trim();
+  const map = {
+    'skincare': ['Retail Health and Personal Care Products'],
+    'beauty': ['Retail Health and Personal Care Products'],
+    'cosmetics': ['Retail Health and Personal Care Products'],
+    'fitness': ['Wellness and Fitness Services'],
+    'gym': ['Wellness and Fitness Services'],
+    'gyms': ['Wellness and Fitness Services'],
+    'saas': ['Software Development'],
+    'software': ['Software Development'],
+    'tech': ['Software Development'],
+    'shopify': ['Online and Mail Order Retail'],
+    'ecommerce': ['Online and Mail Order Retail'],
+    'e-com': ['Online and Mail Order Retail'],
+    'real estate': ['Real Estate'],
+    'realestate': ['Real Estate'],
+    'hotels': ['Hospitality'],
+    'hotel': ['Hospitality'],
+    'clinics': ['Hospitals and Health Care'],
+    'clinic': ['Hospitals and Health Care'],
+    'marketing': ['Marketing Services'],
+    'agency': ['Marketing Services'],
+  };
+  for (const k in map) if (n.includes(k)) return map[k];
   return null;
 }
 
