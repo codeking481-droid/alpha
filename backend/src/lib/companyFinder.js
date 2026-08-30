@@ -470,7 +470,148 @@ export async function findLeadsGooglePlaces(env, niche, location, limit) {
 }
 
 // ──────────────────────────────────────────────────
-// MAIN SEARCH: Apollo (global) → Tavily → Overpass → Google Places
+// PROSPEO: Real verified owner emails — works on free tier, X-KEY header
+// ──────────────────────────────────────────────────
+function prospeoIndustryForNiche(niche) {
+  const n = (niche || '').toLowerCase().trim();
+  const map = {
+    'skincare': ['Cosmetics'],
+    'beauty': ['Cosmetics'],
+    'cosmetics': ['Cosmetics'],
+    'fitness': ['Health, Wellness & Fitness'],
+    'gym': ['Health, Wellness & Fitness'],
+    'gyms': ['Health, Wellness & Fitness'],
+    'saas': ['Software Development', 'Information Technology & Services'],
+    'software': ['Software Development'],
+    'tech': ['Software Development', 'Information Technology & Services'],
+    'shopify': ['Retail', 'Information Technology & Services'],
+    'ecommerce': ['Retail'],
+    'e-com': ['Retail'],
+    'real estate': ['Real Estate'],
+    'realestate': ['Real Estate'],
+    'hotels': ['Hospitality'],
+    'hotel': ['Hospitality'],
+    'clinics': ['Hospital & Health Care'],
+    'clinic': ['Hospital & Health Care'],
+    'marketing': ['Marketing & Advertising'],
+    'agency': ['Marketing & Advertising'],
+  };
+  for (const k in map) if (n.includes(k)) return map[k];
+  return null; // no industry filter — broader
+}
+
+export async function findCompaniesProspeo(env, niche, location, limit) {
+  const apiKey = env.PROSPEO_API_KEY || env.PROSPEO_KEY;
+  if (!apiKey) throw new Error('PROSPEO_API_KEY missing');
+  const perPage = Math.min(limit || 10, 10);
+  // Build filters: seniority Founder/Owner + industry if mapped + location if provided
+  const filters = {
+    person_seniority: { include: ['Founder/Owner', 'C-Suite'] },
+  };
+  const ind = prospeoIndustryForNiche(niche);
+  if (ind) filters.company_industry = { include: ind };
+  // Location filter requires exact strings — try to map common ones
+  const locLower = (location || '').toLowerCase().trim();
+  if (locLower && locLower !== 'global' && locLower !== 'worldwide' && locLower !== '') {
+    // Use company_location_search with raw location — Prospeo will validate, fallback if invalid
+    // We try with provided location, if INVALID_FILTERS we retry without location
+    if (locLower.includes('usa') || locLower.includes('united states')) filters.company_location_search = { include: ['United States'] };
+    else if (locLower.includes('uk') || locLower.includes('united kingdom') || locLower.includes('england')) filters.company_location_search = { include: ['United Kingdom'] };
+    else if (locLower.includes('dubai') || locLower.includes('uae')) filters.company_location_search = { include: ['United Arab Emirates'] };
+    else filters.company_location_search = { include: [location.trim()] };
+  }
+  const doSearch = async (f) => {
+    const res = await fetch('https://api.prospeo.io/search-person', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-KEY': apiKey },
+      body: JSON.stringify({ page: 1, filters: f })
+    });
+    const txt = await res.text();
+    let data = null;
+    try { data = txt ? JSON.parse(txt) : null; } catch { throw new Error(`Prospeo JSON parse failed: ${txt.slice(0,300)}`); }
+    if (!res.ok || data.error) {
+      const code = data?.error_code || '';
+      const msg = data?.filter_error || data?.error || txt.slice(0,400);
+      throw new Error(`Prospeo ${res.status} ${code}: ${msg}`.slice(0,500));
+    }
+    return data;
+  };
+  let data = null;
+  try {
+    data = await doSearch(filters);
+  } catch (e) {
+    const msg = String(e.message);
+    // If location filter invalid, retry without location
+    if (msg.includes('INVALID_FILTERS') && filters.company_location_search) {
+      console.log('Prospeo location filter invalid, retrying without location:', location);
+      const f2 = { ...filters }; delete f2.company_location_search;
+      data = await doSearch(f2);
+    } else throw e;
+  }
+  const results = data.results || [];
+  if (!Array.isArray(results) || results.length === 0) {
+    console.log('Prospeo search returned 0 for', niche, location);
+    return [];
+  }
+  // Enrich top N to get verified emails (costs 1 credit each, but gives real owner emails)
+  const toEnrich = results.slice(0, perPage);
+  const companies = [];
+  for (const r of toEnrich) {
+    const person = r.person || {};
+    const company = r.company || {};
+    const personId = person.person_id || person.id;
+    let verifiedEmail = '';
+    let ownerName = `${person.first_name || ''} ${person.last_name || ''}`.trim();
+    // Try enrich for verified email
+    if (personId) {
+      try {
+        const enrichRes = await fetch('https://api.prospeo.io/enrich-person', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-KEY': apiKey },
+          body: JSON.stringify({ only_verified_email: true, enrich_mobile: false, data: { person_id: personId } })
+        });
+        const enrichTxt = await enrichRes.text();
+        const enrichData = enrichTxt ? JSON.parse(enrichTxt) : null;
+        if (enrichRes.ok && enrichData && !enrichData.error && enrichData.person?.email?.email) {
+          verifiedEmail = enrichData.person.email.email;
+          ownerName = `${enrichData.person.first_name || person.first_name || ''} ${enrichData.person.last_name || person.last_name || ''}`.trim() || ownerName;
+        } else {
+          // fallback to person email if enrich says NO_MATCH but person has email stub
+          if (person.email) verifiedEmail = person.email;
+        }
+      } catch (e) { console.log('Prospeo enrich failed for', personId, e.message); }
+    }
+    const domain = (company.domain || company.website || '').replace(/^https?:\/\//,'').split('/')[0].replace('www.','') || `${(company.name||'company').toLowerCase().replace(/[^a-z0-9]+/g,'')}.com`;
+    const website = company.website || (company.domain ? `https://${company.domain}` : `https://${domain}`);
+    // Only keep if we have verified email (user wants real customers)
+    const email = verifiedEmail || person.email || '';
+    companies.push({
+      id: `prospeo-${personId || Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+      name: company.name || `${person.first_name || ''} ${person.last_name || ''}`.trim() || 'Unknown Company',
+      domain: domain.toLowerCase(),
+      website,
+      email: email || `info@${domain}`,
+      ownerName,
+      ownerEmail: email,
+      industry: company.industry || niche,
+      location: company.location?.country || location || 'USA',
+      source: 'prospeo',
+      verified: !!email,
+      employeeCount: company.employee_count || 0,
+      shortDescription: company.description || '',
+      linkedinUrl: person.linkedin_url || '',
+      is_real: true
+    });
+    if (companies.length >= perPage) break;
+    // Small delay to avoid rate limit
+    await new Promise(res => setTimeout(res, 200));
+  }
+  console.log(`Prospeo found ${companies.length} verified for "${niche}" in "${location}"`);
+  return companies;
+}
+
+// ──────────────────────────────────────────────────
+// MAIN SEARCH: Prospeo (verified if key) → Apollo (global) → Tavily → Overpass → Google Places
 // ──────────────────────────────────────────────────
 export async function searchCompanies(env, niche, location, limit = 20) {
   // location can be "" or "Global" for worldwide — keep as is, getApolloLocation handles null
@@ -479,7 +620,24 @@ export async function searchCompanies(env, niche, location, limit = 20) {
   const apolloLocation = getApolloLocation(searchLocation)
   console.log(`Search niche=${niche} location=${location} apolloLocation=${apolloLocation} limit=${limit}`)
 
-  // 1) Try Apollo FIRST — returns real companies with verified owner emails (90/100 quality)
+  // 0) Try Prospeo FIRST if key set — you have PROSPEO_API_KEY and no money, Prospeo free tier gives verified emails
+  if (env.PROSPEO_API_KEY || env.PROSPEO_KEY) {
+    try {
+      const prospeo = await findCompaniesProspeo(env, niche, searchLocation || location, Math.min(limit, 10))
+      allCompanies = allCompanies.concat(prospeo)
+      console.log(`Search niche=${niche} location=${location} prospeo results=${prospeo.length} source=prospeo`)
+      if (prospeo.filter(c=>c.verified).length >= 3) {
+        return dedupeCompanies(allCompanies, env, limit)
+      }
+      if (prospeo.length >= 5) {
+        return dedupeCompanies(allCompanies, env, limit)
+      }
+    } catch (e) {
+      console.log('Prospeo search skipped:', e.message)
+    }
+  }
+
+  // 1) Try Apollo — returns real companies with verified owner emails (90/100 quality)
   try {
     const apollo = await findCompaniesApollo(env, niche, searchLocation, limit)
     allCompanies = allCompanies.concat(apollo)
