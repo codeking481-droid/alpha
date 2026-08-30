@@ -1062,15 +1062,18 @@ app.post('/api/companies/find', async (c) => {
     if (!niche) return c.json({ error: 'niche is required' }, 400)
 
     // Apollo first (owner emails), Tavily fallback, Overpass/Places for physical
-    const result = await searchCompanies(c.env, niche, location || 'Worldwide', Math.min(count, 25))
+    // Global: location can be "" or "Global" for worldwide
+    const loc = (location || '').trim()
+    const result = await searchCompanies(c.env, niche, loc, Math.min(count, 25))
     const companies = result.companies || []
     const source = companies[0]?.source || 'search'
+    console.log(`Search niche=${niche} location=${location} loc=${loc} source=${source} count=${companies.length}`)
 
     if (!companies.length) {
       return c.json({
         success: false,
-        error: 'No real companies found. Configure APOLLO_API_KEY for best results.',
-        companies: [], count: 0, niche, location
+        error: 'No real companies found. Try broader niche or different location. Configure APOLLO_API_KEY for best results.',
+        companies: [], count: 0, niche, location: loc
       }, 503)
     }
 
@@ -1079,7 +1082,7 @@ app.post('/api/companies/find', async (c) => {
       companies: companies,
       count: companies.length,
       niche: niche,
-      location: location,
+      location: loc,
       source,
       cached: source === 'Cache'
     })
@@ -1087,19 +1090,19 @@ app.post('/api/companies/find', async (c) => {
     return c.json({ error: e.message }, 500)
   }
 })
-// POST /api/companies/search — Apollo first (owner emails), Tavily fallback
+// POST /api/companies/search — Apollo first (owner emails), Tavily fallback — GLOBAL
 app.post('/api/companies/search', async (c) => {
   try {
     const { niche, location, count = 20, limit } = await c.req.json().catch(()=>({}))
     if (!niche) return c.json({ error: 'niche is required' }, 400)
-    const loc = location || 'USA'
+    const loc = (location || '').trim() // "" = Global worldwide
     const cnt = Math.min(Number(limit || count) || 20, 50)
 
-    // Apollo first (real owner emails), Tavily fallback
+    // Apollo first (global if loc empty), Tavily fallback
     const result = await searchCompanies(c.env, niche, loc, cnt)
     const companies = result.companies || []
     const source = companies[0]?.source || 'search'
-    console.log(`Search q=${niche} source=${source} count=${companies.length}`)
+    console.log(`Search niche=${niche} location=${location} loc=${loc} apolloLocation=${loc||'GLOBAL'} results=${companies.length} source=${source}`)
 
     return c.json({ success: true, companies, count: companies.length, niche, location: loc, source })
   } catch (e) { return c.json({ error: e.message }, 500) }

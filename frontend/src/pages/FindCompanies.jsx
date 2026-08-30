@@ -41,32 +41,24 @@ function SaveCompanyBtn({ company, getToken }) {
 export const FindCompanies = () => {
   const navigate = useNavigate();
   const { user, getToken } = useAuth();
-  const [search, setSearch] = useState('AI startups');
+  const [niche, setNiche] = useState('Skincare');
+  const [location, setLocation] = useState(''); // "" = Global worldwide
   const [results, setResults] = useState(DEMO_RESULTS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSearch = async () => {
-    if (!search.trim()) return;
+    if (!niche.trim()) { setError('Enter a niche (e.g., Skincare, Real Estate, Hotels)'); return; }
     setLoading(true);
     setError('');
     try {
-      // Parse city from input: "real estate in Lagos" => city=Lagos niche=real estate
-      // For real search we need city + niche (Overpass). Default city Lagos.
-      let city = 'Lagos';
-      let niche = search.trim();
-      const inMatch = search.match(/^(.+)\s+in\s+(.+)$/i);
-      if (inMatch) {
-        niche = inMatch[1].trim();
-        city = inMatch[2].trim();
-      } else if (search.toLowerCase().includes('lagos') || search.toLowerCase().includes('abuja') || search.toLowerCase().includes('port harcourt')) {
-        // keep city Lagos, niche as is
-      }
+      const nicheTrim = niche.trim();
+      const locationTrim = location.trim(); // "" = Global
       const res = await fetch(`${API_URL}/api/companies/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ niche, location: city, count: 20 })
+        body: JSON.stringify({ niche: nicheTrim, location: locationTrim, count: 20 })
       });
       const text = await res.text();
       let data = {};
@@ -116,27 +108,52 @@ export const FindCompanies = () => {
             </button>
             <div className="text-center flex-1 min-w-0 mx-2 sm:mx-4">
               <h1 className="text-[20px] sm:text-[28px] md:text-[34px] font-bold tracking-tight text-[#0A0A0A] leading-none truncate">Find Companies</h1>
-              <p className="text-[13px] sm:text-[15px] text-[#6B7280] mt-1">Search any niche</p>
+              <p className="text-[13px] sm:text-[15px] text-[#6B7280] mt-1">Global • USA • UK • Dubai • Worldwide</p>
             </div>
             <div className="w-9 h-9 sm:w-11 sm:h-11 bg-[#5E17EB] rounded-full flex items-center justify-center shrink-0">
               <span className="text-white text-[12px] sm:text-[15px] font-semibold tracking-widest">AA</span>
             </div>
           </div>
 
-          <div className="relative bg-white border border-[#E0E0E0] rounded-xl sm:rounded-2xl px-2 sm:px-3 py-2 flex items-center gap-2 sm:gap-3 shadow-sm w-full overflow-hidden">
-            <div className="pl-1 sm:pl-3 text-[#9CA3AF] shrink-0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[22px] sm:h-[22px]"><circle cx="11" cy="11" r="7"/><path d="M15.5 15.5L20 20"/></svg>
+          <div className="bg-white border border-[#E0E0E0] rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-sm w-full overflow-hidden space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 bg-white rounded-lg sm:rounded-xl border sm:border-0 px-2 sm:px-0 py-1 sm:py-0">
+              <div className="pl-1 sm:pl-2 text-[#9CA3AF] shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[20px] sm:h-[20px]"><circle cx="11" cy="11" r="7"/><path d="M15.5 15.5L20 20"/></svg>
+              </div>
+              <input
+                value={niche}
+                onChange={(e) => setNiche(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Skincare, Real Estate, Hotels, Gyms..."
+                className="flex-1 min-w-0 py-2 text-[14px] sm:text-[15px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:outline-none bg-transparent truncate"
+              />
             </div>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="hotel in Lagos, AI startups"
-              className="flex-1 min-w-0 py-2 text-[14px] sm:text-[17px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:outline-none bg-transparent truncate"
-            />
-            <button onClick={handleSearch} className="bg-[#0A0A0A] hover:bg-black text-white rounded-lg sm:rounded-xl px-4 sm:px-7 py-2.5 sm:py-3 text-[14px] sm:text-[16px] font-medium transition-colors shrink-0 cursor-pointer">
+            <div className="hidden sm:block w-px h-8 bg-[#EDEDED] shrink-0"></div>
+            <div className="flex items-center gap-2 flex-1 bg-white rounded-lg sm:rounded-xl border sm:border-0 px-2 sm:px-0 py-1 sm:py-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.6" className="shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Location (e.g., USA, UK, Dubai, Global)"
+                className="flex-1 min-w-0 py-2 text-[14px] sm:text-[15px] text-[#0A0A0A] placeholder:text-[#9CA3AF] focus:outline-none bg-transparent truncate"
+              />
+              <span className="hidden sm:inline text-[10px] font-bold text-[#9CA3AF] shrink-0">{!location.trim() || location.toLowerCase()==='global' ? '🌍 Global' : ''}</span>
+            </div>
+            <button onClick={handleSearch} className="w-full sm:w-auto bg-[#0A0A0A] hover:bg-black text-white rounded-lg sm:rounded-xl px-4 sm:px-7 py-2.5 sm:py-3 text-[14px] sm:text-[15px] font-medium transition-colors shrink-0 cursor-pointer">
               Search
             </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <span className="text-[11px] text-[#9CA3AF]">Try:</span>
+            {[
+              {n:'Skincare', l:'USA'},
+              {n:'Real Estate', l:'Dubai'},
+              {n:'Hotels', l:''},
+              {n:'Gyms', l:'UK'},
+            ].map(ex=>(
+              <button key={ex.n+ex.l} onClick={()=>{setNiche(ex.n); setLocation(ex.l); setTimeout(handleSearch,100)}} className="text-[11px] font-medium bg-[#F3F4F6] hover:bg-[#EDEDED] text-[#0A0A0A] rounded-full px-2.5 py-1">{ex.n} {ex.l ? `• ${ex.l||'Global'}` : '• Global'}</button>
+            ))}
           </div>
           {error && <p className="text-center text-xs text-[#6B7280] mt-2">{error}</p>}
 

@@ -7,29 +7,51 @@ const OVERPASS_BASE = 'https://overpass-api.de/api/query'
 const GOOGLE_PLACES_BASE = 'https://maps.googleapis.com/maps/api/place/textsearch'
 
 // ──────────────────────────────────────────────────
+// APOLLO: Global location helper — null = worldwide
+// ──────────────────────────────────────────────────
+export function getApolloLocation(locationInput) {
+  if (!locationInput || locationInput.trim() === '' || locationInput.toLowerCase().trim() === 'global' || locationInput.toLowerCase().trim() === 'worldwide') {
+    return null // No location filter = GLOBAL search
+  }
+  const lower = locationInput.toLowerCase().trim()
+  if (lower.includes('usa') || lower.includes('united states')) return ['United States']
+  if (lower.includes('uk') || lower.includes('united kingdom') || lower.includes('london') || lower.includes('england')) return ['United Kingdom']
+  if (lower.includes('dubai') || lower.includes('uae') || lower.includes('united arab emirates')) return ['United Arab Emirates']
+  if (lower.includes('canada') || lower.includes('toronto') || lower.includes('vancouver')) return ['Canada']
+  if (lower.includes('australia') || lower.includes('sydney') || lower.includes('melbourne')) return ['Australia']
+  if (lower.includes('germany') || lower.includes('berlin')) return ['Germany']
+  if (lower.includes('france') || lower.includes('paris')) return ['France']
+  // For any other input, use as-is: "Texas, USA", "California", "Toronto, Canada", "Skincare USA"
+  return [locationInput.trim()]
+}
+
+// ──────────────────────────────────────────────────
 // APOLLO: Find companies + owner emails (90/100 quality)
 // ──────────────────────────────────────────────────
 export async function findCompaniesApollo(env, niche, location, limit) {
   const apiKey = env.APOLLO_API_KEY
   if (!apiKey) throw new Error('APOLLO_API_KEY missing')
 
-  const locationStr = location || 'United States'
+  const apolloLocation = getApolloLocation(location)
+  const locationStr = apolloLocation ? apolloLocation[0] : 'Global'
   const perPage = Math.min(limit || 20, 25)
 
   try {
-    // Step 1: Search for people (Founders/CEOs) at companies in this niche
+    // Step 1: Search for people (Founders/CEOs) at companies in this niche — location optional for global
+    const apolloBody = {
+      api_key: apiKey,
+      q_organization_keyword_tags: [niche],
+      person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner', 'Managing Director', 'President'],
+      person_seniorities: ['founder', 'c_suite', 'owner'],
+      per_page: perPage,
+      page: 1
+    }
+    if (apolloLocation) apolloBody.organization_locations = apolloLocation
+
     const peopleRes = await fetch('https://api.apollo.io/v1/mixed_people/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: apiKey,
-        q_organization_keyword_tags: [niche],
-        organization_locations: [locationStr],
-        person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner', 'Managing Director', 'Director'],
-        person_seniorities: ['founder', 'c_suite', 'owner'],
-        per_page: perPage,
-        page: 1
-      })
+      body: JSON.stringify(apolloBody)
     })
 
     if (!peopleRes.ok) {
@@ -39,9 +61,64 @@ export async function findCompaniesApollo(env, niche, location, limit) {
     }
 
     const peopleData = await peopleRes.json()
-    const people = peopleData.people || peopleData.pagination?.total_entries || []
+    const people = peopleData.people || peopleData.contacts || []
 
     if (!Array.isArray(people) || people.length === 0) {
+      console.log('Apollo people returned 0, trying organization fallback for', niche, location, 'apolloLocation=', apolloLocation)
+      // Fallback: organization search (no title filter) — catches companies where titles don't match
+      try {
+        const orgBody = {
+          api_key: apiKey,
+          q_organization_keyword_tags: [niche],
+          per_page: perPage,
+          page: 1
+        }
+        if (apolloLocation) orgBody.organization_locations = apolloLocation
+        const orgRes = await fetch('https://api.apollo.io/v1/mixed_companies/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orgBody)
+        })
+        if (orgRes.ok) {
+          const orgData = await orgRes.json()
+          const orgs = orgData.organizations || orgData.companies || orgData.accounts || []
+          if (Array.isArray(orgs) && orgs.length > 0) {
+            const companies = []
+            const seenDomains = new Set()
+            for (const org of orgs) {
+              const domain = (org.primary_domain || org.domain || '').toLowerCase().trim()
+              if (!domain || seenDomains.has(domain)) continue
+              seenDomains.add(domain)
+              companies.push({
+                id: `apollo-org-${org.id || Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                name: org.name || org.organization_name || 'Unknown Company',
+                domain: domain,
+                website: org.website_url || org.url || `https://${domain}`,
+                email: org.primary_email || `info@${domain}`,
+                ownerName: org.owner_name || '',
+                ownerEmail: org.primary_email || '',
+                industry: org.industry || niche,
+                location: org.city || org.country || locationStr,
+                source: 'apollo',
+                verified: !!org.primary_email,
+                employeeCount: org.estimated_num_employees || 0,
+                shortDescription: org.short_description || '',
+                linkedinUrl: org.linkedin_url || '',
+                is_real: true
+              })
+            }
+            if (companies.length > 0) {
+              console.log(`Apollo org fallback found ${companies.length} companies for "${niche}" in ${locationStr}`)
+              return companies
+            }
+          }
+        } else {
+          const txt = await orgRes.text()
+          console.log('Apollo org fallback error:', orgRes.status, txt.slice(0,200))
+        }
+      } catch (e) {
+        console.log('Apollo org fallback exception:', e.message)
+      }
       console.log('Apollo returned 0 people for', niche, location)
       return []
     }
@@ -222,18 +299,21 @@ export async function findLeadsGooglePlaces(env, niche, location, limit) {
 }
 
 // ──────────────────────────────────────────────────
-// MAIN SEARCH: Apollo (with owner emails) → Tavily → Overpass → Google Places
+// MAIN SEARCH: Apollo (global) → Tavily → Overpass → Google Places
 // ──────────────────────────────────────────────────
 export async function searchCompanies(env, niche, location, limit = 20) {
-  location = location || 'USA'
+  // location can be "" or "Global" for worldwide — keep as is, getApolloLocation handles null
+  const searchLocation = location || '' // keep empty for global, don't force USA
   let allCompanies = []
+  const apolloLocation = getApolloLocation(searchLocation)
+  console.log(`Search niche=${niche} location=${location} apolloLocation=${apolloLocation} limit=${limit}`)
 
   // 1) Try Apollo FIRST — returns real companies with verified owner emails (90/100 quality)
   try {
-    const apollo = await findCompaniesApollo(env, niche, location, limit)
+    const apollo = await findCompaniesApollo(env, niche, searchLocation, limit)
     allCompanies = allCompanies.concat(apollo)
+    console.log(`Search niche=${niche} location=${location} apolloLocation=${apolloLocation} results=${apollo.length} source=apollo`)
     if (apollo.length >= 5) {
-      console.log(`Apollo satisfied search with ${apollo.length} results`)
       return dedupeCompanies(allCompanies, env, limit)
     }
   } catch (e) {
