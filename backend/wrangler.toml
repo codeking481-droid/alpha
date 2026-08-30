@@ -22,9 +22,14 @@ PAYSTACK_NGN_RATE = "1500"
 
 # Groq — https://console.groq.com/keys
 # npx wrangler secret put GROQ_API_KEY
+# npx wrangler secret put GROQ_MODEL  # e.g., llama-3.3-70b-versatile, llama3-70b-8192, or your 120b own id
 # npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
 
-# Paystack — $50 / $99 converted to NGN — https://dashboard.paystack.com/#/settings/developer
+# Telegram hot lead alerts
+# npx wrangler secret put TELEGRAM_BOT_TOKEN  # from @BotFather
+# npx wrangler secret put TELEGRAM_CHAT_ID    # your chat ID
+
+# Paystack — $250 Founding / $500 Regular / $99 converted to NGN — https://dashboard.paystack.com/#/settings/developer
 # npx wrangler secret put PAYSTACK_SECRET_KEY   # sk_test_... or sk_live_...
 # Optional: npx wrangler secret put FRONTEND_URL        # e.g. https://alphatekx.name.ng
 

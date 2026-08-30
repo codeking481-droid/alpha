@@ -102,6 +102,36 @@ async function deleteOne(env, table, id) {
   return mem[table].length < before
 }
 
+// Telegram hot lead helper — detects hot keywords and sends Telegram
+async function checkAndSendHotLeadTelegram(env, replies) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return
+  const hotKeywords = ['interested', 'call', 'pricing', 'meeting']
+  for (const r of replies || []) {
+    const body = (r.body || r.content || r.reply_text || r.text || '').toLowerCase()
+    const isHot = hotKeywords.some(k => body.includes(k))
+    if (isHot && !r.hot_lead_alerted) {
+      const snippet = (r.body || r.content || r.reply_text || '').slice(0, 200)
+      const companyName = r.company?.company_name || r.company_name || r.from_email?.split('@')[1]?.split('.')[0] || 'Unknown Company'
+      const ownerEmail = r.from_email || r.owner_email || r.to || 'unknown@example.com'
+      const msg = `🔥 HOT LEAD: ${companyName} (${ownerEmail}) replied: ${snippet} - Check Inbox!`
+      try {
+        await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: msg })
+        })
+        // Mark as alerted to avoid duplicate spam
+        if (r.id) {
+          try { await sbUpdate(env, 'replies', r.id, { hot_lead_alerted: true, hot_lead_alerted_at: new Date().toISOString() }) } catch {}
+          // Also update mem
+          const idx = (mem.replies || []).findIndex(x => String(x.id) === String(r.id))
+          if (idx !== -1) mem.replies[idx].hot_lead_alerted = true
+        }
+      } catch {}
+    }
+  }
+}
+
 // Health â€” both / and /api/health (for prompt's test)
 app.get('/', (c) => c.json({ status: 'Alpha Agency API â€” Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only â€” Root path must be backend' }))
 app.get('/api/debug/env', (c) => c.json({ hasSupabaseUrl: !!c.env.SUPABASE_URL, hasAnon: !!c.env.SUPABASE_ANON_KEY, hasService: !!c.env.SUPABASE_SERVICE_KEY, hasGroq: !!c.env.GROQ_API_KEY, envKeys: Object.keys(c.env || {}), note: 'debug — no values leaked' }))
@@ -379,22 +409,26 @@ app.post('/api/content', async (c) => {
 })
 app.post('/api/content/generate', async (c) => {
   const body = await c.req.json().catch(() => ({}))
+  const groqModel = c.env.GROQ_MODEL || "llama-3.1-70b-versatile"
+  console.log(`Content generate using model: ${groqModel}, body: ${JSON.stringify(body).slice(0,120)}`)
   // CompanyId mode (authenticated vault content generation)
   if (body.companyId) {
     try {
       const user = getUserFromRequest(c)
       const comp = await getOne(c.env, 'companies', body.companyId)
       if (!comp) return c.json({ error: 'company not found' }, 404)
+      console.log(`Content generate using model: ${groqModel}, company: ${body.companyId} (${comp.company_name || comp.name})`)
       const prompt = `Generate 3 premium community posts for ${comp.company_name || comp.name} (${comp.niche || 'business'}) to post on our 4,500+ audience. Tone: professional, invite-only.`
-      const { text, mocked } = await groqGenerate(c.env, { prompt })
-      return c.json({ success: true, company: comp.company_name || comp.name, content: text || 'Generated', text: text || 'Generated', mocked })
+      const { text, mocked, model } = await groqGenerate(c.env, { prompt })
+      return c.json({ success: true, company: comp.company_name || comp.name, content: text || 'Generated', text: text || 'Generated', mocked: !!mocked, model: model || groqModel })
     } catch (e) { return c.json({ error: e.message }, 500) }
   }
   // Generic mode: topic/format
   const { topic, format = 'post', company = 'Your Company' } = body
   if (!topic) return c.json({ error: 'topic required (or companyId)' }, 400)
-  const { text, mocked } = await groqGenerate(c.env, { prompt: promptContent({ topic, format, company }) })
-  return c.json({ text, mocked, content: text, success: true })
+  console.log(`Content generate using model: ${groqModel}, topic: ${topic}`)
+  const { text, mocked, model } = await groqGenerate(c.env, { prompt: promptContent({ topic, format, company }) })
+  return c.json({ text, mocked: !!mocked, content: text, success: true, model: model || groqModel })
 })
 app.get('/api/content/:id', async (c) => {
   const item = await getOne(c.env, 'content', c.req.param('id'))
@@ -556,17 +590,21 @@ app.get('/api/replies', async (c) => {
         const gmailReplies = await getGmailReplies(c.env, 100).catch(()=>null)
         if (gmailReplies && Array.isArray(gmailReplies) && gmailReplies.length > 0) {
           const filtered = sentiment ? gmailReplies.filter(r => r.sentiment === sentiment) : gmailReplies
+          try { await checkAndSendHotLeadTelegram(c.env, filtered) } catch {}
           return c.json({ success: true, replies: filtered, count: filtered.length, source: 'gmail', stats: { total: gmailReplies.length, positive: gmailReplies.filter(r=>r.sentiment==='positive').length, negative: gmailReplies.filter(r=>r.sentiment==='negative').length, neutral: gmailReplies.filter(r=>r.sentiment==='neutral').length } })
         }
       } catch {}
     }
     if (leadId && hasSupabase(c.env)) {
       const replies = await getReplies(c.env, leadId)
+      try { await checkAndSendHotLeadTelegram(c.env, replies) } catch {}
       return c.json({ success: true, replies, count: replies.length })
     }
     const all = await list(c.env, 'replies')
     const filteredByLead = leadId ? all.filter(r => String(r.lead_id) === String(leadId) || String(r.message_id) === String(leadId)) : all
     const filtered = sentiment ? filteredByLead.filter(r => r.sentiment === sentiment || r.sentiment === 'positive' && sentiment==='positive') : filteredByLead
+    // Telegram hot lead notification on hot keywords
+    try { await checkAndSendHotLeadTelegram(c.env, filtered) } catch {}
     return c.json({ success: true, replies: filtered, count: filtered.length })
   } catch (e) {
     return c.json({ error: e.message }, 500)
@@ -1361,6 +1399,8 @@ app.get('/api/replies/my-replies', async (c) => {
       }
       enriched.push({ ...r, company, company_name: r.company_name || company?.company_name || company?.name || 'Unknown', reply_text: r.reply_text || r.body || r.content || '' })
     }
+    // Telegram hot lead on hot keywords (interested, call, pricing, meeting)
+    try { await checkAndSendHotLeadTelegram(c.env, enriched) } catch {}
     const hot = enriched.filter(r => r.sentiment === 'interested' || r.sentiment === 'positive').length
     const pending = enriched.filter(r => r.followup_status === 'pending_approval').length
     const replied = enriched.filter(r => r.followup_status === 'sent').length

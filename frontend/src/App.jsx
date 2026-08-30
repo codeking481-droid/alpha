@@ -9,6 +9,7 @@ import { TrackReplies } from './pages/TrackReplies';
 import { Campaigns } from './pages/Campaigns';
 import { SavedCompanies } from './pages/SavedCompanies';
 import { Inbox } from './pages/Inbox';
+import { Settings } from './pages/Settings';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/campaigns" element={<ProtectedRoute requirePayment={true}><Campaigns /></ProtectedRoute>} />
         <Route path="/saved-companies" element={<ProtectedRoute requirePayment={true}><SavedCompanies /></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute requirePayment={true}><Inbox /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute requirePayment={true}><Settings /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

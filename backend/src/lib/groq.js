@@ -1,33 +1,53 @@
-// Groq client — uses env.GROQ_API_KEY, falls back to mock when missing
-
-export async function groqGenerate(env, { prompt, model = 'llama-3.3-70b-versatile' }) {
+// Groq client — uses env.GROQ_API_KEY and env.GROQ_MODEL (120B own), falls back to llama3-70b-8192
+export async function groqGenerate(env, { prompt, model }) {
   const key = env.GROQ_API_KEY
   if (!key) {
-    // Mock — clearly marked real draft
     return { text: `Real draft (mock until GROQ_API_KEY set) — ${prompt.slice(0, 120)}...\n\n— Set GROQ_API_KEY in Workers secrets for real Groq.`, mocked: true }
   }
+  // Use 120B own model via env GROQ_MODEL, not hardcoded
+  const groqModel = model || env.GROQ_MODEL || "llama-3.1-70b-versatile"
+  console.log(`Content generate using model: ${groqModel}, prompt: ${prompt.slice(0,60)}...`)
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model,
+        model: groqModel,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 800,
       }),
     })
-    if (!res.ok) {
-      const err = await res.text()
-      // Fallback to mock on Groq error (invalid key, timeout) — don't crash engine
-      return { text: `Real draft (Groq ${res.status} — mock fallback) — ${prompt.slice(0, 120)}...\n\n— Groq error: ${err.slice(0,200)} — check GROQ_API_KEY or use mock.`, mocked: true, groqStatus: res.status }
-    }
+    if (!res.ok) throw new Error(`Groq ${groqModel} ${res.status}: ${await res.text().then(t=>t.slice(0,300))}`)
     const data = await res.json()
     const text = data.choices?.[0]?.message?.content || ''
-    return { text, model, mocked: false }
+    if (!text) throw new Error(`Groq ${groqModel} returned empty`)
+    return { text, model: groqModel, mocked: false }
   } catch (e) {
-    // Network/timeout fallback — keep engine working
-    return { text: `Real draft (Groq timeout — mock fallback) — ${prompt.slice(0, 120)}...\n\n— Groq unreachable: ${e.message.slice(0,200)} — check key/network, mock used.`, mocked: true, error: e.message }
+    console.log(`Groq 120B ${groqModel} failed: ${e.message}, trying llama3-70b-8192`)
+    // Fallback to guaranteed working model
+    try {
+      const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: "llama3-70b-8192",
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 800,
+        }),
+      })
+      if (!res2.ok) throw new Error(`Groq fallback ${res2.status}: ${await res2.text().then(t=>t.slice(0,300))}`)
+      const data2 = await res2.json()
+      const text2 = data2.choices?.[0]?.message?.content || ''
+      if (!text2) throw new Error('Groq fallback empty')
+      console.log(`Groq fallback llama3-70b-8192 succeeded`)
+      return { text: text2, model: "llama3-70b-8192", mocked: false }
+    } catch (e2) {
+      console.log(`Groq fallback also failed: ${e2.message}`)
+      // Only then return mock, but log real error
+      return { text: `Real draft (Groq ${groqModel} failed, fallback also failed) — ${prompt.slice(0, 120)}...\n\n— Groq error: ${e.message.slice(0,200)} | Fallback: ${e2.message.slice(0,200)}`, mocked: true, error: e.message }
+    }
   }
 }
 

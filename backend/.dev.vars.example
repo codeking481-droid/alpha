@@ -4,9 +4,15 @@ SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
 SUPABASE_ANON_KEY="YOUR_ANON_KEY_HERE"
 SUPABASE_SERVICE_KEY="YOUR_SERVICE_ROLE_KEY_HERE"
 GROQ_API_KEY="gsk_YOUR_GROQ_KEY_HERE"
-# Paystack — https://dashboard.paystack.com/#/settings/developer  (USD $50 / $99)
+GROQ_MODEL="llama-3.1-70b-versatile"
+# 120B own model id - set via: npx wrangler secret put GROQ_MODEL
+# e.g., llama-3.3-70b-versatile, llama-3.1-405b, or your custom 120b id
+# Paystack — https://dashboard.paystack.com/#/settings/developer  (USD $250 Founding / $500 Regular)
 # Test: sk_test_...  Live: sk_live_...
 PAYSTACK_SECRET_KEY="sk_test_YOUR_KEY_HERE"
-# Currency must be USD for $50/$99 — NGN only if you explicitly want Naira
+# Currency must be USD for $250/$500 — NGN only if you explicitly want Naira
 PAYSTACK_CURRENCY="USD"
 FRONTEND_URL="http://localhost:5173"
+# Telegram hot lead alerts
+TELEGRAM_BOT_TOKEN="YOUR_BOT_TOKEN_HERE"
+TELEGRAM_CHAT_ID="YOUR_CHAT_ID_HERE"

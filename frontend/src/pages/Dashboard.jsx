@@ -163,6 +163,17 @@ export const Dashboard = () => {
             <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Generate tokens for team members to access the API</p>
           </button>
           )}
+          {/* Settings - Telegram & Groq 120B */}
+          <button
+            onClick={() => navigate('/settings')}
+            className="bg-[#F9FAFB] border border-[#EDEDED] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02]"
+          >
+            <div className="w-10 h-10 bg-[#0A0A0A] rounded-xl flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.7"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </div>
+            <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Settings</h3>
+            <p className="text-[13px] md:text-[14px] text-[#0A0A0A]/80 mt-2 leading-tight">Telegram hot leads & Groq 120B model</p>
+          </button>
         </div>
 
         {/* TODAY'S GOAL */}
