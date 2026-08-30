@@ -145,6 +145,19 @@ async function checkAndSendHotLeadTelegram(env, replies) {
 // Health â€” both / and /api/health (for prompt's test)
 app.get('/', (c) => c.json({ status: 'Alpha Agency API â€” Online', badges: ['Command Hub', 'Content Studio', 'Outreach Engine', 'Analytics', 'Deal Desk'], supabase: !!getSupabase(c.env), note: 'Real data only â€” Root path must be backend' }))
 app.get('/api/debug/env', (c) => c.json({ hasSupabaseUrl: !!c.env.SUPABASE_URL, hasAnon: !!c.env.SUPABASE_ANON_KEY, hasService: !!c.env.SUPABASE_SERVICE_KEY, hasGroq: !!c.env.GROQ_API_KEY, envKeys: Object.keys(c.env || {}), note: 'debug — no values leaked' }))
+app.get('/api/debug/prospeo', async (c) => {
+  try {
+    const niche = c.req.query('niche') || 'skincare';
+    const location = c.req.query('location') || 'USA';
+    const { findCompaniesProspeo } = await import('./lib/companyFinder.js');
+    try {
+      const r = await findCompaniesProspeo(c.env, niche, location, 3);
+      return c.json({ success: true, count: r.length, sample: r[0] || null, niche, location, source: 'prospeo', hasKey: !!c.env.PROSPEO_API_KEY, hasKey1: !!c.env.PROSPEO_API_KEY_1 });
+    } catch (e) {
+      return c.json({ success: false, error: String(e.message).slice(0,800), niche, location, hasKey: !!c.env.PROSPEO_API_KEY, hasKey1: !!c.env.PROSPEO_API_KEY_1 }, 500);
+    }
+  } catch (e) { return c.json({ error: e.message }, 500); }
+})
 app.get('/api/debug/apollo', async (c) => {
   try {
     const niche = c.req.query('niche') || 'software';
