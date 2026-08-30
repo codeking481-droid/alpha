@@ -119,7 +119,7 @@ export const AccessCode = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, price: 250, amount: 25000, callback_url: callbackUrl, callbackUrl })
+        body: JSON.stringify({ email, price: 50, amount: 5000, callback_url: callbackUrl, callbackUrl })
       });
       const text = await res.text();
       let data = {};
@@ -146,32 +146,22 @@ export const AccessCode = () => {
   const isSuccess = message.startsWith('✅');
   const isError = message.startsWith('❌');
 
-  const spotsLeft = 7; // Founding Member: 10 - totalCustomers (dynamic via API)
   return (
     <div className="min-h-screen bg-[#FFFCF8] flex items-center justify-center px-3 sm:px-4 py-6 font-['Inter',sans-serif] overflow-x-hidden w-full max-w-[100vw]">
       <div className="max-w-md w-full bg-white border border-[#EDEDED] rounded-xl p-6 sm:p-8 mx-3 sm:mx-0 overflow-hidden">
         <div className="text-4xl text-center mb-4">🔑</div>
         <h1 className="font-semibold text-2xl text-[#0A0A0A] text-center tracking-tight">Access Alpha Agency</h1>
-        <p className="text-sm text-[#6B7280] text-center mt-2">Global Starter — Founding Member Special</p>
-        <div className="mt-2 inline-flex items-center gap-1.5 bg-[#FEF3C7] border border-[#FDE68A] rounded-full px-3 py-1 text-[11px] font-black text-[#92400E] mx-auto w-full justify-center">🔥 Founding Member - {spotsLeft} spots left at $250</div>
+        <p className="text-sm text-[#6B7280] text-center mt-2">Lifetime Access — One-time payment</p>
         <div className="mt-4 text-center">
-          <p className="text-[36px] font-black leading-none text-[#0A0A0A]">$250</p>
-          <p className="text-[14px] font-bold text-gray-400 line-through">$500</p>
-          <p className="text-[13px] font-bold text-[#5E17EB] mt-1"><strong>Founding Member: $250</strong> - First 10 clients only!</p>
-          <ul className="mt-3 text-left bg-[#F9FAFB] border border-[#EDEDED] rounded-lg p-3 space-y-1.5 text-[12px] font-medium">
-            <li>✓ 50 Verified Owner Emails (Apollo ✓, not info@)</li>
-            <li>✓ 50 Personalized Cold Emails (Resend)</li>
-            <li>✓ 3 Follow-ups Included</li>
-            <li>✓ Inbox Reply Tracking</li>
-            <li>✓ Hot Lead Alerts</li>
-          </ul>
-          <p className="text-[11px] text-[#6B7280] mt-2">Regular price $500 after 10 clients - Save $250 now!</p>
+          <p className="text-[42px] font-black leading-none text-[#0A0A0A]">$50</p>
+          <p className="text-[13px] font-bold text-[#5E17EB] mt-1">Lifetime Access</p>
+          <p className="text-[11px] text-[#6B7280] mt-1">One-time payment • Lifetime access • No subscription</p>
         </div>
         <div className="mt-6">
-          <button onClick={handlePayment} disabled={loading} className="w-full bg-[#5E17EB] hover:bg-[#4D0FD4] text-white py-4 rounded-lg font-black hover:bg-gray-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-[15px] cursor-pointer">
-            Get Started - $250 →
+          <button onClick={handlePayment} disabled={loading} className="w-full bg-[#0A0A0A] hover:bg-black text-white py-4 rounded-lg font-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-[15px] cursor-pointer">
+            Buy Access Token — $50
           </button>
-          <p className="text-center text-xs text-[#6B7280] mt-2">One-time payment • Founding Member Special • Save $250</p>
+          <p className="text-center text-xs text-[#6B7280] mt-2">One-time payment, lifetime access</p>
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-[#EDEDED]"></div>
             <span className="text-sm text-[#6B7280]">or</span>

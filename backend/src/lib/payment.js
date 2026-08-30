@@ -17,10 +17,11 @@ function getPaystackKey(env) {
 }
 
 function resolveAmount(env, price, amount) {
-  // Global Starter: Founding $250 (first 10) vs Regular $500 vs $99
+  // Pricing: $50 Lifetime (Access) vs $250 Founding vs $500 Regular vs $99
   const rawPrice = Number(price)
   let p = 250
-  if (rawPrice === 99 || rawPrice === 500 || rawPrice === 250) p = rawPrice
+  if (rawPrice === 50 || rawPrice === 99 || rawPrice === 500 || rawPrice === 250) p = rawPrice
+  else if (Number(amount) === 5000) p = 50
   else if (Number(amount) === 9900) p = 99
   else if (Number(amount) === 50000) p = 500
   else if (Number(amount) === 25000) p = 250

@@ -938,9 +938,10 @@ app.post('/api/payment/initialize', async (c) => {
     if (!email) return c.json({ error: 'Email is required' }, 400);
     const origin = c.req.header('Origin');
     const cb = callback_url || callbackUrl || (origin ? `${origin.replace(/\/$/,'')}/checkout` : null);
-    // Founding Member $250 (first 10) vs Regular $500, plus $99 tier
+    // Pricing: $50 Lifetime (Access) vs $250 Founding vs $500 Regular vs $99
     let amt = 25000 // default founding $250
-    if (Number(price) === 99) amt = 9900
+    if (Number(price) === 50) amt = 5000
+    else if (Number(price) === 99) amt = 9900
     else if (Number(price) === 500) amt = 50000
     else if (Number(price) === 250) amt = 25000
     else if (Number(amount)) amt = Number(amount)
@@ -967,13 +968,14 @@ app.get('/api/payment/verify', async (c) => {
     // Global Starter $250 founding (first 10) vs $500 regular vs $99
     let price = 250;
     if (mock) {
-      if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) price = 99;
+      if (String(reference).includes('_50_') || String(reference).startsWith('mock_50_')) price = 50;
+      else if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) price = 99;
       else if (String(reference).includes('_500_') || String(reference).startsWith('mock_500_')) price = 500;
       else price = 250;
     } else {
       if (payment.metadata && payment.metadata.price) {
         const p = Number(payment.metadata.price);
-        price = p === 99 ? 99 : p === 500 ? 500 : 250;
+        price = p === 50 ? 50 : p === 99 ? 99 : p === 500 ? 500 : 250;
       } else {
         const amt = Number(payment.amount) || 0;
         const cur = String(payment.currency || 'USD').toUpperCase();
@@ -1010,22 +1012,25 @@ app.post('/api/payment/verify', async (c) => {
     const mock = !!payment.mock;
     let price = 250;
     if (mock) {
-      if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) price = 99;
+      if (String(reference).includes('_50_') || String(reference).startsWith('mock_50_')) price = 50;
+      else if (String(reference).includes('_99_') || String(reference).startsWith('mock_99_')) price = 99;
       else if (String(reference).includes('_500_') || String(reference).startsWith('mock_500_')) price = 500;
       else price = 250;
     } else {
       if (payment.metadata && payment.metadata.price) {
         const p = Number(payment.metadata.price);
-        price = p === 99 ? 99 : p === 500 ? 500 : 250;
+        price = p === 50 ? 50 : p === 99 ? 99 : p === 500 ? 500 : 250;
       } else {
         const amt = Number(payment.amount) || 0;
         const cur = String(payment.currency || 'USD').toUpperCase();
         if (cur === 'USD' || cur === 'GHS' || cur === 'ZAR') {
-          if (amt === 9900) price = 99;
+          if (amt === 5000) price = 50;
+          else if (amt === 9900) price = 99;
           else if (amt === 50000) price = 500;
           else price = 250;
         } else {
-          if (amt >= 700000) price = 500;
+          if (amt === 75000) price = 50;
+          else if (amt >= 700000) price = 500;
           else if (amt >= 9000 && amt <= 15000) price = 99;
           else price = 250;
         }
