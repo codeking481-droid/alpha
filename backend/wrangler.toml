@@ -9,51 +9,46 @@ crons = ["*/2 * * * *"]
 
 [vars]
 ENV = "production"
+GROQ_MODEL = "llama-3.1-70b-versatile"
 # This Paystack merchant does not have USD enabled. Prices are entered in USD
-# equivalents ($250 Founding / $500 Regular) and converted to NGN by payment.js before checkout.
+# equivalents ($50 Lifetime public / $250 private Founding was $500) and converted to NGN by payment.js before checkout.
 PAYSTACK_CURRENCY = "NGN"
 PAYSTACK_NGN_RATE = "1500"
-# Real Audience We Own — exact numbers
+# Real Audience We Own - exact numbers (private offer)
 TOTAL_REACH = "4671"
 AUDIENCE_WHATSAPP = "131"
 AUDIENCE_CYBER = "86"
 AUDIENCE_TELEGRAM = "184"
 AUDIENCE_LINKEDIN = "1270"
 AUDIENCE_YOUTUBE = "3000"
-# Pricing — Founding Member
-PRICE = "250"
+# Pricing - Public $50 Lifetime Tool + Private $250 Service (hidden from landing)
+PRICE = "50"
+PRICE_TOOL = "50"
+PRICE_TOOL_CENTS = "5000"
+PRICE_SERVICE = "250"
+PRICE_SERVICE_CENTS = "25000"
 ORIGINAL_PRICE = "500"
-STRIPE_AMOUNT = "25000"
+ORIGINAL_SERVICE = "500"
+STRIPE_AMOUNT = "5000"
+STRIPE_TOOL = "5000"
+STRIPE_SERVICE = "25000"
+PRICE_TOOL_LABEL = "$50 Lifetime"
 
-# Supabase — create project at https://supabase.com then set:
+# Supabase - create project at https://supabase.com then set:
 # npx wrangler secret put SUPABASE_URL
 # npx wrangler secret put SUPABASE_ANON_KEY
 # Optional service key for writes: SUPABASE_SERVICE_KEY
 # See supabase.sql for tables (backend/supabase.sql)
 
-# Groq — https://console.groq.com/keys
+# Groq - https://console.groq.com/keys
 # npx wrangler secret put GROQ_API_KEY
-# npx wrangler secret put GROQ_MODEL  # e.g., llama-3.3-70b-versatile, llama3-70b-8192, or your 120b own id
+# npx wrangler secret put GROQ_MODEL  # e.g., llama-3.1-70b-versatile, llama3-70b-8192, or your 120b own id (user 120B)
 # npx wrangler secret put ACCESS_CODES  # comma-separated, e.g. ALPHA2024,TEAM123
 
 # Telegram hot lead alerts
 # npx wrangler secret put TELEGRAM_BOT_TOKEN  # from @BotFather
 # npx wrangler secret put TELEGRAM_CHAT_ID    # your chat ID
 
-# Paystack — $250 Founding / $500 Regular / $99 converted to NGN — https://dashboard.paystack.com/#/settings/developer
+# Paystack - $50 Lifetime / $250 Private / $500 Regular converted to NGN - https://dashboard.paystack.com/#/settings/developer
 # npx wrangler secret put PAYSTACK_SECRET_KEY   # sk_test_... or sk_live_...
 # Optional: npx wrangler secret put FRONTEND_URL        # e.g. https://alphatekx.name.ng
-
-# D1 (alternative to Supabase) — npx wrangler d1 create alphatekx-db
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "alphatekx-db"
-# database_id = "REPLACE_AFTER_CREATE"
-
-# R2 — npx wrangler r2 bucket create alphatekx-storage
-# [[r2_buckets]]
-# binding = "STORAGE"
-# bucket_name = "alphatekx-storage"
-
-# [observability]
-# enabled = true

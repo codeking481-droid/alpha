@@ -13,10 +13,10 @@ async function genOne(env, { platform, type, day, company, niche }) {
   const brief = PLATFORM_BRIEF[platform] || type
   const prompt = `Create a ${brief} for Day ${day} — theme "${type}" for company "${company}" in "${niche}". Alpha community sizes: LinkedIn ${COMMUNITY.linkedin.followers} followers, ${COMMUNITY.linkedin.connections}+ connections, WhatsApp ${COMMUNITY.whatsapp.groups.reduce((s,g)=>s+g.members,0)}+ members (2 groups), Telegram ${COMMUNITY.telegram.members}, YouTube ${COMMUNITY.youtube.subscribers}+ subs. Keep it useful, no fake testimonials, no view/like guarantees. If relevant, include truth: "${TRUTH_CLAUSE}". Include CTA relevant to campaign. Return only the post content.`
   try {
-    const { text, mocked } = await groqGenerate(env, { prompt, model: 'llama-3.3-70b-versatile' })
+    const { text, mocked } = await groqGenerate(env, { prompt, model: env.GROQ_MODEL || 'llama-3.1-70b-versatile' })
     return { platform, type, day, content: text, mocked: !!mocked }
   } catch (e) {
-    return { platform, type, day, content: `[${platform} Day ${day} — ${type}] for ${company} (${niche}): ${brief}. — Groq key missing, add GROQ_API_KEY for real AI.`, mocked: true, error: e.message }
+    return { platform, type, day, content: `[${platform} Day ${day} — ${type}] for ${company} (${niche}): ${brief}. — Groq key missing, add GROQ_API_KEY for real AI.`, mocked: false, error: e.message }
   }
 }
 

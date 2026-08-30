@@ -1,5 +1,5 @@
-// ============================================================
-// LEAD FINDER — Apollo + Serply + Tavily + Overpass (100+ leads)
+﻿// ============================================================
+// LEAD FINDER â€” Apollo + Serply + Tavily + Overpass (100+ leads)
 // ============================================================
 
 export async function getCoordinates(city) {
@@ -7,14 +7,14 @@ export async function getCoordinates(city) {
   const response = await fetch(url, { headers: { 'User-Agent': 'AlphaAgency/1.0 (contact: alpha.agency)' } })
   if (!response.ok) throw new Error(`Nominatim ${response.status}`)
   const data = await response.json()
-  if (!data || data.length === 0) throw new Error(`City "${city}" not found — try a larger city`)
+  if (!data || data.length === 0) throw new Error(`City "${city}" not found â€” try a larger city`)
   const b = data[0].boundingbox ? data[0].boundingbox.map(parseFloat) : null
   // Nominatim boundingbox is [south, north, west, east] as strings
   const bbox = b ? { latMin: b[0], latMax: b[1], lonMin: b[2], lonMax: b[3] } : null
   return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display: data[0].display_name, bbox }
 }
 
-// Apollo — real gmails, needs APOLLO_API_KEY
+// Apollo â€” real gmails, needs APOLLO_API_KEY
 export async function findLeadsApollo(env, { city, niche, limit = 10 }) {
   const key = env.APOLLO_API_KEY
   if (!key) throw new Error('APOLLO_API_KEY not set')
@@ -49,7 +49,7 @@ export async function findLeadsApollo(env, { city, niche, limit = 10 }) {
   }))
 }
 
-// Serply — Google SERP API, needs SERPLY_API_KEY (or SERP_API_KEY)
+// Serply â€” Google SERP API, needs SERPLY_API_KEY (or SERP_API_KEY)
 export async function findLeadsSerply(env, { city, niche, limit = 25 }) {
   const key = env.SERPLY_API_KEY || env.SERP_API_KEY
   if (!key) throw new Error('SERPLY_API_KEY not set')
@@ -73,7 +73,7 @@ export async function findLeadsSerply(env, { city, niche, limit = 25 }) {
   }))
 }
 
-// Tavily — AI search, needs TAVILY_API_KEY
+// Tavily â€” AI search, needs TAVILY_API_KEY
 export async function findLeadsTavily(env, { city, niche, limit = 25 }) {
   const key = env.TAVILY_API_KEY
   if (!key) throw new Error('TAVILY_API_KEY not set')
@@ -105,7 +105,7 @@ export async function findLeadsTavily(env, { city, niche, limit = 25 }) {
   }))
 }
 
-// Overpass — free, no key, physical businesses
+// Overpass â€” free, no key, physical businesses
 export async function findLeadsOverpass(city, niche, limit = 50) {
   let coords;
   try { coords = await getCoordinates(city) } catch (e) { throw new Error(`Overpass: ${e.message}`) }
@@ -116,7 +116,7 @@ export async function findLeadsOverpass(city, niche, limit = 50) {
   const lonMin = bbox ? bbox.lonMin : lon - 0.05
   const lonMax = bbox ? bbox.lonMax : lon + 0.05
   const n = String(niche).toLowerCase().trim()
-  // Broaden tag matching — many businesses use 'shop' or 'office' instead of 'amenity'
+  // Broaden tag matching â€” many businesses use 'shop' or 'office' instead of 'amenity'
   const query = `
     [out:json][timeout:30];
     (
@@ -154,12 +154,12 @@ export async function findLeadsOverpass(city, niche, limit = 50) {
       break
     } catch (e) {
       lastErr = e
-      // timeout/504 — try next endpoint
+      // timeout/504 â€” try next endpoint
       if (String(e.message).includes('504') || String(e.message).includes('timeout') || String(e.message).includes('Overpass')) continue
       throw e
     }
   }
-  if (!response) throw new Error(lastErr ? lastErr.message : 'Overpass all endpoints failed — try again in 30s')
+  if (!response) throw new Error(lastErr ? lastErr.message : 'Overpass all endpoints failed â€” try again in 30s')
   if (!response.ok) throw new Error(`Overpass ${response.status}: ${(await response.text()).slice(0, 200)}`)
   const data = await response.json()
   const leads = (data.elements || []).map((el) => ({
@@ -189,7 +189,7 @@ export async function findLeadsOverpass(city, niche, limit = 50) {
   return named.length ? named : leads
 }
 
-// Mock generator for when no keys — still returns 100 realistic leads
+// Mock generator for when no keys â€” still returns 100 realistic leads
 function mockLeads(city, niche, limit) {
   const suffixes = ['Solutions','Labs','Group','Systems','Digital','Tech','Ventures','Agency','Holdings','Partners']
   return Array.from({ length: limit }, (_, i) => {
@@ -210,13 +210,13 @@ function mockLeads(city, niche, limit) {
   })
 }
 
-// Main — aggregates to 100+ leads across providers
-export async function findLeads(env, city, niche, limit = 100) {
+// Main â€” aggregates to 100+ leads across providers
+export async function findLeads(env, city = 'Global', niche = 'tech', limit = 100) {
   const target = Math.min(Math.max(limit, 1), 150)
   const results = []
   const errors = []
 
-  // Try Apollo FIRST for ALL niches — real verified owner emails, not small Tavily scraps
+  // Try Apollo FIRST for ALL niches â€” real verified owner emails, not small Tavily scraps
   if (env.APOLLO_API_KEY) {
     try {
       const apollo = await findLeadsApollo(env, { city, niche, limit: Math.min(25, target) })
@@ -242,7 +242,7 @@ export async function findLeads(env, city, niche, limit = 100) {
       results.push(...op)
     } catch (e) { errors.push(`Overpass: ${e.message}`) }
   }
-  // No mock — only real businesses from Overpass/Apollo. If under target, return what we have.
+  // No mock â€” only real businesses from Overpass/Apollo. If under target, return what we have.
   const seen = new Set()
   const deduped = results.filter(r => {
     const k = `${(r.company||r.name).toLowerCase()}|${(r.email||r.website||'').toLowerCase()}`
@@ -255,6 +255,7 @@ export async function findLeads(env, city, niche, limit = 100) {
 }
 
 // Convenience for the 100-company test
-export async function find100Leads(env, city = 'Lagos', niche = 'tech', opts = {}) {
+export async function find100Leads(env, city = 'Global', niche = 'tech', opts = {}) {
   return findLeads(env, city, niche, opts.limit || 100)
 }
+

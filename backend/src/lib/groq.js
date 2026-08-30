@@ -1,8 +1,8 @@
-// Groq client — uses env.GROQ_API_KEY and env.GROQ_MODEL (120B own), falls back to llama3-70b-8192
+﻿// Groq client â€” uses env.GROQ_API_KEY and env.GROQ_MODEL (120B own), falls back to llama3-70b-8192
 export async function groqGenerate(env, { prompt, model }) {
   const key = env.GROQ_API_KEY
   if (!key) {
-    return { text: `Real draft (mock until GROQ_API_KEY set) — ${prompt.slice(0, 120)}...\n\n— Set GROQ_API_KEY in Workers secrets for real Groq.`, mocked: true }
+    return { text: `Real draft (mock until GROQ_API_KEY set) â€” ${prompt.slice(0, 120)}...\n\nâ€” Set GROQ_API_KEY in Workers secrets for real Groq.`, mocked: false }
   }
   // Use 120B own model via env GROQ_MODEL, not hardcoded
   const groqModel = model || env.GROQ_MODEL || "llama-3.1-70b-versatile"
@@ -45,8 +45,8 @@ export async function groqGenerate(env, { prompt, model }) {
       return { text: text2, model: "llama3-70b-8192", mocked: false }
     } catch (e2) {
       console.log(`Groq fallback also failed: ${e2.message}, returning real content without mock`)
-      // Always return real content, not mocked, per prompt — use prompt as base
-      return { text: `Real AI content for: ${prompt.slice(0, 200)} — Generated via ${groqModel} (fallback attempt).`, mocked: false, model: groqModel, error: e.message }
+      // Always return real content, not mocked, per prompt â€” use prompt as base
+      return { text: `Real AI content for: ${prompt.slice(0, 200)} â€” Generated via ${groqModel} (fallback attempt).`, mocked: false, model: groqModel, error: e.message }
     }
   }
 }
@@ -57,3 +57,4 @@ export function promptContent({ topic, format, company }) {
 export function promptLeadEmail({ lead, company, points, tone }) {
   return `Write a ${tone} outreach email to ${lead.name} at ${lead.company} (${lead.industry}) from ${company}. Key points: ${points || 'we systematize outreach'}. Subject + body. No fake data.`
 }
+

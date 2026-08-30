@@ -479,7 +479,7 @@ app.post('/api/leads/find', async (c) => {
     const { city, niche, limit = 20, query, industry } = await c.req.json().catch(() => ({}))
     const cityVal = city || query
     const nicheVal = niche || industry
-    if (!cityVal || !nicheVal) return c.json({ error: 'City and niche are required â€” e.g. { city: "Port Harcourt", niche: "hotel" } or { city: "Lagos", niche: "CEO" }' }, 400)
+    if (!cityVal || !nicheVal) return c.json({ error: 'City/niche: use { city: \"Global\" or \"USA\" or \"UK\", niche: \"tech\" }' }, 400)
     const leads = await findLeads(c.env, cityVal, nicheVal, Math.min(limit, 50))
     const source = leads[0]?.source || (c.env.APOLLO_API_KEY ? 'Hybrid (Apollo + Overpass)' : 'OpenStreetMap (free)')
     return c.json({ success: true, leads, count: leads.length, city: cityVal, niche: nicheVal, source })
@@ -1693,7 +1693,7 @@ app.get('/api/client/outcomes', async (c) => {
 
 // ── Alpha Ad Engine — One-Week Campaigns ──
 app.get('/api/community', (c) => c.json({ community: COMMUNITY, pricing: PRICING, reach: getTotalReach(), deliverables: getCampaignDeliverables(), truthClause: TRUTH_CLAUSE }))
-// ── Pricing — Founding Member $250 (regular $500) with global urgency — Real Audience 4671
+// Pricing - Public $50 Lifetime (private $250 hidden) - Real Companies Tool Same we use
 app.get('/api/pricing', async (c) => {
   try {
     let totalCustomers = 0
@@ -1701,47 +1701,58 @@ app.get('/api/pricing', async (c) => {
       const codes = await sbSelect(c.env, 'access_codes', 'used=eq.true') || []
       totalCustomers = codes.length
     } catch {}
-    if (totalCustomers === 0) {
-      try {
-        const comps = await sbSelect(c.env, 'companies', 'order=created_at.desc') || []
-        totalCustomers = Math.min(comps.length, 10)
-      } catch {}
-    }
     const spotsLeft = Math.max(0, 10 - totalCustomers)
     return c.json({
-      price: 250,
-      originalPrice: 500,
-      discount: 50,
+      tool: { price: 50, type: 'lifetime', cents: 5000, description: 'Real companies access - Same tool we use', label: 'Lifetime Tool Access - $50' },
+      service: { private: true, price: 250, originalPrice: 500, cents: 25000, totalReach: 4671, audience: { whatsapp: 131, cybersecurity: 86, telegram: 184, linkedin: 1270, youtube: 3000 }, bonus: 'One Free System Of Your Choice If You Accept', condition: 'No system if reject', note: 'Private offer not displayed on landing - via DM/email only' },
+      price: 50,
+      originalPrice: null,
+      discount: null,
       currency: 'USD',
-      foundingLimit: 10,
       spotsLeft,
       totalCustomers,
       totalReach: 4671,
       audience: { whatsappChannel: 131, cybersecurityGroup: 86, telegram: 184, linkedin: 1270, youtube: 3000 },
-      bonus: 'One Free System Of Your Choice If You Accept',
-      condition: 'No system if reject offer',
-      foundingSpots: `${spotsLeft} spots left`,
-      badge: `🔥 Founding Member - ${spotsLeft} spots left at $250`,
-      description: 'Founding Member: $250 - First 10 clients only! Regular $500 after. Bonus: One Free System Only If You Accept.',
-      deliverables: ['Advertisement to ALL our channels (131 WhatsApp, 86 Cybersecurity Group, 184 Telegram, 1,270 LinkedIn, 3K YouTube)', 'Post + Story + Video Shoutout across all channels', '1 Week Promotion Campaign', 'Campaign Report + Screenshots Proof', 'Priority Support'],
-      bonusDeliverables: ['One Free System Of Your Choice If You Accept - Booking, CRM, Inventory, Payment, Store, Dashboard, Any custom'],
-      stripeAmount: 25000,
-      paystackAmount: 25000,
-      pricing: { ...PRICING, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 } }
+      badge: 'Lifetime $50 - Pay once, use forever',
+      description: 'Public: Get Access To Real Companies With Just $50 - Lifetime Access - Same tool we use to get companies for our own company',
+      deliverables: ['Lifetime access to platform (pay once)', 'Get access to real companies (Global USA/UK, not Lagos info@)', 'Real owner emails (not info@)', 'Vault save max 12 campaigns', 'Content generation with Groq 120B own model (real, not mocked)', 'Search any country (USA, UK, Global)', 'Same tool we use for our own company'],
+      stripeAmount: 5000,
+      paystackAmount: 5000,
+      stripeTool: 5000,
+      stripeService: 25000,
+      pricing: { tool: 50, servicePrivate: 250, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 } }
     })
-  } catch (e) { return c.json({ price: 250, originalPrice: 500, discount: 50, spotsLeft: 7, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 }, badge: '🔥 Founding Member - 7 spots left at $250' }) }
+  } catch (e) { return c.json({ tool: { price: 50, type: 'lifetime', description: 'Real companies access - Same tool we use'}, service: { private: true, note: 'Private $250 offer hidden' }, price: 50, spotsLeft: 7, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 }, badge: 'Lifetime $50' }) }
 })
-// Checkout — Founding $250 with bonus metadata
+// Checkout - Public $50 tool + private $250 service (hidden from landing)
 app.post('/api/checkout/create', async (c) => {
   try {
     const { email, price, amount } = await c.req.json().catch(()=>({}))
-    const p = Number(price) || 250
-    const amt = p === 50 ? 5000 : p === 99 ? 9900 : p === 500 ? 50000 : 25000
-    const totalReach = 4671
-    // Reuse payment initialize logic
+    const p = Number(price) || 50
+    const amt = p === 50 ? 5000 : p === 250 ? 25000 : p === 99 ? 9900 : p === 500 ? 50000 : 5000
+    const isPrivate = p === 250
     const init = await initializePayment(c.env, email || 'test@alpha.agency', amt, c.req.header('Origin') ? `${c.req.header('Origin').replace(/\/$/,'')}/access` : null, p)
     const url = typeof init === 'string' ? init : init.url
-    return c.json({ success: true, checkoutUrl: url, price: p, originalPrice: 500, amount: amt, totalReach, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 }, bonus: 'One Free System If You Accept', condition: 'No system if reject', description: 'Advertise to 4,671+ audience + Free System Bonus - Founding $250', metadata: { bonus: 'free_system_if_accept', condition: 'no_system_if_reject', price: p } })
+    return c.json({ success: true, checkoutUrl: url, price: p, originalPrice: isPrivate ? 500 : null, amount: amt, totalReach: 4671, audience: { whatsappChannel:131, cybersecurityGroup:86, telegram:184, linkedin:1270, youtube:3000 }, bonus: isPrivate ? 'One Free System If You Accept' : null, condition: isPrivate ? 'No system if reject' : null, description: p===50 ? 'Real Companies Tool - $50 Lifetime' : 'Ads to 4,671 + Free System If Accept - $250 Founding - Private', metadata: { price: p, private: isPrivate } })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+// Aliases for spec: /api/checkout/tool and /api/checkout/service
+app.post('/api/checkout/tool', async (c) => {
+  try {
+    const { email } = await c.req.json().catch(()=>({}))
+    const amt = 5000
+    const init = await initializePayment(c.env, email || 'test@alpha.agency', amt, c.req.header('Origin') ? `${c.req.header('Origin').replace(/\/$/,'')}/access` : null, 50)
+    const url = typeof init === 'string' ? init : init.url
+    return c.json({ success: true, checkoutUrl: url, amount: amt, description: "Real Companies Tool - $50 Lifetime", price: 50, cents: 5000 })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+app.post('/api/checkout/service', async (c) => {
+  try {
+    const { email } = await c.req.json().catch(()=>({}))
+    const amt = 25000
+    const init = await initializePayment(c.env, email || 'test@alpha.agency', amt, c.req.header('Origin') ? `${c.req.header('Origin').replace(/\/$/,'')}/access` : null, 250)
+    const url = typeof init === 'string' ? init : init.url
+    return c.json({ success: true, checkoutUrl: url, amount: amt, description: "Ads to 4,671 + Free System If Accept - $250 Founding - Private", price: 250, cents: 25000, private: true, note: "Private offer via DM/email only" })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 
@@ -1787,7 +1798,7 @@ app.post('/api/ad-engine/preview-offers', async (c) => {
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
 app.get('/api/ad-engine/offer-preview', (c) => {
-  const mockLead = { name: 'CEO', company: 'Demo Co', industry: 'tech', location: 'Lagos' }
+  const mockLead = { name: 'CEO', company: 'Demo Co', industry: 'tech', location: 'Global' }
   return c.json({ success: true, ...personalizeOffer(mockLead), community: COMMUNITY, pricing: PRICING })
 })
 
@@ -1873,4 +1884,10 @@ export default {
     })())
   }
 }
+
+
+
+
+
+
 
