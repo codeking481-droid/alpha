@@ -219,8 +219,8 @@ export const SavedCompanies = () => {
     } catch {}
   }, [getToken]);
 
-  useEffect(() => { if (user) fetchData(); else setLoading(false); }, [user, fetchData]);
-  useEffect(() => { if (user) fetchPending(); }, [user, fetchPending]);
+  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchPending(); }, [fetchPending]);
 
   const toggleSelect = (id) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleAll = () => setSelected(prev => prev.size === items.length ? new Set() : new Set(items.map(i => i.id)));

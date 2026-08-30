@@ -38,10 +38,10 @@ export async function findCompaniesApollo(env, niche, location, limit) {
   const perPage = Math.min(limit || 20, 25)
 
   try {
-    // Free plan does not include mixed_* — try organizations/search first, then people/search, then mixed_*
+    // Free plan mixed_* blocked — try people/search first (verified owner), then organizations, then mixed_*
     const tryEndpoints = [
-      { url: 'https://api.apollo.io/v1/organizations/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], per_page: perPage, page: 1 } },
       { url: 'https://api.apollo.io/v1/people/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner'], per_page: perPage, page: 1 } },
+      { url: 'https://api.apollo.io/v1/organizations/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], per_page: perPage, page: 1 } },
       { url: 'https://api.apollo.io/v1/mixed_people/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner', 'Managing Director', 'President'], person_seniorities: ['founder', 'c_suite', 'owner'], per_page: perPage, page: 1 } },
     ];
     for (const ep of tryEndpoints) { if (apolloLocation) ep.body.organization_locations = apolloLocation; }
