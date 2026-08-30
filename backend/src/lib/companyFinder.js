@@ -38,63 +38,52 @@ export async function findCompaniesApollo(env, niche, location, limit) {
   const perPage = Math.min(limit || 20, 25)
 
   try {
-    // Step 1: Search for people (Founders/CEOs) at companies in this niche — location optional for global
-    const apolloBody = {
-      api_key: apiKey,
-      q_organization_keyword_tags: [niche],
-      person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner', 'Managing Director', 'President'],
-      person_seniorities: ['founder', 'c_suite', 'owner'],
-      per_page: perPage,
-      page: 1
-    }
-    if (apolloLocation) apolloBody.organization_locations = apolloLocation
-
-    const peopleRes = await fetch('https://api.apollo.io/v1/mixed_people/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey, 'Cache-Control': 'no-cache' },
-      body: JSON.stringify(apolloBody)
-    })
-
-    if (!peopleRes.ok) {
-      const txt = await peopleRes.text()
-      console.log('Apollo people search error:', peopleRes.status, txt.slice(0, 500))
-      // Try organization fallback even on 403 — people endpoint may be restricted for this key
-      console.log('Apollo people failed, trying organizations fallback for', niche, location)
+    // Free plan does not include mixed_* — try organizations/search first, then people/search, then mixed_*
+    const tryEndpoints = [
+      { url: 'https://api.apollo.io/v1/organizations/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], per_page: perPage, page: 1 } },
+      { url: 'https://api.apollo.io/v1/people/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner'], per_page: perPage, page: 1 } },
+      { url: 'https://api.apollo.io/v1/mixed_people/search', body: { api_key: apiKey, q_organization_keyword_tags: [niche], person_titles: ['Founder', 'CEO', 'Co-Founder', 'Owner', 'Managing Director', 'President'], person_seniorities: ['founder', 'c_suite', 'owner'], per_page: perPage, page: 1 } },
+    ];
+    for (const ep of tryEndpoints) { if (apolloLocation) ep.body.organization_locations = apolloLocation; }
+    let peopleRes = null;
+    let lastErr = null;
+    let successUrl = '';
+    for (const ep of tryEndpoints) {
       try {
-        const orgBody2 = { api_key: apiKey, q_organization_keyword_tags: [niche], per_page: perPage, page: 1 }
-        if (apolloLocation) orgBody2.organization_locations = apolloLocation
-        const orgRes2 = await fetch('https://api.apollo.io/v1/mixed_companies/search', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey, 'Cache-Control': 'no-cache' },
-          body: JSON.stringify(orgBody2)
-        })
-        if (orgRes2.ok) {
-          const orgData2 = await orgRes2.json()
-          const orgs2 = orgData2.organizations || orgData2.companies || orgData2.accounts || []
-          if (Array.isArray(orgs2) && orgs2.length > 0) {
-            const companies = []
-            const seen = new Set()
-            for (const org of orgs2) {
-              const domain = (org.primary_domain || org.domain || '').toLowerCase().trim()
-              if (!domain || seen.has(domain)) continue
-              seen.add(domain)
-              companies.push({ id: `apollo-org-${org.id || Date.now()}-${Math.random().toString(36).slice(2,8)}`, name: org.name || org.organization_name || 'Unknown', domain, website: org.website_url || org.url || `https://${domain}`, email: org.primary_email || `info@${domain}`, ownerName: org.owner_name || '', ownerEmail: org.primary_email || '', industry: org.industry || niche, location: org.city || org.country || locationStr, source: 'apollo', verified: !!org.primary_email, employeeCount: org.estimated_num_employees || 0, shortDescription: org.short_description || '', linkedinUrl: org.linkedin_url || '', is_real: true })
-            }
-            if (companies.length > 0) { console.log(`Apollo org fallback after people 403 found ${companies.length} for "${niche}"`); return companies; }
-          }
-        } else {
-          const txt2 = await orgRes2.text()
-          console.log('Apollo org fallback after people 403 error:', orgRes2.status, txt2.slice(0,300))
-          throw new Error(`Apollo API failed: ${peopleRes.status} / org ${orgRes2.status}: ${txt.slice(0,200)} | ${txt2.slice(0,200)}`)
-        }
-      } catch (e2) {
-        // if fallback also failed, throw original
-        if (e2.message.includes('Apollo API failed')) throw e2
-        console.log('Apollo org fallback after 403 exception:', e2.message)
-      }
-      throw new Error(`Apollo API failed: ${peopleRes.status} ${txt.slice(0,300)}`)
+        const r = await fetch(ep.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey, 'Cache-Control': 'no-cache' },
+          body: JSON.stringify(ep.body)
+        });
+        if (r.ok) { peopleRes = r; successUrl = ep.url; console.log(`Apollo ${ep.url} succeeded`); break; }
+        const txt = await r.text();
+        console.log(`Apollo ${ep.url} failed ${r.status}: ${txt.slice(0,300)}`);
+        lastErr = new Error(`Apollo ${ep.url} ${r.status}: ${txt.slice(0,200)}`);
+        if (r.status === 403 && txt.includes('not included in your Free plan')) { continue; }
+        peopleRes = r; successUrl = ep.url; break;
+      } catch (e) { console.log(`Apollo ${ep.url} exception: ${e.message}`); lastErr = e; }
+    }
+    if (!peopleRes || !peopleRes.ok) {
+      const txt = peopleRes ? await peopleRes.clone().text().catch(()=> '') : '';
+      throw lastErr || new Error(`Apollo all endpoints failed: ${peopleRes ? peopleRes.status : 'no response'} ${txt.slice(0,300)}`)
     }
 
     const peopleData = await peopleRes.json()
+    // If organizations/search succeeded, it returns organizations, not people — handle directly
+    if (successUrl.includes('/organizations/search')) {
+      const orgs = peopleData.organizations || peopleData.companies || peopleData.accounts || []
+      if (Array.isArray(orgs) && orgs.length > 0) {
+        const companies = []
+        const seen = new Set()
+        for (const org of orgs) {
+          const domain = (org.primary_domain || org.domain || '').toLowerCase().trim()
+          if (!domain || seen.has(domain)) continue
+          seen.add(domain)
+          companies.push({ id: `apollo-org-${org.id || Date.now()}-${Math.random().toString(36).slice(2,8)}`, name: org.name || org.organization_name || 'Unknown', domain, website: org.website_url || org.url || `https://${domain}`, email: org.primary_email || `info@${domain}`, ownerName: org.owner_name || '', ownerEmail: org.primary_email || '', industry: org.industry || niche, location: org.city || org.country || locationStr, source: 'apollo', verified: !!org.primary_email, employeeCount: org.estimated_num_employees || 0, shortDescription: org.short_description || '', linkedinUrl: org.linkedin_url || '', is_real: true })
+        }
+        if (companies.length > 0) { console.log(`Apollo organizations/search found ${companies.length} for "${niche}"`); return companies; }
+      }
+    }
     const people = peopleData.people || peopleData.contacts || []
 
     if (!Array.isArray(people) || people.length === 0) {
