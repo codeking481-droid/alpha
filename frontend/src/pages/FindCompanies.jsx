@@ -74,7 +74,7 @@ export const FindCompanies = () => {
           ownerName: c.ownerName || '', ownerEmail: c.ownerEmail || c.email || '',
           color: 'bg-[#5E17EB]', phone: c.phone || '', source: c.source || 'search', verified: !!c.verified, employeeCount: c.employeeCount || 0
         })));
-        const srcMap = { apollo: 'Apollo ✓ (verified)', nominatim: 'OpenStreetMap (real)', duckduckgo: 'DuckDuckGo (real web)', wikipedia: 'Wikipedia (real)', overpass: 'OpenStreetMap (real)', tavily: 'Tavily' };
+        const srcMap = { prospeo: 'Prospeo ✓ (verified)', apollo: 'Apollo ✓ (verified)', nominatim: 'OpenStreetMap (real)', duckduckgo: 'DuckDuckGo (real web)', wikipedia: 'Wikipedia (real)', overpass: 'OpenStreetMap (real)', tavily: 'Tavily' };
         let src = srcMap[data.source] || data.source || (arr[0]?.source ? (srcMap[arr[0].source] || arr[0].source) : 'real');
         setError(`${arr.length} found • Source: ${src} — real`);
       } else {
