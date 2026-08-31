@@ -1,6 +1,9 @@
-// Alpha Agency — Real Email Send via Resend + Supabase Marking
-// Send one email, mark company as contacted in Supabase.
-// If bulk, loop with delays and mark each.
+// Alpha Agency — Real Email Send via Gmail API + Supabase Marking
+// Send one email via Gmail (appears in Sent folder), mark company as contacted.
+// If bulk, loop with delays and mark each. Gmail API replaces Resend 100%.
+
+import { sbSelect, sbInsert, getSupabase } from './supabase.js'
+import { sendViaGmail } from './gmail.js'
 
 // Helper: check if company already contacted in Supabase
 export async function checkCompanyDuplicate(env, domain, ownerEmail) {
@@ -41,7 +44,7 @@ Dashboard: {{dashboardLink}}
 // Dashboard link for the brand
 const DASHBOARD_LINK = 'https://alpha-agency-api.alphatekxcompany.workers.dev/dashboard'
 
-// Send a single outreach email
+// Send a single outreach email via Gmail API (shows in Sent folder)
 export async function sendOutreachEmail(env, lead) {
   const { companyName, domain, ownerName, ownerEmail, niche } = lead
 
@@ -60,7 +63,6 @@ export async function sendOutreachEmail(env, lead) {
           console.log('SKIP duplicate outreach:', companyName, 'already contacted at', already.contacted_at)
           return { skipped: true, reason: 'already_contacted', company: companyName, last_contacted_at: already.contacted_at, outreach_count: already.outreach_count }
         }
-        // Company exists but not contacted yet - proceed but mark
         console.log('Company exists but not contacted yet:', companyName, '— proceeding with outreach')
       }
     }
@@ -71,38 +73,22 @@ export async function sendOutreachEmail(env, lead) {
   // Step 2: Generate real email using outreachSender template
   const personalized = personalizeOutreach(lead)
 
-  // Step 3: Send via Resend API
-  let resendId = null
+  // Step 3: Send via Gmail API (replaces Resend — appears in Sent folder)
+  let gmailId = null
   let sendError = null
   try {
-    const resendKey = env.RESEND_API_KEY
-    if (!resendKey) throw new Error('RESEND_API_KEY missing')
-
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: 'outreach@alphatekx.name.ng',
-        to: ownerEmail,
-        subject: personalized.subject,
-        html: `<pre style="font-family:system-ui;white-space:pre-wrap">${personalized.text}</pre>`
-      })
+    const sent = await sendViaGmail(env, {
+      to: ownerEmail,
+      subject: personalized.subject,
+      html: `<pre style="font-family:system-ui;white-space:pre-wrap">${personalized.text}</pre>`,
+      text: personalized.text,
+      from: env.GMAIL_EMAIL || env.FROM_EMAIL || 'alpha@alphatekx.name.ng'
     })
-
-    if (!resendRes.ok) {
-      const txt = await resendRes.text()
-      console.log('Resend error:', resendRes.status, txt.slice(0, 300))
-      sendError = new Error('Resend send failed: ' + txt.slice(0, 200))
-    } else {
-      const data = await resendRes.json()
-      resendId = data.id || data.uuid || null
-      console.log('Resend sent OK, id:', resendId)
-    }
+    gmailId = sent.id || sent.gmail_id || null
+    console.log('Gmail sent OK, id:', gmailId)
   } catch (e) {
-    console.log('Resend exception:', e.message)
+    console.log('Gmail send exception:', e.message)
+    // In dev, Gmail mock already returns id; if we are here, it's real error
     sendError = e
   }
 
@@ -111,7 +97,6 @@ export async function sendOutreachEmail(env, lead) {
     const sb = getSupabase(env)
     if (sb) {
       const now = new Date().toISOString()
-      // First try to find the company by domain and update it
       const findRes = await fetch(`${sb.url}/rest/v1/companies?domain=eq.${domain.toLowerCase()}&select=id,outreach_count`, {
         headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }
       })
@@ -135,7 +120,6 @@ export async function sendOutreachEmail(env, lead) {
             })
           }).catch(() => {})
         } else {
-          // Company not in DB yet - insert it
           const followUpDue2 = new Date(Date.now() + 3*24*60*60*1000).toISOString()
           const followUpMsg2 = `Hi ${ownerName || 'there'},\n\nJust following up on my previous email about featuring ${companyName} on our 4,500+ audience. Still open to a YES? Reply YES and we start immediately.\n\n— Alpha Agency ($250 Founding)`
           await fetch(`${sb.url}/rest/v1/companies`, {
@@ -162,10 +146,10 @@ export async function sendOutreachEmail(env, lead) {
     console.log('Supabase upsert non-fatal:', e.message)
   }
 
-  // Step 5: Insert sent_emails record
+  // Step 5: Insert sent_emails record — provider gmail
   try {
     const sb = getSupabase(env)
-    if (sb && resendId) {
+    if (sb && gmailId) {
       const now = new Date().toISOString()
       await sbInsert(env, 'sent_emails', {
         company_id: null,
@@ -174,12 +158,13 @@ export async function sendOutreachEmail(env, lead) {
         industry: niche || 'unknown',
         subject: personalized.subject,
         body: personalized.text,
-        provider: 'resend',
-        resend_id: resendId,
+        provider: 'gmail',
+        gmail_id: gmailId,
+        resend_id: gmailId,
         status: 'sent',
         sent_at: now
       })
-      console.log('Inserted sent_email record for', ownerEmail)
+      console.log('Inserted sent_email (gmail) record for', ownerEmail)
     }
   } catch (e) {
     console.log('Sent email DB non-fatal:', e.message)
@@ -189,7 +174,8 @@ export async function sendOutreachEmail(env, lead) {
     success: !sendError,
     company: companyName,
     ownerEmail,
-    resend_id: resendId,
+    gmail_id: gmailId,
+    resend_id: gmailId,
     sendError: sendError?.message || null,
     outreach_count: 0,
     truthClause: OUTREACH_TEMPLATE.body
@@ -220,12 +206,12 @@ export function personalizeOutreach(lead) {
   }
 }
 
-// Bulk send with 30s delay between each, dedup check per company
+// Bulk send via Gmail — supports 50 at once with deduplication and delays
 export async function sendBulkOutreach(env, leads, opts = {}) {
-  const max = Math.min(leads.length, opts.max || 20)
+  const max = Math.min(leads.length, opts.max || 50)
   const slice = leads.slice(0, max)
   const results = []
-  const delayMs = Number(opts.delayMs) || 30000
+  const delayMs = Number(opts.delayMs) || 500
 
   for (let i = 0; i < slice.length; i++) {
     const lead = slice[i]
@@ -233,17 +219,16 @@ export async function sendBulkOutreach(env, leads, opts = {}) {
       const result = await sendOutreachEmail(env, lead)
       results.push({ success: true, ...result, index: i })
 
-      // Delay between sends (not after the last)
       if (i < slice.length - 1 && delayMs > 0) {
         await new Promise(r => setTimeout(r, delayMs))
       }
     } catch (e) {
-      console.log('Bulk send error at index', i, e.message)
+      console.log('Bulk Gmail send error at index', i, e.message)
       results.push({ success: false, error: e.message, index: i })
     }
   }
 
-  const sent = results.filter(r => r.success).length
+  const sent = results.filter(r => r.success && !r.skipped).length
   const skipped = results.filter(r => r.skipped && r.reason === 'already_contacted').length
   const failed = results.filter(r => !r.success && !r.skipped).length
 
@@ -256,7 +241,7 @@ export async function sendBulkOutreach(env, leads, opts = {}) {
   }
 }
 
-// Legacy no-op exports — old route handlers replaced but imports still referenced
+// Legacy no-op exports
 export async function sendEmail() { return { success: true } }
 export function trackSentEmail() { return {} }
 export function getSentEmails() { return [] }

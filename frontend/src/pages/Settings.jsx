@@ -12,7 +12,9 @@ export const Settings = () => {
   const [testMessage, setTestMessage] = useState('');
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState('');
-  const [envStatus, setEnvStatus] = useState({ hasTelegram: false, hasGroq: false });
+  const [envStatus, setEnvStatus] = useState({ hasTelegram: false, hasGroq: false, hasGmail: false, gmailEmail: null });
+  const [gmailStatus, setGmailStatus] = useState(null);
+  const [gmailLoading, setGmailLoading] = useState(false);
 
   useEffect(() => {
     // Load saved values
@@ -24,12 +26,21 @@ export const Settings = () => {
     if (savedModel) setGroqModel(savedModel);
     // Check backend env status
     fetch(`${API_URL}/api/debug/env`).then(r=>r.json()).then(data=>{
-      setEnvStatus({ hasTelegram: !!(data.envKeys||[]).includes('TELEGRAM_BOT_TOKEN'), hasGroq: !!(data.envKeys||[]).includes('GROQ_API_KEY') });
+      setEnvStatus({ hasTelegram: !!(data.envKeys||[]).includes('TELEGRAM_BOT_TOKEN'), hasGroq: !!(data.envKeys||[]).includes('GROQ_API_KEY'), hasGmail: !!data.hasGmail, gmailEmail: data.gmailEmail || null, hasGmailRefresh: !!data.hasGmailRefresh });
       // Try to get pricing to show groq model info
       fetch(`${API_URL}/api/community`).then(r=>r.json()).then(c=>{
         if (c.pricing) setGroqModel(prev => prev || 'llama-3.1-70b-versatile');
       }).catch(()=>{});
     }).catch(()=>{});
+    // Gmail status
+    fetch(`${API_URL}/api/auth/gmail/status`).then(r=>r.json()).then(d=> setGmailStatus(d)).catch(()=>{});
+    // Handle redirect back from Gmail OAuth
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('gmail')==='connected') {
+      setTestResult(`✅ Gmail connected: ${params.get('email')||'check Sent folder'} — sending via Gmail API`);
+      window.history.replaceState({}, '', window.location.pathname);
+      fetch(`${API_URL}/api/auth/gmail/status`).then(r=>r.json()).then(d=> setGmailStatus(d)).catch(()=>{});
+    }
     // Load pricing for groq model display
     fetch(`${API_URL}/api/pricing`).then(r=>r.json()).then(d=>{
       if (d.price) console.log('Pricing loaded');
@@ -80,6 +91,78 @@ export const Settings = () => {
         </div>
 
         <div className="space-y-4 sm:space-y-6">
+          {/* Gmail API — replaces Resend */}
+          <div className="bg-white border border-[#EDEDED] rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-[#EA4335] rounded-lg flex items-center justify-center text-white font-black text-[14px]">M</div>
+              <div>
+                <h2 className="text-[16px] sm:text-[18px] font-black">Gmail API — Send via Your Gmail</h2>
+                <p className="text-[11px] sm:text-[12px] text-[#6B7280]">Replaces Resend — every message appears in your Gmail Sent folder, replies go to your inbox</p>
+              </div>
+              <span className={`ml-auto text-[10px] font-black px-2 py-1 rounded-full ${gmailStatus?.configured || envStatus.hasGmailRefresh ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{gmailStatus?.configured || envStatus.hasGmailRefresh ? 'Connected' : 'Not connected'}</span>
+            </div>
+            <div className="space-y-3">
+              <div className="bg-[#F0EFFF] border border-[#DDD6FE] rounded-lg p-3">
+                <p className="text-[11px] font-black text-[#5E17EB]">How it works:</p>
+                <p className="text-[11px] text-[#4B5563] leading-snug mt-1">Click <b>Connect Gmail</b> → approve Google OAuth → we store refresh_token → all sends use <code>Gmail API messages.send</code> → you see every email in <b>Gmail Sent</b>. Bulk 50 emails at once works. Resend is removed.</p>
+              </div>
+              {gmailStatus && (
+                <div className="bg-gray-50 border border-[#EDEDED] rounded-lg p-3 text-[12px] font-mono">
+                  <div>Gmail: <b>{gmailStatus.email || gmailStatus.gmailEmail || envStatus.gmailEmail || 'not set'}</b></div>
+                  <div className="text-[11px] text-[#6B7280]">{gmailStatus.configured ? '✅ Gmail API ready — bulk 50 ready' : 'Set GMAIL_CLIENT_ID / SECRET / REFRESH_TOKEN in Worker secrets or click Connect'}</div>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setGmailLoading(true); window.location.href = `${API_URL}/api/auth/gmail`; }}
+                  disabled={gmailLoading}
+                  className="flex-1 sm:flex-none bg-[#EA4335] hover:bg-[#D33A2E] text-white rounded-lg px-4 py-2.5 text-[13px] font-black disabled:opacity-50"
+                >
+                  {gmailStatus?.configured ? 'Reconnect Gmail' : 'Connect Gmail'}
+                </button>
+                <button
+                  onClick={async () => {
+                    setGmailLoading(true); setTestResult('');
+                    try {
+                      const res = await fetch(`${API_URL}/api/auth/gmail/status`);
+                      const d = await res.json();
+                      setGmailStatus(d);
+                      setTestResult(d.configured ? `✅ Gmail connected: ${d.email||d.gmailEmail} — bulk 50 ready, Sent folder active` : '❌ Gmail not configured — set GMAIL_CLIENT_ID/SECRET/REFRESH_TOKEN');
+                    } catch(e){ setTestResult('❌ '+e.message) }
+                    setGmailLoading(false);
+                  }}
+                  disabled={gmailLoading}
+                  className="flex-1 sm:flex-none bg-[#0A0A0A] hover:bg-black text-white rounded-lg px-4 py-2.5 text-[13px] font-black disabled:opacity-50"
+                >
+                  {gmailLoading ? 'Checking...' : 'Check Status'}
+                </button>
+                <button
+                  onClick={async () => {
+                    const to = prompt('Test Gmail — enter recipient email:');
+                    if (!to) return;
+                    setGmailLoading(true);
+                    try {
+                      const res = await fetch(`${API_URL}/api/gmail/send-bulk`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ emails: [{ to, subject: 'Gmail API Test — Alpha', html: '<p>Test via Gmail API — check Sent folder</p>', text: 'Test via Gmail API — check Sent folder' }] }) });
+                      const d = await res.json();
+                      setTestResult(d.success ? `✅ Gmail sent via API — check Sent folder, id=${d.details?.[0]?.gmail_id||'ok'}` : `❌ ${d.error||'failed'}`);
+                    } catch(e){ setTestResult('❌ '+e.message) }
+                    setGmailLoading(false);
+                  }}
+                  disabled={gmailLoading}
+                  className="hidden sm:inline-flex bg-white border border-[#EDEDED] rounded-lg px-4 py-2.5 text-[13px] font-bold hover:bg-[#F9FAFB] disabled:opacity-50"
+                >
+                  Test Send
+                </button>
+              </div>
+              <div className="bg-gray-900 text-white rounded-lg p-3 font-mono text-[11px] leading-snug">
+                <div>Worker secrets (already set):</div>
+                <div>GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_EMAIL</div>
+                <div className="mt-2 text-white/60">Fallback: GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN also work</div>
+                <div className="mt-1">Bulk: POST /api/gmail/send-bulk or /api/outreach/bulk (max 50) — deduped + validated</div>
+              </div>
+            </div>
+          </div>
+
           {/* Telegram */}
           <div className="bg-white border border-[#EDEDED] rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-3">

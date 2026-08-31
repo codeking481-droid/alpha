@@ -1,4 +1,5 @@
 import { sendEmailResend } from './email.js'
+import { sendViaGmail } from './gmail.js'
 import { groqGenerate } from './groq.js'
 import { COMMUNITY, COMMUNITIES, TRUTH_CLAUSE } from './community.js'
 
@@ -69,12 +70,13 @@ export async function sendOffer(env, lead, opts = {}) {
   const to = lead.email
   if (!to || !String(to).includes('@')) throw new Error(`No email for ${lead.company || lead.name}`)
   const { subject, text, html } = opts.useAI ? await personalizeWithGroq(env, lead, opts) : personalizeOffer(lead, opts)
-  const res = await sendEmailResend(env, { to, subject, html, text, from: opts.from })
-  return { lead, to, subject, text, res, sentAt: new Date().toISOString() }
+  // Gmail API — appears in Sent folder
+  const res = await sendViaGmail(env, { to, subject, html, text, from: opts.from })
+  return { lead, to, subject, text, res, gmail_id: res.id, sentAt: new Date().toISOString() }
 }
 
 export async function sendBulkOffers(env, leads, opts = {}) {
-  const limit = Math.min(leads.length, opts.limit || 100)
+  const limit = Math.min(leads.length, opts.limit || 50)
   const slice = leads.slice(0, limit)
   const results = []
   const batch = Number(opts.batchSize) || 10
