@@ -16,12 +16,19 @@ export const Dashboard = () => {
       fetch(`${API_URL}/api/replies/my-replies`, { headers: { Authorization: token ? `Bearer ${token}`: '' }, credentials: 'include' }).then(r=>r.json()).catch(()=>({ replies: [] })),
       fetch(`${API_URL}/api/companies/stats`, { headers: { Authorization: token ? `Bearer ${token}`: '' }, credentials: 'include' }).then(r=>r.json()).catch(()=>({ stats: null })),
     ]).then(([cData, rData, sData])=>{
-      const companies = cData.companies?.length ?? cData.total ?? 0;
-      const sent = rData.replies?.length ?? rData.count ?? 0;
-      const closed = sData.stats?.closed_won ?? cData.stats?.closed_won ?? 0;
+      const companies = cData.companies?.length ?? cData.total ?? cData.stats?.total_saved ?? 0;
+      // Gmail replies + sent count
+      const repliesCount = rData.replies?.length ?? rData.count ?? rData.total ?? 0;
+      const sentCount = rData.sent ?? 0; // some endpoints return sent
+      const sent = repliesCount || sentCount || 0;
+      // Check multiple sources for closed_won
+      const closed = sData.stats?.closed_won ?? cData.stats?.closed_won ?? rData.closed_won ?? 0;
       const earned = closed * 250;
-      if (companies || sent || earned) setStats({ companies: companies || 24, sent: sent || 128, earned: earned || 4280 });
-    }).catch(()=>{});
+      // Always show real stats — 0 is valid, never mock 24/128/4280
+      setStats({ companies: Number(companies)||0, sent: Number(sent)||0, earned: Number(earned)||0 });
+    }).catch((e)=>{
+      console.error('Dashboard stats failed:', e.message);
+    });
   }, [user, getToken]);
 
   const handleLogout = async () => {
@@ -95,7 +102,7 @@ export const Dashboard = () => {
           <button onClick={() => navigate('/saved-companies')} className="relative bg-[#EDE8FF] border border-[#C4B5FD] rounded-2xl p-6 text-left hover:shadow-md transition-all hover:scale-[1.02] overflow-hidden group">
             <div className="w-10 h-10 bg-[#5E17EB] rounded-xl flex items-center justify-center mb-4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg></div>
             <h3 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[#0A0A0A] leading-none">Vault</h3>
-            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Saved companies — send email via Resend, track replies, close $250 Founding deal</p>
+            <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2 leading-tight">Saved companies — send via Gmail API (in Sent folder), track YES replies, close $250 Founding deal</p>
             <span className="absolute bottom-5 right-5 w-8 h-8 rounded-full border border-[#C4B5FD] bg-[#F0EFFF] flex items-center justify-center text-[#5E17EB] group-hover:bg-white transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><polyline points="8 7 17 7 17 16"/></svg>
             </span>
@@ -212,7 +219,7 @@ export const Dashboard = () => {
             <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
               <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Messages Sent</div>
               <div className="text-[22px] sm:text-[30px] md:text-[44px] font-bold text-[#0A0A0A] leading-none mt-1 break-words">{stats.sent}</div>
-              <div className="text-[10px] sm:text-[11px] text-[#059669] font-medium mt-1.5">Via Resend</div>
+              <div className="text-[10px] sm:text-[11px] text-[#059669] font-medium mt-1.5">Via Gmail API</div>
             </div>
             <div className="text-center px-1 sm:px-2 md:px-4 min-w-0">
               <div className="text-[10px] sm:text-[12px] md:text-[13px] text-[#6B7280] font-medium leading-tight">Earned</div>

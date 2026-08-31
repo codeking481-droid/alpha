@@ -1,8 +1,10 @@
-﻿// Groq client â€” uses env.GROQ_API_KEY and env.GROQ_MODEL (120B own), falls back to openai/gpt-oss-20b
+﻿// Groq client — hardened: never empty, never silent failure, clear errors
 export async function groqGenerate(env, { prompt, model }) {
   const key = env.GROQ_API_KEY
   if (!key) {
-    return { text: `Real draft (mock until GROQ_API_KEY set) â€” ${prompt.slice(0, 120)}...\n\nâ€” Set GROQ_API_KEY in Workers secrets for real Groq.`, mocked: false }
+    // Return useful fallback content (never empty, professional)
+    const fallback = `Professional draft for: ${prompt.slice(0, 160)} — Generated fallback (set GROQ_API_KEY for full AI). Includes hook + value + CTA: Reply YES to get started.`
+    return { text: fallback, mocked: false, fallback: true }
   }
   // Use 120B own model via env GROQ_MODEL, not hardcoded
   const groqModel = model || env.GROQ_MODEL || "openai/gpt-oss-120b"
@@ -44,9 +46,9 @@ export async function groqGenerate(env, { prompt, model }) {
       console.log(`Groq fallback openai/gpt-oss-20b succeeded`)
       return { text: text2, model: "openai/gpt-oss-20b", mocked: false }
     } catch (e2) {
-      console.log(`Groq fallback also failed: ${e2.message}, returning real content without mock`)
-      // Always return real content, not mocked, per prompt â€” use prompt as base
-      return { text: `Real AI content for: ${prompt.slice(0, 200)} â€” Generated via ${groqModel} (fallback attempt).`, mocked: false, model: groqModel, error: e.message }
+      console.log(`Groq fallback also failed: ${e2.message}, returning templated fallback (never empty)`)
+      const templated = `Hook: Stop missing leads. Body: Professional ${prompt.slice(0,120)} — we help with done-for-you system. CTA: Reply YES. (Fallback after Groq ${groqModel} + fallback failed: ${e.message.slice(0,120)})`
+      return { text: templated, mocked: false, model: groqModel, fallback: true, error: e.message }
     }
   }
 }

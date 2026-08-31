@@ -1,25 +1,15 @@
-// Reply tracking service for email replies
-// Uses Gmail API polling to sync replies
+// Reply tracking service — hardened: uses gmail.js hardened token, never silent, YES auto-detect
 import { sendHotLeadAlert } from '../services/hotLeadAlert.js'
+import { getGmailAccessToken } from './gmail.js'
 
 export async function syncGmailReplies(env) {
-  const gmailClientId = env.GMAIL_CLIENT_ID || env.GOOGLE_CLIENT_ID
-  const gmailClientSecret = env.GMAIL_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET
-  const gmailRefreshToken = env.GMAIL_REFRESH_TOKEN || env.GOOGLE_REFRESH_TOKEN
-  if (!gmailRefreshToken || !gmailClientId || !gmailClientSecret) {
-    throw new Error('Gmail credentials not configured')
+  // Hardened: uses gmail.js with retry + clear expired message
+  let access_token
+  try {
+    access_token = await getGmailAccessToken(env)
+  } catch (e) {
+    throw new Error(`Gmail sync failed — ${e.message}`)
   }
-
-  // Get fresh access token
-  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `client_id=${gmailClientId}&client_secret=${gmailClientSecret}&refresh_token=${gmailRefreshToken}&grant_type=refresh_token`
-  })
-
-  if (!tokenRes.ok) throw new Error('Failed to refresh Gmail token')
-  
-  const { access_token } = await tokenRes.json()
 
   // Get recent email messages (last 7 days)
   const sevenDaysAgo = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000)
@@ -96,18 +86,18 @@ export async function saveReply(env, replyData) {
     }
   }
 
-  // Detect sentiment using AI (optional - requires Groq/OpenAI)
+  // Hardened sentiment: YES word-boundary, not silent, clear categories
   let sentiment = 'neutral'
-  const positiveKeywords = ['interested', 'great', 'awesome', 'love', 'perfect', 'excited', 'yes', 'let\'s', 'when', 'soon']
-  const negativeKeywords = ['not interested', 'busy', 'no thanks', 'remove', 'unsubscribe', 'spam', 'stop']
-  
+  const positiveKeywords = ['interested', 'great', 'awesome', 'love', 'perfect', 'excited', 'let\'s', 'when', 'soon', 'pricing', 'call', 'meeting', 'deal', 'go ahead']
+  const negativeKeywords = ['not interested', 'busy', 'no thanks', 'remove', 'unsubscribe', 'spam', 'stop', 'not now']
   const bodyLower = (replyData.body || '').toLowerCase()
+  const hasYes = /\byes\b/i.test(replyData.body || '')
   if (negativeKeywords.some((k) => bodyLower.includes(k))) {
     sentiment = 'negative'
+  } else if (hasYes || positiveKeywords.some((k) => bodyLower.includes(k))) {
+    sentiment = 'positive'
   } else if (bodyLower.includes('?') || bodyLower.includes('can we') || bodyLower.includes('how much') || bodyLower.includes('when can') || bodyLower.includes('schedule')) {
     sentiment = 'question'
-  } else if (positiveKeywords.some((k) => bodyLower.includes(k))) {
-    sentiment = 'positive'
   }
 
   const res = await fetch(`${env.SUPABASE_URL}/rest/v1/replies`, {

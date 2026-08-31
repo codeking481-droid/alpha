@@ -266,6 +266,59 @@ app.post('/api/outreach/send-bulk-gmail', async (c) => {
     return c.json({ success: true, provider: 'gmail', ...result })
   } catch (e) { return c.json({ error: e.message }, 500) }
 })
+// Bulk streaming — real-time progress via NDJSON (for UI progress bar 5/50...)
+app.post('/api/gmail/send-bulk/stream', async (c) => {
+  try {
+    const body = await c.req.json().catch(()=>({}))
+    const emails = body.emails || body.recipients || body.list || []
+    if (!Array.isArray(emails) || emails.length===0) return c.json({ error: 'emails array required (max 50)' }, 400)
+    if (emails.length > 50) return c.json({ error: 'Max 50 emails at once' }, 400)
+    // Validate/clean same as sendBulkViaGmail but stream each result
+    const seen = new Set(); const deduped = []; const invalid = []
+    for (const e of emails) {
+      const raw = String(e.to||e.email||e.ownerEmail||'').trim().toLowerCase()
+      if (!raw || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) { invalid.push(raw||'missing'); continue }
+      if (seen.has(raw)) continue; seen.add(raw); deduped.push({ ...e, to: raw })
+    }
+    const stream = new ReadableStream({
+      async start(controller) {
+        const enc = new TextEncoder()
+        const send = (obj) => controller.enqueue(enc.encode(JSON.stringify(obj)+'\n'))
+        send({ type: 'start', total: deduped.length, invalid: invalid.length, duplicates: emails.length - deduped.length - invalid.length })
+        let sent=0, failed=0
+        for (let i=0;i<deduped.length;i++) {
+          const item = deduped[i]
+          try {
+            const res = await sendViaGmail(c.env, { to: item.to, subject: item.subject||`Quick win for ${item.companyName||'your company'} — 4,500+ audience`, html: item.html||item.body||'', text: item.text||item.html||item.body||'' })
+            sent++; send({ type: 'progress', index: i+1, total: deduped.length, to: item.to, success: true, gmail_id: res.id, progress: `${i+1}/${deduped.length}` })
+          } catch (e) {
+            failed++; send({ type: 'progress', index: i+1, total: deduped.length, to: item.to, success: false, error: String(e.message).slice(0,300), progress: `${i+1}/${deduped.length}` })
+          }
+          if (i < deduped.length-1) await new Promise(r=>setTimeout(r, 300))
+        }
+        send({ type: 'done', sent, failed, total: deduped.length, invalid, note: 'Bulk via Gmail API — all in Sent folder' })
+        controller.close()
+      }
+    })
+    return new Response(stream, { headers: { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-cache', 'X-Provider': 'gmail' } })
+  } catch (e) { return c.json({ error: e.message }, 500) }
+})
+// Dashboard real stats — single call for frontend (no mock)
+app.get('/api/dashboard/stats', async (c) => {
+  try {
+    const user = getUserFromRequest(c)
+    const safeUserId = getSafeUserId(user)
+    let companies = []; let replies = []; let closed = 0
+    try { companies = await sbSelect(c.env, 'companies', `user_id=eq.${encodeURIComponent(safeUserId)}`) || [] } catch { try { companies = await sbSelect(c.env, 'companies', 'order=created_at.desc')||[] } catch { companies = await list(c.env, 'companies') } }
+    try { replies = await sbSelect(c.env, 'replies', `user_id=eq.${encodeURIComponent(safeUserId)}&order=received_at.desc`) || [] } catch { try { replies = await sbSelect(c.env, 'replies', 'order=received_at.desc')||[] } catch { replies = [] } }
+    const contacted = companies.filter(x=> x.status==='contacted' || x.contacted_at).length
+    const replied = replies.filter(r=> r.sentiment==='positive' || /\byes\b/i.test(r.body||r.reply_text||'')).length
+    const hot = replies.filter(r=> r.sentiment==='positive').length
+    closed = companies.filter(x=> x.status==='closed_won').length
+    const revenue = closed * 250
+    return c.json({ success: true, companies: companies.length, contacted, replies: replies.length, replied, hot, closed_won: closed, revenue, totalCompanies: companies.length, totalReplies: replies.length, note: 'Real stats — no mock' })
+  } catch (e) { return c.json({ error: e.message, companies:0, sent:0, revenue:0 }, 500) }
+})
 
 // â”€â”€ Companies (also /api/companies)
 app.get('/api/companies/my-companies', async (c) => {
